@@ -193,8 +193,9 @@
       <a class="brand" href="https://cupajoe.live/" target="_blank" rel="noopener">
         <img src="assets/cupajoe-logo.png" alt="Cupajoe logo">
         <div class="brandTitle">
-          <div class="kicker">USGS 01412150 · Maurice River at Bivalve, NJ</div>
-          <div class="name">Bivalve Tidal Flooding Dashboard</div>
+         <div class="kicker">NWPS SBIN4 · Shrewsbury River at Sea Bright, NJ</div>
+<div class="name">Sea Bright Flooding Dashboard</div>
+
         </div>
       </a>
 
@@ -422,9 +423,11 @@ const TZ="Etc/GMT+5";
 /* Datum toggle */
 let DISPLAY_DATUM = "MLLW"; // "MLLW" or "NAVD88"
 
-const NAVD_MINUS_MLLW_FT = -3.41;           // NAVD = MLLW - 3.41
-function mllwToNavd(ft){ return ft + NAVD_MINUS_MLLW_FT; }  // mllw - 3.41
-function navdToMllw(ft){ return ft - NAVD_MINUS_MLLW_FT; }  // navd + 3.41
+// Sea Bright: NAVD88 = MLLW - 2.10
+const NAVD_MINUS_MLLW_FT = -2.10;           // NAVD = MLLW - 2.10
+function mllwToNavd(ft){ return ft + NAVD_MINUS_MLLW_FT; }
+function navdToMllw(ft){ return ft - NAVD_MINUS_MLLW_FT; }
+
 
 /* USGS observed (15-min IV). */
 const USGS_SITE="01412150";
@@ -447,9 +450,11 @@ const REQUIRE_WITHIN_HOURS = 1;           // must have at least one obs point wi
 
 /* Flood thresholds */
 const THRESH = {
-  MLLW: { minorLow:7.60, moderateLow:8.60, majorLow:9.60 },
-  NAVD88:{ minorLow:4.19, moderateLow:5.19, majorLow:6.19 }
+  // Sea Bright (from your NWPS table)
+  MLLW:  { minorLow: 5.20, moderateLow: 6.20, majorLow: 7.20 },
+  NAVD88:{ minorLow: 3.10, moderateLow: 4.10, majorLow: 5.10 }
 };
+
 
 /* Peak counting settings */
 const PEAK_MIN_SEP_MINUTES = 300;
@@ -860,8 +865,9 @@ NOAA/NWS NWPS official forecast (BVVN4) -> we resample to 15-min later
 Replaces CO-OPS predictions block.
 Returns MLLW ft as [{t: ISO8601, ft: Number}] plus issuedTime for UI.
 ========================= */
-const NWPS_GAUGE = "BVVN4";
+const NWPS_GAUGE = "SBIN4";
 const NWPS_STAGEFLOW_URL = `https://api.water.noaa.gov/nwps/v1/gauges/${NWPS_GAUGE}/stageflow`;
+
 
 /* Clip to N hours from the first point (keeps your existing 72h logic consistent). */
 function clipHoursFromFirst(points, hours){
@@ -1943,7 +1949,7 @@ async function updateTimeseries(){
 JSON-BACKED HISTORY (NAVD88 PEAKS)
 ========================= */
 
-const PEAKS_JSON_FILE = "bivalve_peaks_navd88.json";
+const PEAKS_JSON_FILE = "seabright_peaks_navd88.json";
 const PEAKS_JSON_PATH_CANDIDATES = [
   `data/${PEAKS_JSON_FILE}`,
   `./data/${PEAKS_JSON_FILE}`,
@@ -2075,10 +2081,6 @@ async function initTXTBackedHistory(){
 
 
 
-
-/* =========================
-Boot
-========================= */
 /* =========================
 Boot
 ========================= */
@@ -2093,7 +2095,7 @@ async function boot(){
   const hist = await Promise.allSettled([ initJSONBackedHistory() /* or initTXTBackedHistory() */ ]);
   if(hist[0].status === "rejected"){
     console.error("History init failed:", hist[0].reason);
-    histMeta.textContent = "History load failed. Check /data/bivalve_peaks_navd88.json.";
+    histMeta.textContent = "History load failed. Check /data/seabright_peaks_navd88.json.";
     monthAvgMeta.textContent = "History load failed (monthly averages unavailable).";
   }
 

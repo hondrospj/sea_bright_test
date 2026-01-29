@@ -1,9 +1,9 @@
-name: Update Sea Bright Peaks (NAVD88)
+name: Update Sea Bright Peaks Cache
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: "15,45 * * * *"  # every 30 min at :15 and :45 (UTC)
+    - cron: "*/30 * * * *"  # every 30 minutes
 
 permissions:
   contents: write
@@ -23,10 +23,14 @@ jobs:
       - name: Run updater
         run: node tools/update_seabright_peaks_navd88.js
 
-      - name: Commit and push if changed
+      - name: Commit & push if changed
         run: |
-          git status
-          git diff --quiet && echo "No changes" && exit 0
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data/seabright_peaks_navd88.json
-          git commit -m "Update Sea Bright peaks"
+          if git diff --cached --quiet; then
+            echo "No changes."
+            exit 0
+          fi
+          git commit -m "Update Sea Bright peaks cache"
           git push

@@ -1,408 +1,236 @@
-#!/usr/bin/env node
 /**
- * Crest-anchored NAVD88 "high tide events" builder for USGS 01412150 (param 72279)
- * - Uses NOAA CO-OPS predicted HIGH tide crest times (interval=hilo, type=H) as the "tide clock"
- * - For each predicted HIGH tide crest:
- *    - Search observed USGS IV points within ±2 hours and take the MAX
- *    - BUT: if there are ZERO observed points within ±1 hour of the crest, SKIP that crest entirely
+ * Sea Bright (SBIN4) peak updater
+ * Pulls NWPS observed + forecast stage (in MLLW) and writes peaks in NAVD88
  *
- * Writes to: data/bivalve_peaks_navd88.json
- *
- * Modes:
- *   node tools/update_bivalve_peaks_navd88.js
- *     -> incremental update from lastProcessedISO (with buffer) to now
- *
- *   node tools/update_bivalve_peaks_navd88.js --backfill-year=2000
- *     -> backfill exactly that calendar year (UTC)
- *
- *   node tools/update_bivalve_peaks_navd88.js --backfill-from=2000 --backfill-to=2026
- *     -> backfill inclusive year range (UTC)
+ * Output: data/seabright_peaks_navd88.json
  */
 
-const fs = require("fs");
-const path = require("path");
+import fs from "fs";
+import path from "path";
+import process from "process";
 
-// -------------------------
-// Config (matches your dashboard)
-// -------------------------
-const CACHE_PATH = path.join(__dirname, "..", "data", "bivalve_peaks_navd88.json");
+const SITE = {
+  name: "Shrewsbury River at Sea Bright",
+  gaugeId: "SBIN4",
 
-const SITE = "01412150";
-const PARAM = "72279";
+  // Sea Bright datum table implies: NAVD88 = MLLW - 2.10 ft
+  mllwToNavd88OffsetFt: 2.10,
 
-// NOAA tide-clock (predicted highs/lows) — used ONLY for crest times
-const NOAA_STATION = "8535055"; // Bivalve, Maurice River, NJ (as in your dashboard)
+  // Flood thresholds in NAVD88 (from your screenshot table)
+  thresholdsNavd88: {
+    minor: 3.10,
+    moderate: 4.10,
+    major: 5.10,
+  },
 
-// Keep this in cache for transparency; we still keep your 5-hour constant in JSON,
-// but we are no longer using declustering for cache building under this method.
-const PEAK_MIN_SEP_MINUTES = 300;
+  outFile: "data/seabright_peaks_navd88.json",
+};
 
-// Incremental overlap so boundary crests don't get missed
-const BUFFER_HOURS = 12;
+const NWPS_BASE = `https://api.water.noaa.gov/nwps/v1/gauges/${SITE.gaugeId}`;
+const OBS_URL = `${NWPS_BASE}/stageflow/observed`;
+const FCST_URL = `${NWPS_BASE}/stageflow/forecast`;
 
-// Crest anchoring rules (your request)
-const CREST_WINDOW_HOURS = 2;      // search max within ±2h of predicted crest
-const REQUIRE_WITHIN_HOURS = 1;    // if NO obs points within ±1h, skip that crest entirely
-
-// Method/version tag so you can cleanly rebuild without mixing old scheme
-const METHOD = "crest_anchored_highs_v1";
-
-// -------------------------
-// Helpers
-// -------------------------
-function die(msg) {
-  console.error(msg);
-  process.exit(1);
+function toNavd88(mllwFt) {
+  return mllwFt - SITE.mllwToNavd88OffsetFt;
 }
 
-function loadJSON(p) {
-  if (!fs.existsSync(p)) die(`Missing cache file: ${p}`);
-  return JSON.parse(fs.readFileSync(p, "utf8"));
+function classify(navd88Ft) {
+  if (navd88Ft >= SITE.thresholdsNavd88.major) return "major";
+  if (navd88Ft >= SITE.thresholdsNavd88.moderate) return "moderate";
+  if (navd88Ft >= SITE.thresholdsNavd88.minor) return "minor";
+  return "none";
 }
 
-function saveJSON(p, obj) {
-  fs.writeFileSync(p, JSON.stringify(obj, null, 2) + "\n", "utf8");
+async function fetchJson(url) {
+  const res = await fetch(url, { headers: { "User-Agent": "peak-updater" } });
+  if (!res.ok) throw new Error(`Fetch failed ${res.status} for ${url}`);
+  return await res.json();
 }
 
-function isoNow() {
-  return new Date().toISOString();
-}
+/**
+ * NWPS stageflow payloads typically contain a time series of stage values.
+ * Since exact field names can vary, we normalize by searching for arrays of points.
+ *
+ * This function tries common patterns:
+ * - obj.data[] with { validTime / time, stage }
+ * - obj.timeseries[] with points
+ * - obj.observed / obj.forecast arrays
+ */
+function extractPoints(payload) {
+  // Try a few common shapes
+  const candidates = [];
 
-function addHoursISO(iso, hours) {
-  const t = new Date(iso).getTime();
-  if (!Number.isFinite(t)) return null;
-  return new Date(t + hours * 3600 * 1000).toISOString();
-}
+  // 1) payload.data
+  if (Array.isArray(payload?.data)) candidates.push(payload.data);
 
-function clampISO(iso) {
-  const t = new Date(iso).getTime();
-  return Number.isFinite(t) ? new Date(t).toISOString() : null;
-}
+  // 2) payload.observed / payload.forecast
+  if (Array.isArray(payload?.observed)) candidates.push(payload.observed);
+  if (Array.isArray(payload?.forecast)) candidates.push(payload.forecast);
 
-function parseArg(name) {
-  const a = process.argv.find(x => x.startsWith(name + "="));
-  return a ? a.split("=").slice(1).join("=") : null;
-}
-
-function roundFt(x) {
-  return Math.round(x * 1000) / 1000;
-}
-
-function yyyymmddUTC(d) {
-  const y = d.getUTCFullYear();
-  const m = String(d.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(d.getUTCDate()).padStart(2, "0");
-  return `${y}${m}${day}`;
-}
-
-function addDaysUTC(d, days) {
-  return new Date(d.getTime() + days * 86400 * 1000);
-}
-
-function startOfUTCDate(d) {
-  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 0, 0, 0));
-}
-
-function parseNOAATimeToISO_UTC(t) {
-  // NOAA predictions return "YYYY-MM-DD HH:MM" (no timezone)
-  // We request time_zone=gmt so interpret as UTC and append Z.
-  // Example: "2026-01-28 14:12" -> "2026-01-28T14:12:00Z"
-  return t.replace(" ", "T") + ":00Z";
-}
-
-function classifyNAVD(ft, T) {
-  let type = "Below";
-  if (ft >= T.majorLow) type = "Major";
-  else if (ft >= T.moderateLow) type = "Moderate";
-  else if (ft >= T.minorLow) type = "Minor";
-  return type;
-}
-
-// -------------------------
-// USGS IV fetch (15-min-ish)
-// -------------------------
-async function fetchUSGSIV({ startISO, endISO }) {
-  const url =
-    "https://waterservices.usgs.gov/nwis/iv/?" +
-    new URLSearchParams({
-      format: "json",
-      sites: SITE,
-      parameterCd: PARAM,
-      startDT: startISO,
-      endDT: endISO,
-      siteStatus: "all",
-      agencyCd: "USGS"
-    }).toString();
-
-  const res = await fetch(url, { headers: { "User-Agent": "bivalve-peaks-cache/2.0" } });
-  if (!res.ok) throw new Error(`USGS IV fetch failed: ${res.status} ${res.statusText}`);
-  const j = await res.json();
-
-  const ts = j?.value?.timeSeries?.[0];
-  const vals = ts?.values?.[0]?.value || [];
-
-  const series = vals
-    .map(v => ({ t: v.dateTime, ft: Number(v.value) }))
-    .filter(p => p.t && Number.isFinite(p.ft));
-
-  series.sort((a, b) => new Date(a.t) - new Date(b.t));
-  return series;
-}
-
-// -------------------------
-// NOAA "hilo" predictions fetch (chunked)
-// -------------------------
-async function fetchNOAAHiloPredictionsHighs({ startISO, endISO }) {
-  const start = new Date(startISO);
-  const end = new Date(endISO);
-  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
-    throw new Error("Invalid startISO/endISO for NOAA predictions.");
-  }
-
-  // NOAA is generally happier with ~31-day windows. We'll chunk 30 days.
-  const highs = [];
-  let cur = startOfUTCDate(start);
-  const endDay = startOfUTCDate(end);
-
-  while (cur <= endDay) {
-    const chunkEnd = addDaysUTC(cur, 30);
-    const actualEnd = chunkEnd < endDay ? chunkEnd : endDay;
-
-    const url =
-      "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?" +
-      new URLSearchParams({
-        product: "predictions",
-        application: "bivalve-peaks-cache",
-        format: "json",
-        station: NOAA_STATION,
-        time_zone: "gmt",
-        units: "english",
-        interval: "hilo",
-        datum: "MLLW", // required by NOAA; crest TIMES are what we care about
-        begin_date: yyyymmddUTC(cur),
-        end_date: yyyymmddUTC(actualEnd)
-      }).toString();
-
-    const res = await fetch(url, { headers: { "User-Agent": "bivalve-peaks-cache/2.0" } });
-    if (!res.ok) throw new Error(`NOAA predictions fetch failed: ${res.status} ${res.statusText}`);
-
-    const j = await res.json();
-    const arr = Array.isArray(j?.predictions) ? j.predictions : [];
-
-    for (const p of arr) {
-      if (p?.type !== "H") continue; // highs only
-      const iso = parseNOAATimeToISO_UTC(p.t);
-      const ms = new Date(iso).getTime();
-      if (!Number.isFinite(ms)) continue;
-      highs.push({ t: new Date(ms).toISOString() });
+  // 3) payload.timeseries[0].data or .points
+  if (Array.isArray(payload?.timeseries)) {
+    for (const ts of payload.timeseries) {
+      if (Array.isArray(ts?.data)) candidates.push(ts.data);
+      if (Array.isArray(ts?.points)) candidates.push(ts.points);
     }
-
-    cur = addDaysUTC(actualEnd, 1);
   }
 
-  highs.sort((a, b) => new Date(a.t) - new Date(b.t));
-  return highs;
+  // Flatten candidate arrays into normalized points
+  const points = [];
+
+  for (const arr of candidates) {
+    for (const row of arr) {
+      const t =
+        row?.validTime ??
+        row?.time ??
+        row?.t ??
+        row?.dateTime ??
+        row?.timestamp;
+
+      const stage =
+        row?.stage ??
+        row?.value ??
+        row?.v ??
+        row?.primary ??
+        row?.primaryValue;
+
+      if (!t || stage === undefined || stage === null) continue;
+
+      const dt = new Date(t);
+      const v = Number(stage);
+      if (!Number.isFinite(dt.getTime())) continue;
+      if (!Number.isFinite(v)) continue;
+
+      points.push({ t: dt, mllw: v, navd88: toNavd88(v) });
+    }
+  }
+
+  // Sort + de-dupe by time
+  points.sort((a, b) => a.t - b.t);
+  const deduped = [];
+  let lastMs = null;
+  for (const p of points) {
+    const ms = p.t.getTime();
+    if (ms === lastMs) continue;
+    deduped.push(p);
+    lastMs = ms;
+  }
+
+  return deduped;
 }
 
-// -------------------------
-// Crest-anchored event builder
-// -------------------------
-function buildCrestAnchoredHighEvents({ series, predictedHighs, thresholdsNAVD88 }) {
-  if (!Array.isArray(series) || !series.length) return [];
-  if (!Array.isArray(predictedHighs) || !predictedHighs.length) return [];
+/**
+ * Find local maxima with:
+ * - minimum separation (hours) to avoid multiple tiny bumps
+ * - minimum prominence (ft) relative to surrounding neighborhood
+ */
+function findPeaks(points, { minSeparationHours = 5, minProminenceFt = 0.05 } = {}) {
+  const peaks = [];
 
-  const w2 = CREST_WINDOW_HOURS * 3600 * 1000;
-  const w1 = REQUIRE_WITHIN_HOURS * 3600 * 1000;
+  // helper: neighborhood window
+  const windowPts = 6; // ~6 points on each side; works for 15–60 min spacing
 
-  const pts = [...series].sort((a, b) => new Date(a.t) - new Date(b.t));
+  for (let i = 1; i < points.length - 1; i++) {
+    const p = points[i];
+    const prev = points[i - 1];
+    const next = points[i + 1];
 
-  const out = [];
-  let left = 0;
+    // basic local max
+    if (!(p.navd88 >= prev.navd88 && p.navd88 >= next.navd88)) continue;
 
-  for (const h of predictedHighs) {
-    const crestISO = h.t;
-    const crestMs = new Date(crestISO).getTime();
-    if (!Number.isFinite(crestMs)) continue;
+    // prominence: compare to min around it
+    const lo = Math.max(0, i - windowPts);
+    const hi = Math.min(points.length - 1, i + windowPts);
+    let localMin = Infinity;
+    for (let j = lo; j <= hi; j++) localMin = Math.min(localMin, points[j].navd88);
 
-    // Advance left pointer to first point >= crest - 2h
-    while (left < pts.length) {
-      const tMs = new Date(pts[left].t).getTime();
-      if (!Number.isFinite(tMs) || tMs < crestMs - w2) left++;
-      else break;
-    }
+    if (p.navd88 - localMin < minProminenceFt) continue;
 
-    let i = left;
-    let hasWithin1h = false;
-    let best = null;
-
-    while (i < pts.length) {
-      const tMs = new Date(pts[i].t).getTime();
-      if (!Number.isFinite(tMs)) { i++; continue; }
-      if (tMs > crestMs + w2) break;
-
-      const dt = Math.abs(tMs - crestMs);
-      if (dt <= w1) hasWithin1h = true;
-
-      if (!best || pts[i].ft > best.ft) best = pts[i];
-      i++;
-    }
-
-    // Your rule: if we do not have ANY observed values within ±1h, do not report anything
-    if (!hasWithin1h) continue;
-    if (!best) continue;
-
-    const ft = Number(best.ft);
-    out.push({
-      t: new Date(best.t).toISOString(),     // observed time of window max
-      ft: roundFt(ft),
-      type: classifyNAVD(ft, thresholdsNAVD88),
-      crest: new Date(crestISO).toISOString(), // predicted crest time (key)
-      kind: "CrestHigh"
-    });
-  }
-
-  return out;
-}
-
-// -------------------------
-// Main update logic
-// -------------------------
-async function main() {
-  const cache = loadJSON(CACHE_PATH);
-
-  // Ensure required metadata exists (you already store these)
-  cache.site = cache.site || SITE;
-  cache.parameterCd = cache.parameterCd || PARAM;
-  cache.datum = cache.datum || "NAVD88";
-  cache.peakMinSepMinutes = cache.peakMinSepMinutes || PEAK_MIN_SEP_MINUTES;
-
-  const THRESH_NAVD88 = cache?.thresholdsNAVD88 || null;
-  if (!THRESH_NAVD88) {
-    die(
-      "Missing NAVD88 thresholds. Add thresholdsNAVD88 to data/bivalve_peaks_navd88.json, e.g.\n" +
-      '  "thresholdsNAVD88": {"minorLow": 4.19, "moderateLow": 5.19, "majorLow": 6.19}\n'
-    );
-  }
-
-  // If method changed, clear events to avoid mixing old peak scheme with crest-anchored scheme
-  if (cache.method !== METHOD) {
-    console.log(`Method changed (${cache.method || "none"} -> ${METHOD}). Clearing events for clean rebuild.`);
-    cache.method = METHOD;
-    cache.events = [];
-    // Leave lastProcessedISO as-is; you can run a backfill range to rebuild.
-  }
-
-  const backfillYear = parseArg("--backfill-year");
-  const backfillFrom = parseArg("--backfill-from");
-  const backfillTo = parseArg("--backfill-to");
-
-  let startISO, endISO;
-
-  if (backfillYear) {
-    const y = Number(backfillYear);
-    if (!Number.isFinite(y) || y < 1900 || y > 3000) die("Invalid --backfill-year=YYYY");
-    startISO = new Date(Date.UTC(y, 0, 1, 0, 0, 0)).toISOString();
-    endISO = new Date(Date.UTC(y + 1, 0, 1, 0, 0, 0)).toISOString();
-    console.log(`Backfill year ${y}: ${startISO} → ${endISO}`);
-  } else if (backfillFrom && backfillTo) {
-    const y1 = Number(backfillFrom);
-    const y2 = Number(backfillTo);
-    if (!Number.isFinite(y1) || !Number.isFinite(y2)) die("Invalid --backfill-from / --backfill-to (must be years)");
-    const lo = Math.min(y1, y2);
-    const hi = Math.max(y1, y2);
-    if (lo < 1900 || hi > 3000) die("Backfill range out of bounds.");
-    startISO = new Date(Date.UTC(lo, 0, 1, 0, 0, 0)).toISOString();
-    endISO = new Date(Date.UTC(hi + 1, 0, 1, 0, 0, 0)).toISOString();
-    console.log(`Backfill years ${lo}–${hi}: ${startISO} → ${endISO}`);
-  } else {
-    const last = clampISO(cache.lastProcessedISO || "2000-01-01T00:00:00Z");
-    if (!last) die("Cache lastProcessedISO is invalid ISO.");
-    startISO = addHoursISO(last, -BUFFER_HOURS);
-    endISO = isoNow();
-    console.log(`Incremental: ${startISO} → ${endISO}`);
-  }
-
-  // 1) Fetch observed series from USGS
-  const series = await fetchUSGSIV({ startISO, endISO });
-  if (!series.length) {
-    console.log("No series points returned; nothing to do.");
-    return;
-  }
-
-  // 2) Fetch predicted high tide crest times from NOAA (pad window slightly)
-  const predStartISO = addHoursISO(startISO, -3);
-  const predEndISO = addHoursISO(endISO, +3);
-
-  const predictedHighs = await fetchNOAAHiloPredictionsHighs({ startISO: predStartISO, endISO: predEndISO });
-  if (!predictedHighs.length) {
-    console.log("No NOAA predicted highs returned; nothing to do.");
-    return;
-  }
-
-  // 3) Build crest-anchored events
-  const crestHighs = buildCrestAnchoredHighEvents({
-    series,
-    predictedHighs,
-    thresholdsNAVD88: THRESH_NAVD88
-  });
-
-  // 4) Merge/dedupe by crest time (stable key)
-  const existing = Array.isArray(cache.events) ? cache.events : [];
-  const byCrest = new Map();
-
-  for (const e of existing) {
-    if (e?.crest) byCrest.set(String(e.crest), e);
-  }
-
-  let added = 0;
-  let updated = 0;
-
-  for (const e of crestHighs) {
-    const key = String(e.crest);
-    const prev = byCrest.get(key);
-
-    if (!prev) {
-      existing.push(e);
-      byCrest.set(key, e);
-      added++;
+    // separation: keep only one peak within minSeparationHours
+    const minSepMs = minSeparationHours * 3600 * 1000;
+    const last = peaks[peaks.length - 1];
+    if (last && p.t.getTime() - last.t.getTime() < minSepMs) {
+      // keep the higher one
+      if (p.navd88 > last.navd88) peaks[peaks.length - 1] = p;
       continue;
     }
 
-    // Update if we now have a better observed max (or previous was missing/NaN)
-    const prevFt = Number(prev.ft);
-    const newFt = Number(e.ft);
+    peaks.push(p);
+  }
 
-    // If the old one exists but was based on sparse data and later we capture a higher max,
-    // prefer the higher max.
-    if (!Number.isFinite(prevFt) || (Number.isFinite(newFt) && newFt > prevFt)) {
-      prev.t = e.t;
-      prev.ft = e.ft;
-      prev.type = e.type;
-      prev.kind = e.kind;
-      prev.crest = e.crest;
-      updated++;
+  return peaks;
+}
+
+function loadExisting(outPath) {
+  if (!fs.existsSync(outPath)) return [];
+  try {
+    const raw = fs.readFileSync(outPath, "utf8");
+    const j = JSON.parse(raw);
+    return Array.isArray(j) ? j : (Array.isArray(j?.peaks) ? j.peaks : []);
+  } catch {
+    return [];
+  }
+}
+
+function mergeByTime(existing, incoming) {
+  const map = new Map();
+  for (const e of existing) map.set(e.time, e);
+
+  for (const p of incoming) {
+    const time = p.t.toISOString();
+    const row = {
+      time,
+      navd88_ft: Number(p.navd88.toFixed(2)),
+      mllw_ft: Number(p.mllw.toFixed(2)),
+      category: classify(p.navd88),
+      source: p.source,
+    };
+
+    // Prefer observed over forecast if timestamps collide
+    if (!map.has(time)) map.set(time, row);
+    else {
+      const cur = map.get(time);
+      if (cur.source === "forecast" && row.source === "observed") map.set(time, row);
+      else if (row.navd88_ft > cur.navd88_ft) map.set(time, row);
     }
   }
 
-  // Keep chronological order
-  existing.sort((a, b) => new Date(a.t) - new Date(b.t));
-  cache.events = existing;
-
-  // Advance lastProcessedISO to newest timestamp in the fetched USGS series
-  const newestT = series[series.length - 1]?.t;
-  if (newestT) cache.lastProcessedISO = new Date(newestT).toISOString();
-
-  saveJSON(CACHE_PATH, cache);
-
-  console.log(`Fetched USGS points:         ${series.length}`);
-  console.log(`NOAA predicted HIGH crests:  ${predictedHighs.length}`);
-  console.log(`Crest-anchored events built: ${crestHighs.length}`);
-  console.log(`Events added:               ${added}`);
-  console.log(`Events updated:             ${updated}`);
-  console.log(`New lastProcessedISO:       ${cache.lastProcessedISO}`);
+  const merged = Array.from(map.values()).sort((a, b) => new Date(a.time) - new Date(b.time));
+  return merged;
 }
 
-main().catch(err => {
+async function main() {
+  const repoRoot = process.cwd();
+  const outPath = path.join(repoRoot, SITE.outFile);
+
+  console.log(`Fetching NWPS observed: ${OBS_URL}`);
+  const obsPayload = await fetchJson(OBS_URL);
+  const obsPoints = extractPoints(obsPayload).map(p => ({ ...p, source: "observed" }));
+
+  console.log(`Fetching NWPS forecast: ${FCST_URL}`);
+  const fcstPayload = await fetchJson(FCST_URL);
+  const fcstPoints = extractPoints(fcstPayload).map(p => ({ ...p, source: "forecast" }));
+
+  // Find peaks in each
+  const obsPeaks = findPeaks(obsPoints).map(p => ({ ...p, source: "observed" }));
+  const fcstPeaks = findPeaks(fcstPoints).map(p => ({ ...p, source: "forecast" }));
+
+  // Keep only meaningful peaks (>= minor) OR keep all (your choice)
+  const keep = (p) => p.navd88 >= SITE.thresholdsNavd88.minor;
+  const peaksToWrite = [...obsPeaks.filter(keep), ...fcstPeaks.filter(keep)];
+
+  // Merge with existing
+  const existing = loadExisting(outPath);
+  const merged = mergeByTime(existing, peaksToWrite);
+
+  // Write
+  fs.mkdirSync(path.dirname(outPath), { recursive: true });
+  fs.writeFileSync(outPath, JSON.stringify(merged, null, 2) + "\n", "utf8");
+
+  console.log(`Wrote ${merged.length} peaks -> ${SITE.outFile}`);
+}
+
+main().catch((err) => {
   console.error(err);
   process.exit(1);
 });

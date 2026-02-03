@@ -1,1 +1,0 @@
-# sea_bright_test

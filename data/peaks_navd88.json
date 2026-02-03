@@ -1,13 +1,25 @@
 {
   "site": "01407600",
   "parameterCd": "72279",
-  "noaaStation": "8531804",
-  "place": "Sea Bright, NJ",
   "datum": "NAVD88",
-  "method": "crest_anchored_highs_v1_seabright",
   "peakMinSepMinutes": 300,
-  "thresholdsNAVD88": { "minorLow": 3.1, "moderateLow": 4.1, "majorLow": 5.1 },
+  "method": "crest_anchored_highs_v1",
+  "thresholdsNAVD88": {
+    "minorLow": 3.10,
+    "moderateLow": 4.10,
+    "majorLow": 5.10
+  },
   "lastProcessedISO": "2000-01-01T00:00:00Z",
-  "updated_utc": null,
-  "events": []
+  "events": [
+    { "t": "2012-10-29T00:00:00Z", "ft": 9.63, "type": "Major", "kind": "HistoricTop", "note": "11.73 ft MLLW -> NAVD = MLLW-2.10" },
+    { "t": "1992-12-11T00:00:00Z",:contentReference[oaicite:18]{index=18}", "kind": "HistoricTop", "note": "9.43 ft MLLW" },
+    { "t": "2011-08-28T00:00:00Z", "ft": 6.32, "type": "Major", "kind": "HistoricTop", "note": "8.42 ft MLLW" },
+    { "t": "1962-03-06T00:00:00Z", "ft": 5.63, "type": "Major", "kind": "HistoricTop", "note": "7.73 ft MLLW" },
+    { "t": "2010-03-13T00:00:00Z", "ft": 5.35, "type": "Major", "kind": "HistoricTop", "note": "7.45 ft MLLW" },
+    { "t": "2024-01-13T00:00:00Z", "ft": 5.25, "type": "Major", "kind": "HistoricTop", "note": "7.35 ft MLLW" },
+    { "t": "2018-10-27T00:00:00Z", "ft": 5.20, "type": "Major", "kind": "HistoricTop", "note": "7.30 ft MLLW" },
+    { "t": "2022-12-23T00:00:00Z", "ft": 5.19, "type": "Major", "kind": "HistoricTop", "note": "7.29 ft MLLW" },
+    { "t": "2021-02-02T00:00:00Z", "ft": 5.16, "type": "Major", "kind": "HistoricTop", "note": "7.26 ft MLLW" },
+    { "t": "2017-01-24T00:00:00Z", "ft": 5.08, "type": "Moderate", "kind": "HistoricTop", "note": "7.18 ft MLLW" }
+  ]
 }

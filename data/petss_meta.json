@@ -1,10 +1,11 @@
 {
-  "station": "8531804",
+  "place": "Sea Bright, NJ",
+  "site_slug": "seabright",
+  "petss_stid": "8531680",
   "datum": "MLLW",
+  "issued_utc": null,
   "fetched_utc": null,
-  "source": null,
-  "n_points": 0,
-  "t0": null,
-  "t1": null
+  "ok": false,
+  "urlUsed": null,
+  "points": []
 }
-

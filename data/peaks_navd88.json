@@ -1,11 +1,10 @@
 {
-  "place": "Sea Bright, NJ",
-  "site_slug": "seabright",
-  "usgs_site": "01407600",
-  "usgs_parameter": "72279",
+  "site": "01412150",
+  "parameterCd": "72279",
   "datum": "NAVD88",
   "peakMinSepMinutes": 300,
-  "updated_utc": null,
-  "obs_points_navd88": [],
-  "peaks_navd88": []
-}
+  "thresholdsNAVD88": {
+    "minorLow": 3.1,
+    "moderateLow": 4.1,
+    "majorLow": 5.1
+  }

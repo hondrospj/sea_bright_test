@@ -1,0 +1,10 @@
+{
+  "place": "Sea Bright, NJ",
+  "site_slug": "seabright",
+  "petss_stid": "8531680",
+  "fetched_utc": "2026-02-03T23:11:50.879Z",
+  "ok": false,
+  "error": "404 Not Found",
+  "urlUsed": "https://api.water.noaa.gov/nwps/v1/reaches/8531680/forecast?product=petss",
+  "points": []
+}

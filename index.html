@@ -447,7 +447,7 @@
       <a class="brand" href="https://cupajoe.live/" target="_blank" rel="noopener">
         <img src="assets/cupajoe-logo.png" alt="Cupajoe logo">
         <div class="brandTitle">
-          <div class="kicker">USGS 01412150 · Maurice River at Bivalve, NJ</div>
+          <div class="kicker">USGS 01407600 · Maurice River at Bivalve, NJ</div>
           <div class="name">Bivalve Tidal Flooding Dashboard</div>
         </div>
       </a>
@@ -722,7 +722,7 @@ function mllwToNavd(ft){ return ft + NAVD_MINUS_MLLW_FT; }  // mllw - 2.1
 function navdToMllw(ft){ return ft - NAVD_MINUS_MLLW_FT; }  // navd + 2.1
 
 /* USGS observed (15-min IV). */
-const USGS_SITE="01412150";
+const USGS_SITE="01407600";
 
 /* Water level ONLY (tide elevation NAVD88). */
 const USGS_PARAM_PRIMARY = "72279";
@@ -795,7 +795,7 @@ const LIVE_START_ISO = "2026-01-01T00:00:00Z"; // use >= Jan 1 2026
 const ALERT_POINT={lat:40.3656, lon:-73.9747};
 
 /* TXT daily tides file */
-const DAILY_TIDES_TXT_FILE = "bivalve_daily_stats.txt";
+const DAILY_TIDES_TXT_FILE = "";
 const TXT_PATH_CANDIDATES = [
   `data/${DAILY_TIDES_TXT_FILE}`,
   `./data/${DAILY_TIDES_TXT_FILE}`,
@@ -3090,7 +3090,7 @@ async function updateTimeseries(){
 JSON-BACKED HISTORY (NAVD88 PEAKS)
 ========================= */
 
-const PEAKS_JSON_FILE = "bivalve_peaks_navd88.json";
+const PEAKS_JSON_FILE = "peaks_navd88.json";
 const PEAKS_JSON_PATH_CANDIDATES = [
   `data/${PEAKS_JSON_FILE}`,
   `./data/${PEAKS_JSON_FILE}`,
@@ -3293,7 +3293,7 @@ const hist = await Promise.allSettled([
 
 if (hist[0].status === "rejected") {
   console.error("History init failed:", hist[0].reason);
-  if (histMeta)      histMeta.textContent = "History load failed. Check /data/bivalve_peaks_navd88.json.";
+  if (histMeta)      histMeta.textContent = "History load failed. Check /data/peaks_navd88.json.";
   if (monthAvgMeta)  monthAvgMeta.textContent = "History load failed (monthly averages unavailable).";
 }
 

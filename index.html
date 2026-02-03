@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -446,7 +447,7 @@
       <a class="brand" href="https://cupajoe.live/" target="_blank" rel="noopener">
         <img src="assets/cupajoe-logo.png" alt="Cupajoe logo">
         <div class="brandTitle">
-          <div class="kicker">USGS 01407600 · Maurice River at Bivalve, NJ</div>
+          <div class="kicker">USGS 01412150 · Maurice River at Bivalve, NJ</div>
           <div class="name">Bivalve Tidal Flooding Dashboard</div>
         </div>
       </a>
@@ -551,15 +552,15 @@
       <div class="stages" aria-label="Flood stages">
         <div class="stage">
           <div class="stageName">Minor</div>
-          <div class="badge" id="minorBadge" style="color:var(--minor)">5.2–6.2</div>
+          <div class="badge" id="minorBadge" style="color:var(--minor)">7.60–8.60</div>
         </div>
         <div class="stage">
           <div class="stageName">Moderate</div>
-          <div class="badge" id="moderateBadge" style="color:var(--moderate)">6.2–7.2</div>
+          <div class="badge" id="moderateBadge" style="color:var(--moderate)">8.60–9.60</div>
         </div>
         <div class="stage">
           <div class="stageName">Major</div>
-          <div class="badge" id="majorBadge" style="color:var(--major)">≥ 7.2</div>
+          <div class="badge" id="majorBadge" style="color:var(--major)">≥ 9.60</div>
         </div>
       </div>
     </div>
@@ -716,32 +717,32 @@ const TZ="Etc/GMT+5";
 /* Datum toggle */
 let DISPLAY_DATUM = "MLLW"; // "MLLW" or "NAVD88"
 
-const NAVD_MINUS_MLLW_FT = -2.10;           // NAVD = MLLW - 2.10
-function mllwToNavd(ft){ return ft + NAVD_MINUS_MLLW_FT; }  // mllw - 2.10
-function navdToMllw(ft){ return ft - NAVD_MINUS_MLLW_FT; }  // navd + 2.10
+const NAVD_MINUS_MLLW_FT = -3.41;           // NAVD = MLLW - 3.41
+function mllwToNavd(ft){ return ft + NAVD_MINUS_MLLW_FT; }  // mllw - 3.41
+function navdToMllw(ft){ return ft - NAVD_MINUS_MLLW_FT; }  // navd + 3.41
 
 /* USGS observed (15-min IV). */
-const USGS_SITE="01407600";
+const USGS_SITE="01412150";
 
 /* Water level ONLY (tide elevation NAVD88). */
 const USGS_PARAM_PRIMARY = "72279";
 
 /* NOAA CO-OPS predictions */
-const COOPS_STATION="8531804";
+const COOPS_STATION="8535055";
 const COOPS_APP="cupajoe.live";
 const COOPS_DATUM="MLLW";
 const COOPS_INTERVAL="6";
 const COOPS_TZ="gmt";
 
       /* Tide-clock settings for crest-anchored highs (NOAA hilo predictions) */
-const NOAA_STATION_TIDECLOCK = "8531804"; // same station as COOPS_STATION (Bivalve)
+const NOAA_STATION_TIDECLOCK = "8535055"; // same station as COOPS_STATION (Bivalve)
 const CREST_WINDOW_HOURS = 2;             // search max within ±2 hours of predicted crest
 const REQUIRE_WITHIN_HOURS = 1;           // must have at least one obs point within ±1 hour
 
 
 /* Flood thresholds */
 const THRESH = {
-  MLLW: { minorLow:5.2, moderateLow:6.2, majorLow:7.2 },
+  MLLW: { minorLow:7.60, moderateLow:8.60, majorLow:9.60 },
   NAVD88:{ minorLow:4.19, moderateLow:5.19, majorLow:6.19 }
 };
 
@@ -791,13 +792,24 @@ const LIVE_START_ISO = "2026-01-01T00:00:00Z"; // use >= Jan 1 2026
 
 
 /* NWS alerts point */
-const ALERT_POINT={lat: 40.361, lon: -73.975};
+const ALERT_POINT={lat:39.2325, lon:-75.0380};
+
+/* TXT daily tides file */
+const DAILY_TIDES_TXT_FILE = "bivalve_daily_stats.txt";
+const TXT_PATH_CANDIDATES = [
+  `data/${DAILY_TIDES_TXT_FILE}`,
+  `./data/${DAILY_TIDES_TXT_FILE}`,
+  `../data/${DAILY_TIDES_TXT_FILE}`,
+  `/data/${DAILY_TIDES_TXT_FILE}`
+];
+let DAILY_TIDES_TXT_URL = TXT_PATH_CANDIDATES[0];
+
 
 /* TXT columns (NAVD88 daily stats for parameter 72279) */
 const COL_DAILY_HIGH = "239251_72279_00021";
 const COL_DAILY_LOWHI = "239252_72279_00022";
 
-/* Top ten list (MLLW) — FIXED (shifted +2.10 ft from NAVD) */
+/* Top ten list (MLLW) — FIXED (shifted +3.41 ft from NAVD) */
 const TOP_TEN_MLLW = [
   {date:"10-29-2012", ft:10.44},
   {date:"11-25-1950", ft:10.01},
@@ -3078,7 +3090,7 @@ async function updateTimeseries(){
 JSON-BACKED HISTORY (NAVD88 PEAKS)
 ========================= */
 
-const PEAKS_JSON_FILE = "peaks_navd88.json";
+const PEAKS_JSON_FILE = "bivalve_peaks_navd88.json";
 const PEAKS_JSON_PATH_CANDIDATES = [
   `data/${PEAKS_JSON_FILE}`,
   `./data/${PEAKS_JSON_FILE}`,
@@ -3281,7 +3293,7 @@ const hist = await Promise.allSettled([
 
 if (hist[0].status === "rejected") {
   console.error("History init failed:", hist[0].reason);
-  if (histMeta)      histMeta.textContent = "History load failed. Check /data/_peaks_navd88.json.";
+  if (histMeta)      histMeta.textContent = "History load failed. Check /data/bivalve_peaks_navd88.json.";
   if (monthAvgMeta)  monthAvgMeta.textContent = "History load failed (monthly averages unavailable).";
 }
 

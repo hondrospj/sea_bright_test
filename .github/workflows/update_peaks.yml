@@ -1,22 +1,15 @@
-name: Update Bivalve Peaks Cache
+name: Update Peaks (NAVD88)
 
 on:
   workflow_dispatch:
-    inputs:
-      backfill_from:
-        description: "Optional: backfill from year (e.g., 2000)"
-        required: false
-      backfill_to:
-        description: "Optional: backfill to year (e.g., 2026)"
-        required: false
   schedule:
-    - cron: "*/30 * * * *"  # every 30 minutes
+    - cron: "12,42 * * * *"  # twice per hour
 
 permissions:
   contents: write
 
 jobs:
-  update:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -27,22 +20,13 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Run updater
-        run: |
-          if [ -n "${{ inputs.backfill_from }}" ] && [ -n "${{ inputs.backfill_to }}" ]; then
-            node tools/update_bivalve_peaks_navd88.js --backfill-from=${{ inputs.backfill_from }} --backfill-to=${{ inputs.backfill_to }}
-          else
-            node tools/update_bivalve_peaks_navd88.js
-          fi
+      - name: Run peaks updater
+        run: node tools/update_peaks_navd88.js
 
-      - name: Commit & push if changed
+      - name: Commit updated peaks
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/bivalve_peaks_navd88.json
-          if git diff --cached --quiet; then
-            echo "No changes."
-            exit 0
-          fi
-          git commit -m "Update peaks cache"
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add data/peaks_navd88.json
+          git commit -m "Update peaks_navd88.json" || echo "No changes"
           git push

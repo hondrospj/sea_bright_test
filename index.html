@@ -717,9 +717,9 @@ const TZ="Etc/GMT+5";
 /* Datum toggle */
 let DISPLAY_DATUM = "MLLW"; // "MLLW" or "NAVD88"
 
-const NAVD_MINUS_MLLW_FT = -3.41;           // NAVD = MLLW - 3.41
-function mllwToNavd(ft){ return ft + NAVD_MINUS_MLLW_FT; }  // mllw - 3.41
-function navdToMllw(ft){ return ft - NAVD_MINUS_MLLW_FT; }  // navd + 3.41
+const NAVD_MINUS_MLLW_FT = -2.10;           // NAVD = MLLW - 2.10
+function mllwToNavd(ft){ return ft + NAVD_MINUS_MLLW_FT; }  // mllw - 2.10
+function navdToMllw(ft){ return ft - NAVD_MINUS_MLLW_FT; }  // navd + 2.10
 
 /* USGS observed (15-min IV). */
 const USGS_SITE="01407600";              // Sea Bright, Shrewsbury River :contentReference[oaicite:7]{index=7}
@@ -806,7 +806,7 @@ let DAILY_TIDES_TXT_URL = TXT_PATH_CANDIDATES[0];
 const COL_DAILY_HIGH = "239251_72279_00021";
 const COL_DAILY_LOWHI = "239252_72279_00022";
 
-/* Top ten list (MLLW) — FIXED (shifted +3.41 ft from NAVD) */
+/* Top ten list (MLLW) — FIXED (shifted +2.10 ft from NAVD) */
 const TOP_TEN_MLLW = [
   {date:"10-29-2012", ft:10.44},
   {date:"11-25-1950", ft:10.01},
@@ -1306,14 +1306,11 @@ const PETSS_JSON_CANDIDATES = [
   "./data/petss_forecast.json",
   "/data/petss_forecast.json",
 
-  // common variants if you name files per-station:
   `data/petss_forecast_${COOPS_STATION}_mllw.json`,
   `./data/petss_forecast_${COOPS_STATION}_mllw.json`,
-  `/data/petss_forecast_${COOPS_STATION}_mllw.json`,
-
-  // keep your old guess as a last resort
-  "data/petss_forecast_8536889_mllw.json"
+  `/data/petss_forecast_${COOPS_STATION}_mllw.json`
 ];
+
 
 // returns parsed points in the format your chart expects: [{t, ft}]
 function normalizePetssJsonToPoints(json){

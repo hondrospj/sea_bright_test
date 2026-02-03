@@ -23,7 +23,7 @@ jobs:
 
       - name: Update peaks (Sea Bright)
         run: |
-          node tools/update_seabright_peaks_navd88.js --out data/seabright_peaks_navd88.json
+          node tools/update_peaks_navd88.js --out data/seabright_peaks_navd88.json
 
       - name: Commit & push
         run: |

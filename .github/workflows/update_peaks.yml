@@ -1,15 +1,15 @@
-name: Update Sea Bright PETSS Forecast (MLLW)
+name: Update Sea Bright Peaks (NAVD88)
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: "*/30 * * * *"
+    - cron: "0 * * * *"
 
 permissions:
   contents: write
 
 jobs:
-  update_petss_forecast:
+  update_peaks_navd88:
     runs-on: ubuntu-latest
 
     steps:
@@ -21,16 +21,14 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Update PETSS forecast (Sea Bright)
-        env:
-          PETSS_STID: "8531680"
+      - name: Update peaks (Sea Bright)
         run: |
-          node tools/update_petss_forecast.js --stid "$PETSS_STID" --out data/seabright_petss_forecast_mllw.json
+          node tools/update_seabright_peaks_navd88.js --out data/seabright_peaks_navd88.json
 
       - name: Commit & push
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/seabright_petss_forecast_mllw.json
-          git commit -m "Update Sea Bright PETSS forecast (MLLW)" || echo "No changes"
+          git add data/seabright_peaks_navd88.json
+          git commit -m "Update Sea Bright peaks (NAVD88)" || echo "No changes"
           git push

@@ -1,4 +1,4 @@
-name: Update Peaks 
+name: Peaks Cache
 
 on:
   workflow_dispatch:
@@ -30,9 +30,9 @@ jobs:
       - name: Run updater
         run: |
           if [ -n "${{ inputs.backfill_from }}" ] && [ -n "${{ inputs.backfill_to }}" ]; then
-            node tools/update_bivalve_peaks_navd88.js --backfill-from=${{ inputs.backfill_from }} --backfill-to=${{ inputs.backfill_to }}
+            node tools/update_peaks_navd88.js --backfill-from=${{ inputs.backfill_from }} --backfill-to=${{ inputs.backfill_to }}
           else
-            node tools/update_bivalve_peaks_navd88.js
+            node tools/update_peaks_navd88.js
           fi
 
       - name: Commit & push if changed

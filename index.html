@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Bivalve, NJ — Tidal Flooding Dashboard</title>
+  <title>Sea Bright, NJ — Tidal Flooding Dashboard</title>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
@@ -448,8 +448,8 @@
       <a class="brand" href="https://cupajoe.live/" target="_blank" rel="noopener">
         <img src="assets/cupajoe-logo.png" alt="Cupajoe logo">
         <div class="brandTitle">
-          <div class="kicker">USGS 01412150 · Maurice River at Bivalve, NJ</div>
-          <div class="name">Bivalve Tidal Flooding Dashboard</div>
+          <div class="kicker">USGS 01412150 · Maurice River at Sea Bright, NJ</div>
+          <div class="name">Sea Bright Tidal Flooding Dashboard</div>
         </div>
       </a>
 
@@ -553,15 +553,15 @@
       <div class="stages" aria-label="Flood stages">
         <div class="stage">
           <div class="stageName">Minor</div>
-          <div class="badge" id="minorBadge" style="color:var(--minor)">7.60–8.60</div>
+          <div class="badge" id="minorBadge" style="color:var(--minor)">5.20–6.20</div>
         </div>
         <div class="stage">
           <div class="stageName">Moderate</div>
-          <div class="badge" id="moderateBadge" style="color:var(--moderate)">8.60–9.60</div>
+          <div class="badge" id="moderateBadge" style="color:var(--moderate)">6.20–7.20</div>
         </div>
         <div class="stage">
           <div class="stageName">Major</div>
-          <div class="badge" id="majorBadge" style="color:var(--major)">≥ 9.60</div>
+          <div class="badge" id="majorBadge" style="color:var(--major)">≥ 7.20</div>
         </div>
       </div>
     </div>
@@ -718,9 +718,9 @@ const TZ="Etc/GMT+5";
 /* Datum toggle */
 let DISPLAY_DATUM = "MLLW"; // "MLLW" or "NAVD88"
 
-const NAVD_MINUS_MLLW_FT = -3.41;           // NAVD = MLLW - 3.41
-function mllwToNavd(ft){ return ft + NAVD_MINUS_MLLW_FT; }  // mllw - 3.41
-function navdToMllw(ft){ return ft - NAVD_MINUS_MLLW_FT; }  // navd + 3.41
+const NAVD_MINUS_MLLW_FT = -2.10;           // NAVD = MLLW - 2.10
+function mllwToNavd(ft){ return ft + NAVD_MINUS_MLLW_FT; }  // mllw - 2.10
+function navdToMllw(ft){ return ft - NAVD_MINUS_MLLW_FT; }  // navd + 2.10
 
 /* USGS observed (15-min IV). */
 const USGS_SITE="01412150";
@@ -736,15 +736,15 @@ const COOPS_INTERVAL="6";
 const COOPS_TZ="gmt";
 
       /* Tide-clock settings for crest-anchored highs (NOAA hilo predictions) */
-const NOAA_STATION_TIDECLOCK = "8535055"; // same station as COOPS_STATION (Bivalve)
+const NOAA_STATION_TIDECLOCK = "8535055"; // same station as COOPS_STATION (Sea Bright)
 const CREST_WINDOW_HOURS = 2;             // search max within ±2 hours of predicted crest
 const REQUIRE_WITHIN_HOURS = 1;           // must have at least one obs point within ±1 hour
 
 
 /* Flood thresholds */
 const THRESH = {
-  MLLW: { minorLow:7.60, moderateLow:8.60, majorLow:9.60 },
-  NAVD88:{ minorLow:4.19, moderateLow:5.19, majorLow:6.19 }
+  MLLW: { minorLow:5.20, moderateLow:6.20, majorLow:7.20 },
+  NAVD88:{ minorLow:4.19, moderateLow:3.10, majorLow:4.10 }
 };
 
       const HOUR_MS = 60 * 60 * 1000;
@@ -810,7 +810,7 @@ let DAILY_TIDES_TXT_URL = TXT_PATH_CANDIDATES[0];
 const COL_DAILY_HIGH = "239251_72279_00021";
 const COL_DAILY_LOWHI = "239252_72279_00022";
 
-/* Top ten list (MLLW) — FIXED (shifted +3.41 ft from NAVD) */
+/* Top ten list (MLLW) — FIXED (shifted +2.10 ft from NAVD) */
 const TOP_TEN_MLLW = [
   {date:"10-29-2012", ft:10.44},
   {date:"11-25-1950", ft:10.01},

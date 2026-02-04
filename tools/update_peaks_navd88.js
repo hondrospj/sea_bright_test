@@ -27,11 +27,11 @@ const path = require("path");
 // -------------------------
 const CACHE_PATH = path.join(__dirname, "..", "data", "peaks_navd88.json");
 
-const SITE = "01412150";
+const SITE = "01407600";
 const PARAM = "72279";
 
 // NOAA tide-clock (predicted highs/lows) — used ONLY for crest times
-const NOAA_STATION = "8535055"; // , Maurice River, NJ (as in your dashboard)
+const NOAA_STATION = "8531804"; // , Maurice River, NJ (as in your dashboard)
 
 // Keep this in cache for transparency; we still keep your 5-hour constant in JSON,
 // but we are no longer using declustering for cache building under this method.

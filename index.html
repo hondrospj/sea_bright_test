@@ -729,14 +729,14 @@ const USGS_SITE="01412150";
 const USGS_PARAM_PRIMARY = "72279";
 
 /* NOAA CO-OPS predictions */
-const COOPS_STATION="8535055";
+const COOPS_STATION=" 8531804";
 const COOPS_APP="cupajoe.live";
 const COOPS_DATUM="MLLW";
 const COOPS_INTERVAL="6";
 const COOPS_TZ="gmt";
 
       /* Tide-clock settings for crest-anchored highs (NOAA hilo predictions) */
-const NOAA_STATION_TIDECLOCK = "8535055"; // same station as COOPS_STATION (Sea Bright)
+const NOAA_STATION_TIDECLOCK = " 8531804"; // same station as COOPS_STATION (Sea Bright)
 const CREST_WINDOW_HOURS = 2;             // search max within ±2 hours of predicted crest
 const REQUIRE_WITHIN_HOURS = 1;           // must have at least one obs point within ±1 hour
 
@@ -744,7 +744,7 @@ const REQUIRE_WITHIN_HOURS = 1;           // must have at least one obs point wi
 /* Flood thresholds */
 const THRESH = {
   MLLW: { minorLow:5.20, moderateLow:6.20, majorLow:7.20 },
-  NAVD88:{ minorLow:4.19, moderateLow:3.10, majorLow:4.10 }
+  NAVD88:{ minorLow:3.10, moderateLow:4.10, majorLow:5.10 }
 };
 
       const HOUR_MS = 60 * 60 * 1000;

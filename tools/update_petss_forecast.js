@@ -9,7 +9,7 @@
  *  - data/petss_meta.json      ({ stid, datum, run_dir, cycle, source_url, updated_utc, n_points })
  *
  * Env:
- *  - PETSS_STID  (required) e.g. "8536889"
+ *  - PETSS_STID  (required) e.g. "8531804"
  *  - PETSS_DATUM (optional; metadata only) e.g. "MLLW"
  */
 
@@ -209,7 +209,7 @@ async function main() {
   const stid = process.env.PETSS_STID?.trim();
   const datum = (process.env.PETSS_DATUM || "MLLW").trim();
 
-  if (!stid) die("PETSS_STID is required (e.g., 8536889).");
+  if (!stid) die("PETSS_STID is required (e.g., 8531804).");
 
   log("Running PETSS forecast updater via NOMADS…");
   log("STID:", stid);

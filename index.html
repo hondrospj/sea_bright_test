@@ -448,7 +448,7 @@
       <a class="brand" href="https://cupajoe.live/" target="_blank" rel="noopener">
         <img src="assets/cupajoe-logo.png" alt="Cupajoe logo">
         <div class="brandTitle">
-          <div class="kicker">USGS 01412150 · Maurice River at Sea Bright, NJ</div>
+          <div class="kicker">USGS 01412150 · Sea Bright, NJ</div>
           <div class="name">Sea Bright Tidal Flooding Dashboard</div>
         </div>
       </a>
@@ -729,14 +729,14 @@ const USGS_SITE="01407600";
 const USGS_PARAM_PRIMARY = "72279";
 
 /* NOAA CO-OPS predictions */
-const COOPS_STATION=" 8531804";
+const COOPS_STATION="8531804";
 const COOPS_APP="cupajoe.live";
 const COOPS_DATUM="MLLW";
 const COOPS_INTERVAL="6";
 const COOPS_TZ="gmt";
 
       /* Tide-clock settings for crest-anchored highs (NOAA hilo predictions) */
-const NOAA_STATION_TIDECLOCK = " 8531804"; // same station as COOPS_STATION (Sea Bright)
+const NOAA_STATION_TIDECLOCK = "8531804"; // same station as COOPS_STATION (Sea Bright)
 const CREST_WINDOW_HOURS = 2;             // search max within ±2 hours of predicted crest
 const REQUIRE_WITHIN_HOURS = 1;           // must have at least one obs point within ±1 hour
 
@@ -1432,11 +1432,11 @@ async function fetchObservedSeries({startISO=null,endISO=null,period=null}={}){
 }
 
 /* =========================
-NOAA/NWS NWPS official forecast (BVVN4) -> we resample to 15-min later
+NOAA/NWS NWPS official forecast (SBIN4) -> we resample to 15-min later
 Replaces CO-OPS predictions block.
 Returns MLLW ft as [{t: ISO8601, ft: Number}] plus issuedTime for UI.
 ========================= */
-const NWPS_GAUGE = "BVVN4";
+const NWPS_GAUGE = "SBIN4";
 const NWPS_STAGEFLOW_URL = `https://api.water.noaa.gov/nwps/v1/gauges/${NWPS_GAUGE}/stageflow`;
 
 /* Clip to N hours from the first point (keeps your existing 72h logic consistent). */

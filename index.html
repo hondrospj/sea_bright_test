@@ -855,6 +855,14 @@ function datumToDatum(ft, fromDatum, toDatum){
   const mllw = datumToMllw(ft, fromDatum);
   return mllwToDatum(mllw, toDatum);
 }
+    // Convenience helpers (you reference these later)
+function mllwToNavd(mllwFt){
+  return datumToDatum(mllwFt, "MLLW", "NAVD88");
+}
+function navdToMllw(navdFt){
+  return datumToDatum(navdFt, "NAVD88", "MLLW");
+}
+
 
 // Helpers used across the app (your internal truth stays NAVD88 where needed)
 function toDisplayFtFromNavd(navdFt){

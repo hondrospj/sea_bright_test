@@ -2291,15 +2291,7 @@ const predValsDisplay = labels.map(iso=>{
 
   tsChart.update();
 
-  // keep your debug line, but don’t keep appending forever:
-  if(fcNote){
-    const nObs  = obsFiltered.filter(v=>Number.isFinite(v)).length;
-    const nPred = predValsDisplay.filter(v=>Number.isFinite(v)).length;
-    fcNote.textContent =
-      (fcNote.textContent || "").split(" · Plot pts:")[0] +
-      ` · Plot pts: obs=${nObs}, pred=${nPred} · Window: ${fmtESTFull(startObsISO)} → ${fmtESTFull(predEndISO)}`;
-  }
-}
+
 
 
 

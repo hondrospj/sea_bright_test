@@ -467,10 +467,36 @@ OBVIOUS DATUM DROPDOWN
     }
 
     .table{border-radius:14px;overflow:hidden;border:1px solid var(--line);background:var(--card2)}
-    table{width:100%;border-collapse:collapse}
-    th,td{padding:10px 10px;border-bottom:1px solid var(--line);font-size:13px}
-    th{text-align:left;color:var(--muted);text-transform:uppercase;letter-spacing:.2px;font-size:11px;font-weight:950}
-    tr:last-child td{border-bottom:none}
+table{
+  width:100%;
+  border-collapse:collapse;
+  text-align:center;            /* center everything */
+}
+
+th,td{
+  padding:8px 6px;
+  border-bottom:1px solid var(--line);
+  font-size:13px;
+  text-align:center;            /* center each column */
+}
+
+th{
+  color:var(--muted);
+  font-weight:800;
+}
+
+td{
+  color:var(--text);
+}
+
+tr:last-child td{border-bottom:none}
+
+thead th{
+  text-transform:uppercase;
+  letter-spacing:.2px;
+  font-size:11px;
+  font-weight:950;
+}
 
     .tag{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.05);font-weight:950;font-size:12px;white-space:nowrap}
     .chip{width:9px;height:9px;border-radius:99px;display:inline-block}

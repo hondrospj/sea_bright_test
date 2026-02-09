@@ -517,9 +517,9 @@
           </div>
         </div>
 
-        <!-- NEXT 48H FLOOD OUTLOOK -->
+        <!-- NEXT 3 DAYS FLOOD OUTLOOK -->
         <div class="panel">
-          <div class="panelTitle">Flood outlook (next 48h)</div>
+          <div class="panelTitle">Flood outlook (Next 3 Days)</div>
 
           <div class="outlookTop" aria-label="Total flood hours by type">
             <div class="miniStat">
@@ -1038,7 +1038,8 @@ function updateFloodOutlook48(){
 
   // Next 48h window anchored to forecast start
   const t0 = new Date(pred[0].t).getTime();
-  const t1 = t0 + 48 * 3600 * 1000;
+const t1 = t0 + 72 * 3600 * 1000;
+
 
   // Convert to DISPLAY datum and keep only 48h
   const pts = pred
@@ -1061,7 +1062,7 @@ function updateFloodOutlook48(){
       <div class="event">
         <div class="eventLeft">
           <div class="eventWhen">No flood periods forecast</div>
-          <div class="eventSub">Next 48h stays below minor</div>
+          <div class="eventSub">Next 3 days stays below minor</div>
         </div>
         <div class="eventBadge" style="color:var(--ok)">Below</div>
       </div>`;
@@ -1096,7 +1097,7 @@ function updateFloodOutlook48(){
       <div class="event">
         <div class="eventLeft">
           <div class="eventWhen">No flood periods forecast</div>
-          <div class="eventSub">Next 48h stays below minor</div>
+          <div class="eventSub">Next 3 days stays below minor</div>
         </div>
         <div class="eventBadge" style="color:var(--ok)">Below</div>
       </div>`;
@@ -3055,7 +3056,7 @@ async function updateTimeseries(){
 
   // Forecast: PETSS (MLLW)
   try {
-    const { issuedTime, points, urlUsed } = await fetchPETSSForecast_MLLW({ hours: 48 });
+ const { issuedTime, points, urlUsed } =  await fetchPETSSForecast_MLLW({ hours: 72 });
     STATE.pred72Mllw = points || [];
 
     if (STATE.pred72Mllw.length) {

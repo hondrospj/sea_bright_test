@@ -938,7 +938,7 @@ function classifyByNavd(navdFt){
   if(navdFt>=T.majorLow) return {label:"MAJOR FLOODING", color:"var(--major)", glow:"rgba(167,139,250,.22)", short:"Major"};
   if(navdFt>=T.moderateLow) return {label:"MODERATE FLOODING", color:"var(--moderate)", glow:"rgba(251,113,133,.22)", short:"Moderate"};
   if(navdFt>=T.minorLow) return {label:"MINOR FLOODING", color:"var(--minor)", glow:"rgba(251,191,36,.22)", short:"Minor"};
-  return {label:"BELOW FLOOD STAGE", color:"var(--ok)", glow:"rgba(45,212,191,.18)", short:"Below"};
+  return {label:"NO FLOODING", color:"var(--ok)", glow:"rgba(45,212,191,.18)", short:"Below"};
 }
 function stageTagByNavd(navdFt){
   const c=classifyByNavd(navdFt);

@@ -632,10 +632,10 @@
           <thead>
             <tr>
               <th>Month</th>
-              <th>Avg Total</th>
-              <th>Avg Minor</th>
-              <th>Avg Moderate</th>
-              <th>Avg Major</th>
+              <th>Average Total Number of Floods</th>
+              <th>Average Minor</th>
+              <th>Average Moderate</th>
+              <th>Average Major</th>
             </tr>
           </thead>
           <tbody id="monthAvgBody"></tbody>
@@ -2583,7 +2583,7 @@ function renderDOYCumPanel(){
 
   const labels  = Array.from({length:365}, (_,i)=> i+1);
   const mStarts = monthStarts365();
-  const mNames  = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const mNames  = ["January","Febuary","March","April","May","June","July","August","September","October","Novvember","December"];
 
  const data = {
   labels,

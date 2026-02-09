@@ -1,5 +1,3 @@
-
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -22,7 +20,7 @@
       --shadow:0 22px 70px rgba(0,0,0,.40);
       --radius:18px;
 
-      /* NO “glow” backgrounds at all (removes greenish banding on iOS) */
+      /* NO “glow” backgrounds at all */
       --card:rgba(255,255,255,.035);
       --card2:rgba(0,0,0,.18);
     }
@@ -33,13 +31,12 @@
     body{
       margin:0;
       font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
-      background:var(--bg);   /* solid only */
+      background:var(--bg);
       color:var(--text);
       -webkit-font-smoothing:antialiased;
       -moz-osx-font-smoothing:grayscale;
       overflow-x:hidden;
     }
-    /* KILL any old global overlay gradient */
     body:before{content:none !important;}
 
     .wrap{max-width:1200px;margin:0 auto;padding:16px 16px 28px}
@@ -58,12 +55,56 @@
     .banner b{font-weight:950}
     .banner .small{color:var(--muted);font-size:12.5px;margin-top:4px;line-height:1.25}
 
-    .top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
-    .brand{display:flex;align-items:center;gap:12px}
-    .brand img{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.25)}
-    .brandTitle{display:flex;flex-direction:column;line-height:1.1}
-    .kicker{color:var(--muted);font-weight:850;font-size:12px;letter-spacing:.2px;text-transform:uppercase}
+    /* ===== Header ===== */
+    .top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:12px;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      min-width:0;
+      flex:1 1 auto;
+    }
+
+    /* LOGO: full size (not crunched) */
+    .brand img{
+      width:64px;height:64px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:rgba(0,0,0,.25);
+      flex:0 0 auto;
+      object-fit:contain;
+    }
+
+    /* Title stack */
+    .brandTitle{
+      display:flex;
+      flex-direction:column;
+      line-height:1.1;
+      min-width:0;
+    }
+
     .name{font-size:18px;font-weight:950;letter-spacing:.2px}
+    .kicker{color:var(--muted);font-weight:850;font-size:12px;letter-spacing:.2px;text-transform:uppercase}
+
+    /* Location moved to the RIGHT (separate from title) */
+    .locPill{
+      display:flex;align-items:center;gap:10px;
+      padding:10px 12px;border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(0,0,0,.16);
+      box-shadow:var(--shadow);
+      font-weight:950;font-size:12.5px;white-space:nowrap;
+      flex:0 0 auto;
+      max-width:100%;
+      overflow:hidden;text-overflow:ellipsis;
+    }
 
     .pill{
       display:flex;align-items:center;gap:10px;
@@ -72,48 +113,71 @@
       background:rgba(0,0,0,.16);
       box-shadow:var(--shadow);
       font-weight:950;font-size:12.5px;white-space:nowrap;
+      max-width:100%;
+      overflow:hidden;text-overflow:ellipsis;
     }
     .dot{width:9px;height:9px;border-radius:999px;background:var(--ok);box-shadow:0 0 0 4px rgba(45,212,191,.16)}
 
-    /* --- Mobile header overflow fix (kept) --- */
-    .brand, .brandTitle { min-width: 0; }
-    .kicker, .name { min-width: 0; }
-    .kicker, .name{
-      overflow:hidden;
-      text-overflow:ellipsis;
-      white-space:nowrap;
+    .rightTools{
+      display:flex;
+      align-items:center;
+      justify-content:flex-end;
+      gap:10px;
+      flex-wrap:wrap;
+      flex:0 0 auto;
+      min-width:0;
     }
-    #lastPill, #stagePill, #datumBtn{ min-width:0; }
-    .pill{ max-width:100%; overflow:hidden; text-overflow:ellipsis; }
 
-    @media (max-width: 720px){
+    .btn, .input, select{
+      background:rgba(0,0,0,.18);
+      border:1px solid var(--line);
+      color:var(--text);
+      border-radius:12px;
+      padding:10px 10px;
+      font-weight:950;
+      font-size:13px;
+      outline:none
+    }
+    .btn{cursor:pointer}
+    .btn:hover{filter:brightness(1.06)}
+    .btn:focus,.input:focus,select:focus{
+      border-color:rgba(45,212,191,.35);
+      box-shadow:0 0 0 4px rgba(45,212,191,.10);
+    }
+
+    @media (max-width: 840px){
       .top{
         flex-direction:column;
-        align-items:center;
-        justify-content:center;
+        align-items:stretch;
         gap:10px;
-        text-align:center;
       }
-      .brand{ width:100%; justify-content:center; text-align:center; }
-      .brandTitle{ align-items:center; text-align:center; }
-      .kicker, .name{
-        white-space:normal;
-        overflow:visible;
-        text-overflow:clip;
-      }
-      .top > div{
+      .brandRow{
         width:100%;
-        justify-content:center !important;
-        flex-wrap:wrap;
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:10px;
       }
-      .pill, .btn{ max-width:100%; }
+      .brand{flex:1 1 auto}
+      .locPill{flex:0 1 auto}
+      .rightTools{justify-content:center}
     }
 
+    @media (max-width: 520px){
+      .brandRow{flex-direction:column;align-items:center;text-align:center}
+      .brand{justify-content:center}
+      .brandTitle{align-items:center;text-align:center}
+      .locPill{max-width:100%}
+      .rightTools{width:100%}
+      .pill,.btn{max-width:100%}
+    }
+
+    /* ===== Layout ===== */
     .grid{display:grid;grid-template-columns:1.15fr .85fr;gap:14px;margin-top:10px}
     @media(max-width:980px){.grid{grid-template-columns:1fr}}
 
     .card{
-      background:var(--card);        /* flat */
+      background:var(--card);
       border:1px solid var(--line);
       border-radius:var(--radius);
       box-shadow:var(--shadow);
@@ -121,13 +185,11 @@
       overflow:hidden;
       position:relative;
 
-      /* keep iOS hardening, but NO overlay gradients */
       isolation:isolate;
       contain:paint;
       transform:translateZ(0);
       -webkit-transform:translateZ(0);
     }
-    /* KILL glow overlays inside cards */
     .card:before{content:none !important;}
     .card>*{position:relative;z-index:1}
 
@@ -139,6 +201,57 @@
       margin-bottom:10px;
     }
     .hrow h2{margin:0;font-size:12.5px;letter-spacing:.22px;text-transform:uppercase;color:var(--muted);font-weight:950}
+
+    /* ===== Accordion (everything except the 4 pinned sections) ===== */
+    .acc{
+      border-radius:var(--radius);
+      border:1px solid var(--line);
+      background:var(--card);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .accBtn{
+      width:100%;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:14px 14px;
+      background:transparent;
+      border:0;
+      color:var(--text);
+      cursor:pointer;
+      font-weight:950;
+      letter-spacing:.2px;
+    }
+    .accLeft{
+      display:flex;align-items:center;gap:10px;min-width:0;
+      text-transform:uppercase;
+      font-size:12.5px;
+      color:var(--muted);
+    }
+    .chev{
+      width:10px;height:10px;flex:0 0 auto;
+      border-right:2px solid rgba(234,240,255,.8);
+      border-bottom:2px solid rgba(234,240,255,.8);
+      transform:rotate(45deg);
+      transition:transform .18s ease;
+      margin-left:10px;
+      opacity:.85;
+    }
+    .acc[data-open="true"] .chev{transform:rotate(225deg)}
+    .accBody{
+      padding:0 14px 14px;
+      display:none;
+    }
+    .acc[data-open="true"] .accBody{display:block}
+    .accInnerCard{
+      margin-top:0;
+      background:transparent;
+      border:0;
+      box-shadow:none;
+      padding:0;
+    }
 
     /* ===== Live Conditions layout ===== */
     .liveGrid{
@@ -163,7 +276,6 @@
       transform:translateZ(0);
       -webkit-transform:translateZ(0);
     }
-    /* KILL glow overlays inside panels */
     .panel:before{content:none !important;}
     .panel>*{position:relative;z-index:1}
 
@@ -177,7 +289,6 @@
       margin-bottom:10px;
     }
 
-    /* TODAY */
     .todayTop{
       display:flex;
       align-items:stretch;
@@ -228,10 +339,7 @@
       text-align:center;
       display:none;
     }
-
-    /* remove progress bar under Current water elevation */
-    .levelMeter{display:none !important;}
-    .levelFill{display:none !important;}
+    .levelMeter,.levelFill{display:none !important;}
 
     .todayRange{
       flex:0 0 320px;
@@ -312,37 +420,12 @@
       justify-content:space-between;
       gap:10px;
     }
-    .eventLeft{
-      display:flex;
-      flex-direction:column;
-      gap:2px;
-      min-width:0;
-    }
-    .eventWhen{
-      font-weight:950;
-      font-size:13px;
-      letter-spacing:.1px;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-    .eventSub{
-      color:var(--muted);
-      font-size:12px;
-      line-height:1.2;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
+    .eventLeft{display:flex;flex-direction:column;gap:2px;min-width:0}
+    .eventWhen{font-weight:950;font-size:13px;letter-spacing:.1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .eventSub{color:var(--muted);font-size:12px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .eventBadge{
-      font-weight:950;
-      font-size:12px;
-      padding:8px 10px;
-      border-radius:999px;
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.06);
-      white-space:nowrap;
-      flex:0 0 auto;
+      font-weight:950;font-size:12px;padding:8px 10px;border-radius:999px;
+      border:1px solid var(--line);background:rgba(255,255,255,.06);white-space:nowrap;flex:0 0 auto;
     }
     @media(max-width:520px){
       .event{align-items:flex-start}
@@ -350,17 +433,9 @@
       .eventBadge{margin-left:auto}
     }
 
-    /* Flood stage strip (stack on mobile so nothing goes off-screen) */
-    .stages{
-      display:grid;
-      grid-template-columns:repeat(3, minmax(0, 1fr));
-      gap:10px;
-      margin-top:10px;
-    }
-    @media(max-width:520px){
-      .stages{grid-template-columns:1fr;}
-    }
-
+    /* Flood stage strip */
+    .stages{display:grid;grid-template-columns:repeat(3, minmax(0, 1fr));gap:10px;margin-top:10px}
+    @media(max-width:520px){.stages{grid-template-columns:1fr;}}
     .stage{
       background:var(--card2);
       border:1px solid var(--line);
@@ -375,26 +450,8 @@
       overflow:hidden;
       text-align:center;
     }
-    .stageName{
-      font-weight:950;
-      font-size:20px;
-      letter-spacing:.2px;
-      width:100%;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      white-space:nowrap;
-      text-align:center;
-    }
-    .badge{
-      font-weight:950;
-      font-size:13px;
-      padding:10px 14px;
-      border-radius:999px;
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.06);
-      white-space:nowrap;
-      text-align:center;
-    }
+    .stageName{font-weight:950;font-size:20px;letter-spacing:.2px;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center}
+    .badge{font-weight:950;font-size:13px;padding:10px 14px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.06);white-space:nowrap;text-align:center}
 
     .table{border-radius:14px;overflow:hidden;border:1px solid var(--line);background:var(--card2)}
     table{width:100%;border-collapse:collapse}
@@ -409,30 +466,43 @@
     .chartWrap{height:240px;width:100%}
     .foot{margin-top:10px;color:var(--muted);font-size:12.5px;line-height:1.25;text-align:center}
 
+    /* Historic filter: make AND/OR explicit */
     .filterRow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
-    .input,.btn,select{
-      background:rgba(0,0,0,.18);
-      border:1px solid var(--line);
-      color:var(--text);
-      border-radius:12px;
-      padding:10px 10px;
-      font-weight:950;
-      font-size:13px;
-      outline:none
-    }
-    .input{min-width:240px}
-    .btn{cursor:pointer}
-    .btn:hover{filter:brightness(1.06)}
+    .input{min-width:220px}
     .hint{color:var(--muted);font-size:12.5px;line-height:1.25}
 
-    .btn:focus,.input:focus,select:focus{
-      border-color:rgba(45,212,191,.35);
-      box-shadow:0 0 0 4px rgba(45,212,191,.10);
+    .logicBox{
+      display:flex;align-items:center;gap:10px;
+      padding:10px 10px;border-radius:12px;
+      border:1px solid var(--line);
+      background:rgba(0,0,0,.18);
+      font-weight:950;font-size:12.5px;
     }
+    .logicBox label{display:flex;align-items:center;gap:8px;cursor:pointer}
+    .logicBox input{accent-color: var(--ok);}
 
     /* Hide footer notes you called out */
     #f48Meta{display:none !important;}
     #curMeta{display:none !important;}
+
+    /* Widget mode (town website embed): show ONLY Flood Outlook + location */
+    body.widget .banner,
+    body.widget #datumBtn,
+    body.widget #lastPill,
+    body.widget #stagePill,
+    body.widget #liveCard,
+    body.widget #obsCard,
+    body.widget #doyCard,
+    body.widget #topTenAcc,
+    body.widget #monthAvgAcc,
+    body.widget #annualAcc,
+    body.widget #histAcc{
+      display:none !important;
+    }
+    body.widget .wrap{max-width:820px}
+    body.widget .top{margin-bottom:10px}
+    body.widget .rightTools{display:none !important;}
+    body.widget .brand img{width:56px;height:56px}
   </style>
 </head>
 
@@ -445,17 +515,26 @@
     </div>
 
     <div class="top">
-      <a class="brand" href="https://cupajoe.live/" target="_blank" rel="noopener">
-        <img src="assets/cupajoe-logo.png" alt="Cupajoe logo">
-        <div class="brandTitle">
-          <div class="kicker">USGS 01412150 · Sea Bright, NJ</div>
-          <div class="name">Sea Bright Tidal Flooding Dashboard</div>
-        </div>
-      </a>
+      <div class="brandRow" style="display:flex;align-items:center;gap:12px;width:100%">
+        <a class="brand" href="https://cupajoe.live/" target="_blank" rel="noopener">
+          <img src="assets/cupajoe-logo.png" alt="Cupajoe logo">
+          <div class="brandTitle">
+            <div class="name">Sea Bright Tidal Flooding Dashboard</div>
+            <div class="kicker">Time expressed in EST</div>
+          </div>
+        </a>
 
-      <div style="display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap">
+        <!-- Location moved to the right -->
+        <div class="locPill" id="locPill" title="Station and location">
+          <span style="opacity:.9">USGS 01412150 · Sea Bright, NJ</span>
+        </div>
+      </div>
+
+      <div class="rightTools">
         <button class="btn" id="datumBtn" title="Flip between MLLW and NAVD88">Datum: MLLW</button>
         <div class="pill" id="lastPill">Last updated: —</div>
+
+        <!-- 1) “Below flood stage” -> “No flooding” (handled in JS below) -->
         <div class="pill" id="stagePill">
           <span class="dot" id="stageDot"></span>
           <span id="stageText">Loading…</span>
@@ -463,15 +542,17 @@
       </div>
     </div>
 
+    <!-- ===== PINNED (NOT accordion) ===== -->
+
     <!-- 1) Live Conditions -->
-    <div class="card">
+    <div class="card" id="liveCard">
       <div class="hrow">
         <h2>Live conditions</h2>
-        <div class="kicker" style="text-transform:none">Time Expressed In EST</div>
+        <div class="kicker" style="text-transform:none"></div>
       </div>
 
       <div class="liveGrid">
-        <!-- TODAY (current + today's max/min) -->
+        <!-- TODAY -->
         <div class="panel">
           <div class="panelTitle">Daily range (today)</div>
 
@@ -484,10 +565,6 @@
                   <span id="curFt">—</span>
                   <span class="unit" data-unit>ft MLLW</span>
                 </div>
-              </div>
-
-              <div class="levelMeter" aria-hidden="true">
-                <div class="levelFill" id="curFill"></div>
               </div>
 
               <div class="curMeta" id="curMeta">Updated: —</div>
@@ -517,8 +594,8 @@
           </div>
         </div>
 
-        <!-- NEXT 48H FLOOD OUTLOOK -->
-        <div class="panel">
+        <!-- FLOOD OUTLOOK -->
+        <div class="panel" id="outlookPanel">
           <div class="panelTitle">Flood outlook (next 48h)</div>
 
           <div class="outlookTop" aria-label="Total flood hours by type">
@@ -536,6 +613,8 @@
             </div>
           </div>
 
+          <!-- 2) Remove "no flood periods forecast" section when none:
+               We simply HIDE this list if there are no events (JS below). -->
           <div class="events" id="f48List">
             <div class="event">
               <div class="eventLeft">
@@ -568,28 +647,8 @@
 
     <div style="height:14px"></div>
 
-    <!-- 2) Top 10 Highest Tides -->
-    <div class="card" style="display:flex;flex-direction:column">
-      <div class="hrow"><h2>Top ten highest tides</h2></div>
-      <div class="table" style="flex:1 1 auto">
-        <table aria-label="Top ten highest tides">
-          <thead>
-            <tr>
-              <th>Rank</th>
-              <th>Date</th>
-              <th id="topTenUnitTh">Height (ft MLLW)</th>
-              <th>Type</th>
-            </tr>
-          </thead>
-          <tbody id="topTenBody"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div style="height:14px"></div>
-
-    <!-- 3) Observations & Predictions -->
-    <div class="card">
+    <!-- 3) Observations & Predictions (PINNED) -->
+    <div class="card" id="obsCard">
       <div class="hrow">
         <h2>Observations (USGS) & Predictions (NOAA)</h2>
         <div class="kicker" style="text-transform:none"></div>
@@ -597,6 +656,16 @@
 
       <div class="chartWrapTall">
         <canvas id="tsChart"></canvas>
+      </div>
+
+      <!-- 3) Put tide height + flood stage at the bottom of that rectangle -->
+      <div class="foot" id="obsBottomLine" style="font-size:16px;font-weight:950;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <span class="tag" style="padding:10px 16px;">
+          Tide now: <span id="obsNowTide">—</span> <span class="unit" data-unit>ft MLLW</span>
+        </span>
+        <span class="tag" style="padding:10px 16px;">
+          Flood stage: <span id="obsFloodStage">—</span> <span class="unit" data-unit>ft MLLW</span>
+        </span>
       </div>
 
       <div class="foot" id="threshKey" style="font-size:18px;">
@@ -620,79 +689,8 @@
 
     <div style="height:14px"></div>
 
-    <!-- 4) Average Floods Per Month -->
-    <div class="card">
-      <div class="hrow"><h2>Average Number of floods per month</h2></div>
-      <div class="hint" id="monthAvgMeta">Computing…</div>
-      <div style="height:10px"></div>
-      <div class="chartWrap"><canvas id="monthAvgChart"></canvas></div>
-      <div style="height:10px"></div>
-      <div class="table">
-        <table aria-label="Average floods by month of year">
-          <thead>
-            <tr>
-              <th>Month</th>
-              <th>Avg Total</th>
-              <th>Avg Minor</th>
-              <th>Avg Moderate</th>
-              <th>Avg Major</th>
-            </tr>
-          </thead>
-          <tbody id="monthAvgBody"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div style="height:14px"></div>
-
-    <!-- 5) Flooding over the years bar chart -->
-    <div class="card">
-      <div class="hrow">
-        <h2>Flooding over the years</h2>
-        <div class="kicker" style="text-transform:none"></div>
-      </div>
-      <div class="chartWrap"><canvas id="annualChart"></canvas></div>
-      <div class="foot" id="annualNote"></div>
-    </div>
-
-    <div style="height:14px"></div>
-
-    <!-- 6) Historic Flooding Filter -->
-    <div class="card">
-      <div class="hrow"><h2>Historic Flooding Filter (enter a range)</h2></div>
-      <div class="filterRow">
-        <input class="input" id="minElev" type="number" step="0.01" placeholder="Min (ft)" />
-        <input class="input" id="maxElev" type="number" step="0.01" placeholder="Max (ft)" />
-        <input class="input" id="fromDate" type="date" autocomplete="off" />
-        <input class="input" id="toDate" type="date" autocomplete="off" />
-        <select id="sortMode">
-          <option value="desc">Highest first</option>
-          <option value="asc">Lowest first</option>
-          <option value="recent">Most recent</option>
-        </select>
-        <button class="btn" id="applyBtn">Apply</button>
-        <button class="btn" id="resetBtn">Reset</button>
-      </div>
-      <div class="hint" id="histMeta">Loading…</div>
-      <div style="height:10px"></div>
-      <div class="table">
-        <table aria-label="Historic tides above threshold">
-          <thead>
-            <tr>
-              <th>Date/Time (EST)</th>
-              <th id="histUnitTh">Peak (ft MLLW)</th>
-              <th>Type</th>
-            </tr>
-          </thead>
-          <tbody id="histBody"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div style="height:14px"></div>
-
-    <!-- 7) Cumulative flooding by day-of-year (Avg + Min/Max band) -->
-    <div class="card">
+    <!-- 7) Cumulative annual flooding (PINNED) -->
+    <div class="card" id="doyCard">
       <div class="hrow">
         <h2>Cumulative annual flooding</h2>
         <div class="kicker" id="doyMeta">Computing…</div>
@@ -708,10 +706,251 @@
 
     <div style="height:14px"></div>
 
+    <!-- ===== ACCORDION SECTIONS (everything else) ===== -->
+
+    <!-- 2) Top 10 Highest Tides (accordion) -->
+    <div class="acc" id="topTenAcc" data-open="false">
+      <button class="accBtn" type="button" aria-expanded="false">
+        <span class="accLeft">Top ten highest tides</span>
+        <span class="chev" aria-hidden="true"></span>
+      </button>
+      <div class="accBody">
+        <div class="card accInnerCard" style="display:flex;flex-direction:column">
+          <div class="table" style="flex:1 1 auto">
+            <table aria-label="Top ten highest tides">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Date</th>
+                  <th id="topTenUnitTh">Height (ft MLLW)</th>
+                  <th>Type</th>
+                </tr>
+              </thead>
+              <tbody id="topTenBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="height:14px"></div>
+
+    <!-- 4) Average Floods Per Month (accordion) -->
+    <div class="acc" id="monthAvgAcc" data-open="false">
+      <button class="accBtn" type="button" aria-expanded="false">
+        <span class="accLeft">Average number of floods per month</span>
+        <span class="chev" aria-hidden="true"></span>
+      </button>
+      <div class="accBody">
+        <div class="card accInnerCard">
+          <div class="hint" id="monthAvgMeta">Computing…</div>
+          <div style="height:10px"></div>
+          <div class="chartWrap"><canvas id="monthAvgChart"></canvas></div>
+          <div style="height:10px"></div>
+          <div class="table">
+            <table aria-label="Average floods by month of year">
+              <thead>
+                <tr>
+                  <th>Month</th>
+                  <th>Avg Total</th>
+                  <th>Avg Minor</th>
+                  <th>Avg Moderate</th>
+                  <th>Avg Major</th>
+                </tr>
+              </thead>
+              <tbody id="monthAvgBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="height:14px"></div>
+
+    <!-- 5) Flooding over the years (accordion) -->
+    <div class="acc" id="annualAcc" data-open="false">
+      <button class="accBtn" type="button" aria-expanded="false">
+        <span class="accLeft">Flooding over the years</span>
+        <span class="chev" aria-hidden="true"></span>
+      </button>
+      <div class="accBody">
+        <div class="card accInnerCard">
+          <div class="chartWrap"><canvas id="annualChart"></canvas></div>
+          <div class="foot" id="annualNote"></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="height:14px"></div>
+
+    <!-- 6) Historic Flooding Filter (accordion) -->
+    <div class="acc" id="histAcc" data-open="false">
+      <button class="accBtn" type="button" aria-expanded="false">
+        <span class="accLeft">Historic flooding filter</span>
+        <span class="chev" aria-hidden="true"></span>
+      </button>
+      <div class="accBody">
+        <div class="card accInnerCard">
+          <div class="hrow"><h2>Historic Flooding Filter (enter a range)</h2></div>
+
+          <!-- 4) Make AND/OR explicit -->
+          <div class="hint" style="margin-bottom:10px">
+            Filter logic:
+            <b>Elevation</b> and <b>Date</b> are both optional.
+            Choose whether you want records that match <b>both</b> filters, or <b>either</b>.
+          </div>
+
+          <div class="filterRow">
+            <input class="input" id="minElev" type="number" step="0.01" placeholder="Min elevation (ft)" />
+            <input class="input" id="maxElev" type="number" step="0.01" placeholder="Max elevation (ft)" />
+
+            <input class="input" id="fromDate" type="date" autocomplete="off" />
+            <input class="input" id="toDate" type="date" autocomplete="off" />
+
+            <div class="logicBox" title="How to combine elevation + date filters">
+              <span style="color:var(--muted);text-transform:uppercase;letter-spacing:.2px;font-size:11px;">Match</span>
+              <label><input type="radio" name="logicMode" value="and" checked> AND</label>
+              <label><input type="radio" name="logicMode" value="or"> OR</label>
+            </div>
+
+            <select id="sortMode">
+              <option value="desc">Highest first</option>
+              <option value="asc">Lowest first</option>
+              <option value="recent">Most recent</option>
+            </select>
+
+            <button class="btn" id="applyBtn">Apply</button>
+            <button class="btn" id="resetBtn">Reset</button>
+          </div>
+
+          <div class="hint" id="histMeta">Loading…</div>
+          <div style="height:10px"></div>
+          <div class="table">
+            <table aria-label="Historic tides above threshold">
+              <thead>
+                <tr>
+                  <th>Date/Time (EST)</th>
+                  <th id="histUnitTh">Peak (ft MLLW)</th>
+                  <th>Type</th>
+                </tr>
+              </thead>
+              <tbody id="histBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="height:14px"></div>
+
   </div>
 
+  <script>
+    /* =========================
+       Accordion behavior
+       ========================= */
+    (function initAccordions(){
+      const accs = document.querySelectorAll('.acc');
+      accs.forEach(acc => {
+        const btn = acc.querySelector('.accBtn');
+        btn.addEventListener('click', () => {
+          const open = acc.getAttribute('data-open') === 'true';
+          acc.setAttribute('data-open', open ? 'false' : 'true');
+          btn.setAttribute('aria-expanded', open ? 'false' : 'true');
+        });
+      });
+    })();
 
-    <script>
+    /* =========================
+       Widget mode for town sites
+       Add ?widget=1 to URL
+       ========================= */
+    (function initWidgetMode(){
+      const params = new URLSearchParams(location.search);
+      if(params.get('widget') === '1' || params.get('widget') === 'true'){
+        document.body.classList.add('widget');
+      }
+    })();
+
+    /* =========================
+       “Below flood stage” -> “No flooding”
+       ========================= */
+    (function normalizeStageText(){
+      const el = document.getElementById('stageText');
+      if(!el) return;
+      const fix = () => {
+        const t = (el.textContent || '').trim().toLowerCase();
+        if(t === 'below flood stage' || t === 'below stage' || t === 'no flooding expected'){
+          el.textContent = 'No flooding';
+        }
+      };
+      const mo = new MutationObserver(fix);
+      mo.observe(el, { childList:true, characterData:true, subtree:true });
+      fix();
+    })();
+
+    /* =========================
+       Hide “no flood periods forecast” section when none
+       ========================= */
+    (function hideOutlookIfNone(){
+      const list = document.getElementById('f48List');
+      const a = document.getElementById('f48MinorHrs');
+      const b = document.getElementById('f48ModerHrs');
+      const c = document.getElementById('f48MajorHrs');
+      if(!list || !a || !b || !c) return;
+
+      function num(x){
+        const t = (x.textContent || '').trim();
+        if(!t || t === '—') return null;
+        const v = Number(t);
+        return Number.isFinite(v) ? v : null;
+      }
+
+      function apply(){
+        const n1 = num(a), n2 = num(b), n3 = num(c);
+        if(n1 === null || n2 === null || n3 === null){
+          list.style.display = '';
+          return;
+        }
+        const total = n1 + n2 + n3;
+        list.style.display = (total <= 0) ? 'none' : '';
+      }
+
+      const mo = new MutationObserver(apply);
+      mo.observe(a, { childList:true, characterData:true, subtree:true });
+      mo.observe(b, { childList:true, characterData:true, subtree:true });
+      mo.observe(c, { childList:true, characterData:true, subtree:true });
+      apply();
+    })();
+
+    /* =========================
+       Observations bottom line values (tide now + flood stage)
+       ========================= */
+    (function mirrorObsBottomLine(){
+      const cur = document.getElementById('curFt');
+      const obsNow = document.getElementById('obsNowTide');
+      if(cur && obsNow){
+        const sync = () => { obsNow.textContent = (cur.textContent || '—').trim() || '—'; };
+        const mo = new MutationObserver(sync);
+        mo.observe(cur, { childList:true, characterData:true, subtree:true });
+        sync();
+      }
+
+      const obsStage = document.getElementById('obsFloodStage');
+      const minorBadge = document.getElementById('minorBadge');
+      if(obsStage && minorBadge){
+        const sync2 = () => {
+          const t = (minorBadge.textContent || '').trim();
+          const first = t.split(/[–-]/)[0]?.trim();
+          obsStage.textContent = first || '—';
+        };
+        const mo2 = new MutationObserver(sync2);
+        mo2.observe(minorBadge, { childList:true, characterData:true, subtree:true });
+        sync2();
+      }
+    })();
+
+
 /* Fixed EST year-round (UTC-5). */
 const TZ="Etc/GMT+5";
 

@@ -106,6 +106,47 @@
       }
       .pill, .btn{ max-width:100%; }
     }
+    /* =========================
+OBVIOUS DATUM DROPDOWN
+========================= */
+.datumPick{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 12px;
+  border-radius:14px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.06);
+  box-shadow:var(--shadow);
+}
+
+.datumLbl{
+  font-weight:950;
+  font-size:12px;
+  letter-spacing:.18px;
+  text-transform:uppercase;
+  color:var(--muted);
+}
+
+.datumSelect{
+  appearance:auto;
+  cursor:pointer;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.16);
+  background:rgba(0,0,0,.22);
+  color:var(--text);
+  font-weight:950;
+  font-size:13px;
+  min-width:120px;
+  outline:none;
+}
+
+.datumSelect:focus{
+  border-color:rgba(45,212,191,.45);
+  box-shadow:0 0 0 4px rgba(45,212,191,.12);
+}
+
 
     .grid{display:grid;grid-template-columns:1.15fr .85fr;gap:14px;margin-top:10px}
     @media(max-width:980px){.grid{grid-template-columns:1fr}}
@@ -489,15 +530,27 @@
         </div>
       </a>
 
-      <div style="display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap">
-        <button class="btn" id="datumBtn" title="Flip between MLLW and NAVD88">Datum: MLLW</button>
-        <div class="pill" id="lastPill">Last updated: —</div>
-        <div class="pill" id="stagePill">
-          <span class="dot" id="stageDot"></span>
-          <span id="stageText">Loading…</span>
-        </div>
-      </div>
-    </div>
+   <div style="display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap">
+
+  <!-- OBVIOUS datum selector -->
+  <div class="datumPick" aria-label="Datum selector">
+    <span class="datumLbl">Datum</span>
+    <select id="datumSelect" class="datumSelect" title="Choose datum">
+      <!-- options are filled by JS so order matches DATUMS -->
+    </select>
+  </div>
+
+  <!-- Cycle button (still works) -->
+  <button class="btn" id="datumBtn" title="Cycle datum">Cycle</button>
+
+  <div class="pill" id="lastPill">Last updated: —</div>
+
+  <div class="pill" id="stagePill">
+    <span class="dot" id="stageDot"></span>
+    <span id="stageText">Loading…</span>
+  </div>
+</div>
+
 
     <!-- 1) Live Conditions (NOT accordion) -->
     <div class="card">
@@ -774,12 +827,46 @@
 /* Fixed EST year-round (UTC-5). */
 const TZ="Etc/GMT+5";
 
-/* Datum toggle */
-let DISPLAY_DATUM = "MLLW"; // "MLLW" or "NAVD88"
+/* =========================
+DATUM SYSTEM (MLLW-based offsets)
+- We convert everything through MLLW using offsets from your table.
+datum_ft = mllw_ft + OFFSET_FROM_MLLW[datum]
+========================= */
 
-const NAVD_MINUS_MLLW_FT = -2.10;           // NAVD = MLLW - 2.10
-function mllwToNavd(ft){ return ft + NAVD_MINUS_MLLW_FT; }  // mllw - 2.10
-function navdToMllw(ft){ return ft - NAVD_MINUS_MLLW_FT; }  // navd + 2.10
+let DISPLAY_DATUM = "MLLW"; // MLLW | NAVD88 | MSL | MHHW
+
+const DATUMS = ["MLLW", "NAVD88", "MSL", "MHHW"]; // cycle order
+
+// From your table (Gauge Zero row): datum = MLLW + offset
+const OFFSET_FROM_MLLW = {
+  MLLW:   0.00,
+  NAVD88: -2.10,
+  MSL:    -1.87,
+  MHHW:   -3.88
+};
+
+function mllwToDatum(ft, datum){
+  return ft + (OFFSET_FROM_MLLW[datum] ?? 0);
+}
+function datumToMllw(ft, datum){
+  return ft - (OFFSET_FROM_MLLW[datum] ?? 0);
+}
+function datumToDatum(ft, fromDatum, toDatum){
+  const mllw = datumToMllw(ft, fromDatum);
+  return mllwToDatum(mllw, toDatum);
+}
+
+// Helpers used across the app (your internal truth stays NAVD88 where needed)
+function toDisplayFtFromNavd(navdFt){
+  return datumToDatum(navdFt, "NAVD88", DISPLAY_DATUM);
+}
+function toDisplayFtFromMllw(mllwFt){
+  return datumToDatum(mllwFt, "MLLW", DISPLAY_DATUM);
+}
+function fromDisplayToNavd(displayFt){
+  return datumToDatum(displayFt, DISPLAY_DATUM, "NAVD88");
+}
+
 
 /* USGS observed (15-min IV). */
 const USGS_SITE="01407600";
@@ -800,10 +887,12 @@ const CREST_WINDOW_HOURS = 2;             // search max within ±2 hours of pred
 const REQUIRE_WITHIN_HOURS = 1;           // must have at least one obs point within ±1 hour
 
 
-/* Flood thresholds */
+/* Flood thresholds (from your table) */
 const THRESH = {
-  MLLW: { minorLow:5.20, moderateLow:6.20, majorLow:7.20 },
-  NAVD88:{ minorLow:3.10, moderateLow:4.10, majorLow:5.10 }
+  MLLW:  { minorLow:5.20, moderateLow:6.20, majorLow:7.20 },
+  NAVD88:{ minorLow:3.10, moderateLow:4.10, majorLow:5.10 },
+  MSL:   { minorLow:3.33, moderateLow:4.33, majorLow:5.33 },
+  MHHW:  { minorLow:1.32, moderateLow:2.32, majorLow:3.32 }
 };
 
       const HOUR_MS = 60 * 60 * 1000;
@@ -919,6 +1008,9 @@ const f48MajorHrsEl = $("f48MajorHrs");
 const f48ListEl     = $("f48List");
 const f48MetaEl     = $("f48Meta");
 
+ const datumSelect = $("datumSelect");
+
+
 
 
 const monthAvgMeta=$("monthAvgMeta"), monthAvgBody=$("monthAvgBody");
@@ -984,12 +1076,25 @@ function startOfTodayEST_ISO(){
 function startOfYearEST_ISO(y){ return new Date(Date.UTC(y,0,1,5,0,0)).toISOString(); }
 function nowISO(){ return new Date().toISOString(); }
 
-/* Datum helpers */
+    /* Datum helpers */
 function datumLabel(){ return DISPLAY_DATUM; }
 function unitText(){ return "ft " + datumLabel(); }
-function toDisplayFtFromNavd(navd){ return (DISPLAY_DATUM==="MLLW") ? navdToMllw(navd) : navd; }
-function toDisplayFtFromMllw(mllw){ return (DISPLAY_DATUM==="MLLW") ? mllw : mllwToNavd(mllw); }
-function fromDisplayToNavd(displayFt){ return (DISPLAY_DATUM==="MLLW") ? mllwToNavd(displayFt) : displayFt; }
+
+// NAVD88 -> DISPLAY datum
+function toDisplayFtFromNavd(navdFt){
+  return datumToDatum(navdFt, "NAVD88", DISPLAY_DATUM);
+}
+
+// MLLW -> DISPLAY datum
+function toDisplayFtFromMllw(mllwFt){
+  return datumToDatum(mllwFt, "MLLW", DISPLAY_DATUM);
+}
+
+// DISPLAY datum -> NAVD88
+function fromDisplayToNavd(displayFt){
+  return datumToDatum(displayFt, DISPLAY_DATUM, "NAVD88");
+}
+
 
 /* Stage classify uses NAVD thresholds */
 function classifyByNavd(navdFt){
@@ -1020,8 +1125,9 @@ function updateUnitsAndBadges(){
   moderateBadge.textContent = `${T.moderateLow.toFixed(2)}–${T.majorLow.toFixed(2)}`;
   majorBadge.textContent = `≥ ${T.majorLow.toFixed(2)}`;
 
-  datumBtn.textContent = "Datum: " + datumLabel();
+  datumBtn.textContent = "Cycle (" + datumLabel() + ")";
 }
+    
 
 /* Simple helpers */
 function maxPoint(arr){ return arr.reduce((a,b)=>b.ft>a.ft?b:a, arr[0]); }
@@ -3330,6 +3436,13 @@ Boot
 /* =========================
 Boot
 ========================= */
+
+      // Build datum dropdown options (obvious + matches DATUMS order)
+  if(datumSelect){
+    datumSelect.innerHTML = DATUMS.map(d => `<option value="${d}">${d}</option>`).join("");
+    datumSelect.value = DISPLAY_DATUM;
+  }
+
 async function boot(){
   updateUnitsAndBadges();
   renderTopTen();
@@ -3385,58 +3498,52 @@ $("resetBtn").addEventListener("click", ()=>{
   applyFilter();
 });
 
-datumBtn.addEventListener("click", ()=>{
-const oldDatum = DISPLAY_DATUM;
+function setDatum(newDatum){
+  if(!DATUMS.includes(newDatum)) return;
 
-// flip datum happens later, so DO NOT refresh yet
+  const oldDatum = DISPLAY_DATUM;
 
-  
-
+  // Read current filter inputs (old datum)
   const vMin = parseFloat(minElevEl.value);
   const vMax = parseFloat(maxElevEl.value);
 
-  function toNavdFromOldDisplay(v){
-    if(!Number.isFinite(v)) return null;
-    return (oldDatum==="MLLW") ? mllwToNavd(v) : v;
-  }
+  // Convert current input values OLD -> NAVD (stable internal)
+  const navdMin = Number.isFinite(vMin) ? datumToDatum(vMin, oldDatum, "NAVD88") : null;
+  const navdMax = Number.isFinite(vMax) ? datumToDatum(vMax, oldDatum, "NAVD88") : null;
 
-  // convert current inputs -> NAVD (stable internal datum)
-  const navdMin = toNavdFromOldDisplay(vMin);
-  const navdMax = toNavdFromOldDisplay(vMax);
+  // Switch datum
+  DISPLAY_DATUM = newDatum;
 
-  // flip datum
-  DISPLAY_DATUM = (DISPLAY_DATUM==="MLLW") ? "NAVD88" : "MLLW";
-  refreshDOYAfterDatumToggle(); // ✅ recompute DOY + YTD in the new datum
+  // Update dropdown + button text immediately
+  if(datumSelect) datumSelect.value = DISPLAY_DATUM;
 
+  // Convert NAVD -> NEW datum for showing in the boxes
+  const newMin = (navdMin === null) ? null : datumToDatum(navdMin, "NAVD88", DISPLAY_DATUM);
+  const newMax = (navdMax === null) ? null : datumToDatum(navdMax, "NAVD88", DISPLAY_DATUM);
 
-  function toNewDisplayFromNavd(navd){
-    if(navd===null || !Number.isFinite(navd)) return null;
-    return (DISPLAY_DATUM==="MLLW") ? navdToMllw(navd) : navd;
-  }
-
-  // write inputs back in the NEW display datum
-  const newMin = toNewDisplayFromNavd(navdMin);
-  const newMax = toNewDisplayFromNavd(navdMax);
-
-  minElevEl.value = (newMin===null)
+  minElevEl.value = (newMin === null)
     ? THRESH[DISPLAY_DATUM].minorLow.toFixed(2)
     : newMin.toFixed(2);
 
-  maxElevEl.value = (newMax===null) ? "" : newMax.toFixed(2);
+  maxElevEl.value = (newMax === null) ? "" : newMax.toFixed(2);
 
-  // refresh everything that depends on DISPLAY_DATUM
+  // Recompute DOY + YTD in new datum (you already built this)
+  refreshDOYAfterDatumToggle();
+
+  // Refresh everything that depends on DISPLAY_DATUM
   updateUnitsAndBadges();
   renderTopTen();
   applyFilter();
   updateMonthAveragesFromHistory();
   renderAnnual();
 
-  // refresh live cards (stored internally as NAVD or MLLW where noted)
+  // Live card refresh (STATE.lastNavd is NAVD)
   if(STATE.lastNavd){
     curFtEl.textContent = toDisplayFtFromNavd(STATE.lastNavd.ft).toFixed(2);
-    setStage(STATE.lastNavd.ft);
+    setStage(STATE.lastNavd.ft); // stage classification is NAVD-based (fine)
   }
 
+  // Daily range refresh
   if(STATE.todayNavd && STATE.todayNavd.length){
     const dmx = maxPoint(STATE.todayNavd), dmn = minPoint(STATE.todayNavd);
     dayMaxFtEl.textContent = toDisplayFtFromNavd(dmx.ft).toFixed(2);
@@ -3446,9 +3553,22 @@ const oldDatum = DISPLAY_DATUM;
     dayMinFtEl.textContent = "—";
   }
 
+  // Charts that depend on display datum
   updatePred24RangeCard();
   updateTsChartFromState();
   updateFloodOutlook48();
+}
+
+// Button cycles from whatever datum is currently active
+datumBtn.addEventListener("click", ()=>{
+  const idx = DATUMS.indexOf(DISPLAY_DATUM);
+  const next = DATUMS[(idx + 1) % DATUMS.length];
+  setDatum(next);
+});
+
+// Dropdown jumps directly
+datumSelect.addEventListener("change", ()=>{
+  setDatum(datumSelect.value);
 });
 
 

@@ -539,9 +539,7 @@ OBVIOUS DATUM DROPDOWN
       <!-- options are filled by JS so order matches DATUMS -->
     </select>
   </div>
-
-  <!-- Cycle button (still works) -->
-  <button class="btn" id="datumBtn" title="Cycle datum">Cycle</button>
+     
 
   <div class="pill" id="lastPill">Last updated: —</div>
 
@@ -1008,7 +1006,7 @@ const minorBadge = $("minorBadge"),
       moderateBadge = $("moderateBadge"),
       majorBadge = $("majorBadge");
 
-const datumBtn = $("datumBtn");
+
       // Flood outlook (next 48h) DOM
 const f48MinorHrsEl = $("f48MinorHrs");
 const f48ModerHrsEl = $("f48ModerHrs");
@@ -1131,9 +1129,7 @@ function updateUnitsAndBadges(){
   const T = THRESH[DISPLAY_DATUM];
   minorBadge.textContent = `${T.minorLow.toFixed(2)}–${T.moderateLow.toFixed(2)}`;
   moderateBadge.textContent = `${T.moderateLow.toFixed(2)}–${T.majorLow.toFixed(2)}`;
-  majorBadge.textContent = `≥ ${T.majorLow.toFixed(2)}`;
-
-  datumBtn.textContent = "Cycle (" + datumLabel() + ")";
+  majorBadge.textContent = `≥ ${T.majorLow.toFixed(2)}`
 }
     
 
@@ -3567,12 +3563,6 @@ function setDatum(newDatum){
   updateFloodOutlook48();
 }
 
-// Button cycles from whatever datum is currently active
-datumBtn.addEventListener("click", ()=>{
-  const idx = DATUMS.indexOf(DISPLAY_DATUM);
-  const next = DATUMS[(idx + 1) % DATUMS.length];
-  setDatum(next);
-});
 
 // Dropdown jumps directly
 datumSelect.addEventListener("change", ()=>{

@@ -892,36 +892,42 @@
     /* =========================
        Hide “no flood periods forecast” section when none
        ========================= */
-    (function hideOutlookIfNone(){
-      const list = document.getElementById('f48List');
-      const a = document.getElementById('f48MinorHrs');
-      const b = document.getElementById('f48ModerHrs');
-      const c = document.getElementById('f48MajorHrs');
-      if(!list || !a || !b || !c) return;
+(function hideOutlookIfNone(){
+  const panel = document.getElementById('outlookPanel');
+  const list  = document.getElementById('f48List');
+  const a = document.getElementById('f48MinorHrs');
+  const b = document.getElementById('f48ModerHrs');
+  const c = document.getElementById('f48MajorHrs');
+  if(!panel || !list || !a || !b || !c) return;
 
-      function num(x){
-        const t = (x.textContent || '').trim();
-        if(!t || t === '—') return null;
-        const v = Number(t);
-        return Number.isFinite(v) ? v : null;
-      }
+  function num(x){
+    const t = (x.textContent || '').trim();
+    if(!t || t === '—') return null;
+    const v = Number(t);
+    return Number.isFinite(v) ? v : null;
+  }
 
-      function apply(){
-        const n1 = num(a), n2 = num(b), n3 = num(c);
-        if(n1 === null || n2 === null || n3 === null){
-          list.style.display = '';
-          return;
-        }
-        const total = n1 + n2 + n3;
-        list.style.display = (total <= 0) ? 'none' : '';
-      }
+  function apply(){
+    const n1 = num(a), n2 = num(b), n3 = num(c);
 
-      const mo = new MutationObserver(apply);
-      mo.observe(a, { childList:true, characterData:true, subtree:true });
-      mo.observe(b, { childList:true, characterData:true, subtree:true });
-      mo.observe(c, { childList:true, characterData:true, subtree:true });
-      apply();
-    })();
+    // If still loading, show it
+    if(n1 === null || n2 === null || n3 === null){
+      panel.style.display = "";
+      return;
+    }
+
+    const total = n1 + n2 + n3;
+
+    // Hide entire Flood Outlook panel when there are no flood hours
+    panel.style.display = (total <= 0) ? "none" : "";
+  }
+
+  const mo = new MutationObserver(apply);
+  mo.observe(a, { childList:true, characterData:true, subtree:true });
+  mo.observe(b, { childList:true, characterData:true, subtree:true });
+  mo.observe(c, { childList:true, characterData:true, subtree:true });
+  apply();
+})();
 
     /* =========================
        Observations bottom line values (tide now + flood stage)

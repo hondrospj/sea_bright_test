@@ -57,8 +57,12 @@
     .banner .small{color:var(--muted);font-size:12.5px;margin-top:4px;line-height:1.25}
 
     .top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+   .top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
     .brand{display:flex;align-items:center;gap:12px}
     .brand img{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.25)}
+    .brandTitle{display:flex;flex-direction:column;line-height:1.1}
+    .kicker{color:var(--muted);font-weight:850;font-size:12px;letter-spacing:.2px;text-transform:uppercase}
+    .name{font-size:18px;font-weight:950;letter-spacing:.2px}
     .brandTitle{display:flex;flex-direction:column;line-height:1.1}
     .kicker{color:var(--muted);font-weight:850;font-size:12px;letter-spacing:.2px;text-transform:uppercase}
     .name{font-size:18px;font-weight:950;letter-spacing:.2px}
@@ -92,8 +96,16 @@
         gap:10px;
         text-align:center;
       }
-      .brand{ width:100%; justify-content:center; text-align:center; }
-      .brandTitle{ align-items:center; text-align:center; }
+   .brand{
+  width:100%;
+  justify-content:flex-start;  /* ✅ keep logo left */
+  text-align:left;
+}
+.brandTitle{
+  align-items:flex-start;      /* ✅ keep text aligned right of logo */
+  text-align:left;
+}
+
       .kicker, .name{
         white-space:normal;
         overflow:visible;
@@ -523,7 +535,10 @@ OBVIOUS DATUM DROPDOWN
 
     <div class="top">
       <a class="brand" href="https://cupajoe.live/" target="_blank" rel="noopener">
-        <img src="assets/cupajoe-logo.png" alt="Cupajoe logo">
+<div class="brandLogo">
+  <img src="assets/cupajoe-logo.png" alt="Cupajoe logo">
+</div>
+
         <div class="brandTitle">
           <div class="kicker">USGS 01412150 · Sea Bright, NJ</div>
           <div class="name">Sea Bright Tidal Flooding Dashboard</div>

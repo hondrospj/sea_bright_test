@@ -826,8 +826,15 @@ thead th{
         <span class="chev"></span>
       </summary>
 
-      <div class="accBody">
-        <div class="filterRow">
+   <div class="accBody">
+
+  <div class="hint" id="histHelp">
+    Use any combination: Elevation range and/or Date range. Leave fields blank to ignore them.
+  </div>
+  <div style="height:8px"></div>
+
+  <div class="filterRow">
+
           <input class="input" id="minElev" type="number" step="0.01" placeholder="Min (ft)" />
           <input class="input" id="maxElev" type="number" step="0.01" placeholder="Max (ft)" />
           <input class="input" id="fromDate" type="date" autocomplete="off" />
@@ -3055,6 +3062,9 @@ function renderHist(rowsNavd){
 }
 
 function applyFilter(){
+    const help = document.getElementById("histHelp");
+  if(help) help.textContent = "Use any combination: Elevation range and/or Date range. Leave fields blank to ignore them.";
+
   // NEW: range inputs (display datum)
   const minDisplay = parseFloat(minElevEl.value);
   const maxDisplay = parseFloat(maxElevEl.value);

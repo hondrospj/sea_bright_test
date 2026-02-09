@@ -1,6 +1,5 @@
 
 
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -362,19 +361,6 @@
       .stages{grid-template-columns:1fr;}
     }
 
-    /* When we move the stage strip into the fallback panel, force it to stack */
-.stages.stacked{
-  grid-template-columns: 1fr !important;
-}
-
-/* Optional: slightly tighten spacing when stacked in the panel */
-.stages.stacked .stage{
-  padding:14px 12px;
-}
-.stages.stacked .stageName{
-  font-size:18px;
-}
-
     .stage{
       background:var(--card2);
       border:1px solid var(--line);
@@ -531,61 +517,54 @@
           </div>
         </div>
 
-<!-- NEXT 48H FLOOD OUTLOOK (shows only when flooding is forecast) -->
-<div class="panel" id="outlookPanel">
-  <div class="panelTitle">Flood outlook (next 48h)</div>
+        <!-- NEXT 48H FLOOD OUTLOOK -->
+        <div class="panel">
+          <div class="panelTitle">Flood outlook (next 48h)</div>
 
-  <div class="outlookTop" aria-label="Total flood hours by type">
-    <div class="miniStat">
-      <span class="miniChip" style="background:var(--minor)"></span>
-      Minor <b id="f48MinorHrs">—</b> hrs
-    </div>
-    <div class="miniStat">
-      <span class="miniChip" style="background:var(--moderate)"></span>
-      Moderate <b id="f48ModerHrs">—</b> hrs
-    </div>
-    <div class="miniStat">
-      <span class="miniChip" style="background:var(--major)"></span>
-      Major <b id="f48MajorHrs">—</b> hrs
-    </div>
-  </div>
+          <div class="outlookTop" aria-label="Total flood hours by type">
+            <div class="miniStat">
+              <span class="miniChip" style="background:var(--minor)"></span>
+              Minor <b id="f48MinorHrs">—</b> hrs
+            </div>
+            <div class="miniStat">
+              <span class="miniChip" style="background:var(--moderate)"></span>
+              Moderate <b id="f48ModerHrs">—</b> hrs
+            </div>
+            <div class="miniStat">
+              <span class="miniChip" style="background:var(--major)"></span>
+              Major <b id="f48MajorHrs">—</b> hrs
+            </div>
+          </div>
 
-  <div class="events" id="f48List">
-    <div class="event">
-      <div class="eventLeft">
-        <div class="eventWhen">Loading…</div>
-        <div class="eventSub">—</div>
+          <div class="events" id="f48List">
+            <div class="event">
+              <div class="eventLeft">
+                <div class="eventWhen">Loading…</div>
+                <div class="eventSub">—</div>
+              </div>
+              <div class="eventBadge" style="color:var(--muted)">—</div>
+            </div>
+          </div>
+
+          <div class="rangeMeta" id="f48Meta">—</div>
+        </div>
       </div>
-      <div class="eventBadge" style="color:var(--muted)">—</div>
+
+      <div class="stages" aria-label="Flood stages">
+        <div class="stage">
+          <div class="stageName">Minor</div>
+          <div class="badge" id="minorBadge" style="color:var(--minor)">5.20–6.20</div>
+        </div>
+        <div class="stage">
+          <div class="stageName">Moderate</div>
+          <div class="badge" id="moderateBadge" style="color:var(--moderate)">6.20–7.20</div>
+        </div>
+        <div class="stage">
+          <div class="stageName">Major</div>
+          <div class="badge" id="majorBadge" style="color:var(--major)">≥ 7.20</div>
+        </div>
+      </div>
     </div>
-  </div>
-
-  <div class="rangeMeta" id="f48Meta">—</div>
-</div>
-
-<!-- FALLBACK (shows only when NO flooding is forecast) -->
-<div class="panel" id="stagesFallbackPanel" style="display:none">
-  <div class="panelTitle">Flood stages</div>
-  <div id="stageStripSlot"></div>
-</div>
-
-
-<div class="stages" id="stageStrip" aria-label="Flood stages">
-  <div class="stage">
-    <div class="stageName">Minor</div>
-    <div class="badge" id="minorBadge" style="color:var(--minor)">5.20–6.20</div>
-  </div>
-  <div class="stage">
-    <div class="stageName">Moderate</div>
-    <div class="badge" id="moderateBadge" style="color:var(--moderate)">6.20–7.20</div>
-  </div>
-  <div class="stage">
-    <div class="stageName">Major</div>
-    <div class="badge" id="majorBadge" style="color:var(--major)">≥ 7.20</div>
-  </div>
-</div>
-
-      
 
     <div style="height:14px"></div>
 
@@ -880,13 +859,6 @@ const f48ModerHrsEl = $("f48ModerHrs");
 const f48MajorHrsEl = $("f48MajorHrs");
 const f48ListEl     = $("f48List");
 const f48MetaEl     = $("f48Meta");
-      // Panel swap DOM
-const outlookPanelEl = $("outlookPanel");
-const stagesFallbackPanelEl = $("stagesFallbackPanel");
-const stageStripEl = $("stageStrip");
-const stageStripBelowEl = $("stageStripBelow");
-const stageStripSlotEl = $("stageStripSlot");
-
 
 
 
@@ -1044,44 +1016,11 @@ function buildFloodSegments(points){
   return segs;
 }
 
-      function showOutlookPanel(){
-  if(!outlookPanelEl || !stagesFallbackPanelEl || !stageStripEl || !stageStripBelowEl) return;
-
-  // show outlook, hide fallback
-  outlookPanelEl.style.display = "";
-  stagesFallbackPanelEl.style.display = "none";
-
-  // move stages back below (if not already there)
-  if(stageStripBelowEl && stageStripEl.parentNode !== stageStripBelowEl){
-    stageStripBelowEl.appendChild(stageStripEl);
-  }
-
-  // un-stack layout
-  stageStripEl.classList.remove("stacked");
-}
-
-function showStagesFallbackPanel(){
-  if(!outlookPanelEl || !stagesFallbackPanelEl || !stageStripEl || !stageStripSlotEl) return;
-
-  // hide outlook, show fallback
-  outlookPanelEl.style.display = "none";
-  stagesFallbackPanelEl.style.display = "";
-
-  // move stages into the right-side fallback slot
-  if(stageStripSlotEl && stageStripEl.parentNode !== stageStripSlotEl){
-    stageStripSlotEl.appendChild(stageStripEl);
-  }
-
-  // force stacked layout
-  stageStripEl.classList.add("stacked");
-}
-
 function updateFloodOutlook48(){
   if(!f48MinorHrsEl || !f48ModerHrsEl || !f48MajorHrsEl || !f48ListEl || !f48MetaEl) return;
 
   const pred = STATE.pred72Mllw || [];
   if(!pred.length){
-    showOutlookPanel();
     f48MinorHrsEl.textContent = "—";
     f48ModerHrsEl.textContent = "—";
     f48MajorHrsEl.textContent = "—";
@@ -1115,7 +1054,6 @@ function updateFloodOutlook48(){
     .sort((a,b)=>a.ms-b.ms);
 
   if(!pts.length){
-    showStagesFallbackPanel();
     f48MinorHrsEl.textContent = "0.0";
     f48ModerHrsEl.textContent = "0.0";
     f48MajorHrsEl.textContent = "0.0";
@@ -1150,51 +1088,40 @@ function updateFloodOutlook48(){
   f48ModerHrsEl.textContent = msToHours(moderMs).toFixed(1);
   f48MajorHrsEl.textContent = msToHours(majorMs).toFixed(1);
 
-// Build flood segments list
-const segs = buildFloodSegments(pts);
+  // Build flood segments list
+  const segs = buildFloodSegments(pts);
 
-const anyFloodHours = (minorMs + moderMs + majorMs) > 0;
-const anyFloodSegs  = segs.length > 0;
-
-// Decide which panel to show
-if(!anyFloodHours && !anyFloodSegs){
-  showStagesFallbackPanel();
-} else {
-  showOutlookPanel();
-}
-
-// Render the list
-if(!segs.length){
-  f48ListEl.innerHTML = `
-    <div class="event">
-      <div class="eventLeft">
-        <div class="eventWhen">No flood periods forecast</div>
-        <div class="eventSub">Next 48h stays below minor</div>
-      </div>
-      <div class="eventBadge" style="color:var(--ok)">Below</div>
-    </div>`;
-} else {
-  const show = segs.slice(0,4);
-  f48ListEl.innerHTML = show.map(seg=>{
-    const durH = Math.max(0.25, (seg.endMs - seg.startMs) / 3600000);
-    const when = `${fmtNiceDate(seg.startT)} · ${fmtESTTime(seg.startT)} → ${fmtESTTime(seg.endT)}`;
-    const sub  = `${durH.toFixed(1)}h · Peak ${seg.peakFt.toFixed(2)} ${unitText()}`;
-    const badgeColor = stageColorVar(seg.peakStage);
-
-    return `
+  if(!segs.length){
+    f48ListEl.innerHTML = `
       <div class="event">
         <div class="eventLeft">
-          <div class="eventWhen">${when}</div>
-          <div class="eventSub">${sub}</div>
+          <div class="eventWhen">No flood periods forecast</div>
+          <div class="eventSub">Next 48h stays below minor</div>
         </div>
-        <div class="eventBadge" style="color:${badgeColor}">${seg.peakStage}</div>
+        <div class="eventBadge" style="color:var(--ok)">Below</div>
       </div>`;
-  }).join("");
-}
+  }else{
+    const show = segs.slice(0,4);
+    f48ListEl.innerHTML = show.map(seg=>{
+      const durH = Math.max(0.25, (seg.endMs - seg.startMs) / 3600000);
+      const when = `${fmtNiceDate(seg.startT)} · ${fmtESTTime(seg.startT)} → ${fmtESTTime(seg.endT)}`;
+      const sub  = `${durH.toFixed(1)}h · Peak ${seg.peakFt.toFixed(2)} ${unitText()}`;
+      const badgeColor = stageColorVar(seg.peakStage);
 
-// Always update the footer range label
-f48MetaEl.textContent =
-  `${fmtNiceDate(pred[0].t)} → ${fmtNiceDate(new Date(t1).toISOString())} · Based on NOAA/PETSS`;
+      return `
+        <div class="event">
+          <div class="eventLeft">
+            <div class="eventWhen">${when}</div>
+            <div class="eventSub">${sub}</div>
+          </div>
+          <div class="eventBadge" style="color:${badgeColor}">${seg.peakStage}</div>
+        </div>`;
+    }).join("");
+  }
+
+  f48MetaEl.textContent =
+    `${fmtNiceDate(pred[0].t)} → ${fmtNiceDate(new Date(t1).toISOString())} · Based on NOAA/PETSS`;
+}
 
 function updatePred24RangeCard(){
   const maxEl = document.getElementById("pred24MaxFt");
@@ -1214,7 +1141,7 @@ function updatePred24RangeCard(){
   const t1 = t0 + 24*3600*1000;
 
   const window = pred
-    .map(p => ({ t:new Date(p.t).getTime(), ft:Number(p.ft) }))
+    .map(p => ({ t:new Date(p.t).getTime(), ft:p.ft }))
     .filter(p => Number.isFinite(p.t) && Number.isFinite(p.ft) && p.t >= t0 && p.t <= t1);
 
   if(!window.length){
@@ -1233,9 +1160,9 @@ function updatePred24RangeCard(){
   maxEl.textContent = toDisplayFtFromMllw(max).toFixed(2);
   minEl.textContent = toDisplayFtFromMllw(min).toFixed(2);
 
-  metaEl.textContent = "";
+  metaEl.textContent =
+    ``;
 }
-
 
 
 /* Top ten renderer (MLLW list; converts for display + classification) */

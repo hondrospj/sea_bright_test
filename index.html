@@ -1,5 +1,3 @@
-
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -433,6 +431,44 @@
     /* Hide footer notes you called out */
     #f48Meta{display:none !important;}
     #curMeta{display:none !important;}
+
+    /* ==============================
+       ACCORDION SYSTEM (NEW)
+       ============================== */
+    details.acc{
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      background:var(--card);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    details.acc summary{list-style:none;cursor:pointer;}
+    details.acc summary::-webkit-details-marker{display:none;}
+
+    .accHeader{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:14px;
+    }
+    .accTitle{
+      margin:0;
+      font-size:12.5px;
+      letter-spacing:.22px;
+      text-transform:uppercase;
+      color:var(--muted);
+      font-weight:950;
+    }
+    .chev{
+      width:12px;
+      height:12px;
+      border-right:2px solid rgba(234,240,255,.7);
+      border-bottom:2px solid rgba(234,240,255,.7);
+      transform:rotate(-45deg);
+      transition:.18s;
+    }
+    details[open] .chev{transform:rotate(45deg);}
+    .accBody{padding:0 14px 14px 14px;}
   </style>
 </head>
 
@@ -463,7 +499,7 @@
       </div>
     </div>
 
-    <!-- 1) Live Conditions -->
+    <!-- 1) Live Conditions (NOT accordion) -->
     <div class="card">
       <div class="hrow">
         <h2>Live conditions</h2>
@@ -517,7 +553,7 @@
           </div>
         </div>
 
-        <!-- NEXT 3 DAYS FLOOD OUTLOOK -->
+        <!-- NEXT 3 DAYS FLOOD OUTLOOK (inside Live Conditions) -->
         <div class="panel">
           <div class="panelTitle">Flood outlook (Next 3 Days)</div>
 
@@ -568,27 +604,32 @@
 
     <div style="height:14px"></div>
 
-    <!-- 2) Top 10 Highest Tides -->
-    <div class="card" style="display:flex;flex-direction:column">
-      <div class="hrow"><h2>Top ten highest tides</h2></div>
-      <div class="table" style="flex:1 1 auto">
-        <table aria-label="Top ten highest tides">
-          <thead>
-            <tr>
-              <th>Rank</th>
-              <th>Date</th>
-              <th id="topTenUnitTh">Height (ft MLLW)</th>
-              <th>Type</th>
-            </tr>
-          </thead>
-          <tbody id="topTenBody"></tbody>
-        </table>
+    <!-- 2) Top 10 Highest Tides (ACCORDION) -->
+    <details class="acc">
+      <summary class="accHeader">
+        <h2 class="accTitle">Top ten highest tides</h2>
+        <span class="chev"></span>
+      </summary>
+      <div class="accBody">
+        <div class="table">
+          <table aria-label="Top ten highest tides">
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Date</th>
+                <th id="topTenUnitTh">Height (ft MLLW)</th>
+                <th>Type</th>
+              </tr>
+            </thead>
+            <tbody id="topTenBody"></tbody>
+          </table>
+        </div>
       </div>
-    </div>
+    </details>
 
     <div style="height:14px"></div>
 
-    <!-- 3) Observations & Predictions -->
+    <!-- 3) Observations & Predictions (NOT accordion) -->
     <div class="card">
       <div class="hrow">
         <h2>Observations (USGS) & Predictions (NOAA)</h2>
@@ -620,78 +661,96 @@
 
     <div style="height:14px"></div>
 
-    <!-- 4) Average Floods Per Month -->
-    <div class="card">
-      <div class="hrow"><h2>Average Number of floods per month</h2></div>
-      <div class="hint" id="monthAvgMeta">Computing…</div>
-      <div style="height:10px"></div>
-      <div class="chartWrap"><canvas id="monthAvgChart"></canvas></div>
-      <div style="height:10px"></div>
-      <div class="table">
-        <table aria-label="Average floods by month of year">
-          <thead>
-            <tr>
-              <th>Month</th>
-              <th>Average Total Number of Floods</th>
-              <th>Average Minor</th>
-              <th>Average Moderate</th>
-              <th>Average Major</th>
-            </tr>
-          </thead>
-          <tbody id="monthAvgBody"></tbody>
-        </table>
+    <!-- 4) Average Floods Per Month (ACCORDION) -->
+    <details class="acc">
+      <summary class="accHeader">
+        <h2 class="accTitle">Average number of floods per month</h2>
+        <span class="chev"></span>
+      </summary>
+
+      <div class="accBody">
+        <div class="hint" id="monthAvgMeta">Computing…</div>
+        <div style="height:10px"></div>
+        <div class="chartWrap"><canvas id="monthAvgChart"></canvas></div>
+        <div style="height:10px"></div>
+
+        <div class="table">
+          <table aria-label="Average floods by month of year">
+            <thead>
+              <tr>
+                <th>Month</th>
+                <th>Average Total Number of Floods</th>
+                <th>Average Minor</th>
+                <th>Average Moderate</th>
+                <th>Average Major</th>
+              </tr>
+            </thead>
+            <tbody id="monthAvgBody"></tbody>
+          </table>
+        </div>
       </div>
-    </div>
+    </details>
 
     <div style="height:14px"></div>
 
-    <!-- 5) Flooding over the years bar chart -->
-    <div class="card">
-      <div class="hrow">
-        <h2>Flooding over the years</h2>
-        <div class="kicker" style="text-transform:none"></div>
+    <!-- 5) Flooding over the years bar chart (ACCORDION) -->
+    <details class="acc">
+      <summary class="accHeader">
+        <h2 class="accTitle">Flooding over the years</h2>
+        <span class="chev"></span>
+      </summary>
+
+      <div class="accBody">
+        <div class="chartWrap"><canvas id="annualChart"></canvas></div>
+        <div class="foot" id="annualNote"></div>
       </div>
-      <div class="chartWrap"><canvas id="annualChart"></canvas></div>
-      <div class="foot" id="annualNote"></div>
-    </div>
+    </details>
 
     <div style="height:14px"></div>
 
-    <!-- 6) Historic Flooding Filter -->
-    <div class="card">
-      <div class="hrow"><h2>Historic Flooding Filter (enter a range)</h2></div>
-      <div class="filterRow">
-        <input class="input" id="minElev" type="number" step="0.01" placeholder="Min (ft)" />
-        <input class="input" id="maxElev" type="number" step="0.01" placeholder="Max (ft)" />
-        <input class="input" id="fromDate" type="date" autocomplete="off" />
-        <input class="input" id="toDate" type="date" autocomplete="off" />
-        <select id="sortMode">
-          <option value="desc">Highest first</option>
-          <option value="asc">Lowest first</option>
-          <option value="recent">Most recent</option>
-        </select>
-        <button class="btn" id="applyBtn">Apply</button>
-        <button class="btn" id="resetBtn">Reset</button>
+    <!-- 6) Historic Flooding Filter (ACCORDION) -->
+    <details class="acc">
+      <summary class="accHeader">
+        <h2 class="accTitle">Historic flooding filter (enter a range)</h2>
+        <span class="chev"></span>
+      </summary>
+
+      <div class="accBody">
+        <div class="filterRow">
+          <input class="input" id="minElev" type="number" step="0.01" placeholder="Min (ft)" />
+          <input class="input" id="maxElev" type="number" step="0.01" placeholder="Max (ft)" />
+          <input class="input" id="fromDate" type="date" autocomplete="off" />
+          <input class="input" id="toDate" type="date" autocomplete="off" />
+          <select id="sortMode">
+            <option value="desc">Highest first</option>
+            <option value="asc">Lowest first</option>
+            <option value="recent">Most recent</option>
+          </select>
+          <button class="btn" id="applyBtn">Apply</button>
+          <button class="btn" id="resetBtn">Reset</button>
+        </div>
+
+        <div class="hint" id="histMeta">Loading…</div>
+        <div style="height:10px"></div>
+
+        <div class="table">
+          <table aria-label="Historic tides above threshold">
+            <thead>
+              <tr>
+                <th>Date/Time (EST)</th>
+                <th id="histUnitTh">Peak (ft MLLW)</th>
+                <th>Type</th>
+              </tr>
+            </thead>
+            <tbody id="histBody"></tbody>
+          </table>
+        </div>
       </div>
-      <div class="hint" id="histMeta">Loading…</div>
-      <div style="height:10px"></div>
-      <div class="table">
-        <table aria-label="Historic tides above threshold">
-          <thead>
-            <tr>
-              <th>Date/Time (EST)</th>
-              <th id="histUnitTh">Peak (ft MLLW)</th>
-              <th>Type</th>
-            </tr>
-          </thead>
-          <tbody id="histBody"></tbody>
-        </table>
-      </div>
-    </div>
+    </details>
 
     <div style="height:14px"></div>
 
-    <!-- 7) Cumulative flooding by day-of-year (Avg + Min/Max band) -->
+    <!-- 7) Cumulative flooding by day-of-year (Avg + Min/Max band) (NOT accordion) -->
     <div class="card">
       <div class="hrow">
         <h2>Cumulative annual flooding</h2>
@@ -710,8 +769,8 @@
 
   </div>
 
+  <script>
 
-    <script>
 /* Fixed EST year-round (UTC-5). */
 const TZ="Etc/GMT+5";
 

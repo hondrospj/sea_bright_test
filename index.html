@@ -1341,6 +1341,15 @@ function setStage(navdFt){
   stageDotEl.style.boxShadow = `0 0 0 4px ${c.glow}`;
 }
 
+    function datumLabel(){
+  return DISPLAY_DATUM;
+}
+
+function unitText(){
+  return `ft ${DISPLAY_DATUM}`;
+}
+
+
 function updateUnitsAndBadges(){
   document.querySelectorAll("[data-unit]").forEach(el=>{ el.textContent = "ft " + datumLabel(); });
   topTenUnitTh.textContent = "Height (" + unitText() + ")";
@@ -3735,9 +3744,11 @@ if (hist[0].status === "rejected") {
 /* =========================
 Controls
 ========================= */
-$("applyBtn").addEventListener("click", applyFilter);
+const applyBtn = $("applyBtn");
+if(applyBtn) applyBtn.addEventListener("click", applyFilter);
 
-$("resetBtn").addEventListener("click", ()=>{
+const resetBtn = $("resetBtn");
+if(resetBtn) resetBtn.addEventListener("click", ()=>{
   minElevEl.value = THRESH[DISPLAY_DATUM].minorLow.toFixed(2);
   maxElevEl.value = "";
   if(fromDateEl) fromDateEl.value = "";
@@ -3745,6 +3756,11 @@ $("resetBtn").addEventListener("click", ()=>{
   sortModeEl.value = "desc";
   applyFilter();
 });
+
+if(datumSelect) datumSelect.addEventListener("change", ()=>{
+  setDatum(datumSelect.value);
+});
+
 
 function setDatum(newDatum){
   if(!DATUMS.includes(newDatum)) return;

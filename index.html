@@ -2400,10 +2400,38 @@ function ensureAnnual(){
     options:{
       responsive:true,
       maintainAspectRatio:false,
+
+      // ✅ KEY: hover anywhere on the bar → show ALL stacks for that year
+      interaction:{ mode:"index", intersect:false },
+
       plugins:{
         legend:{
           position:"bottom",
           labels:{color:"rgba(234,240,255,.88)",font:{weight:"950"},boxWidth:16}
+        },
+
+        // ✅ Tooltip shows Minor/Moderate/Major + computed Total
+        tooltip:{
+          mode:"index",
+          intersect:false,
+          callbacks:{
+            title:(items)=>{
+              // Year label (your x-axis label)
+              return items?.[0]?.label ?? "";
+            },
+            label:(ctx)=>{
+              const v = ctx.parsed?.y;
+              if(!Number.isFinite(v)) return null;
+              return `${ctx.dataset.label}: ${Math.round(v)}`;
+            },
+            footer:(items)=>{
+              const total = (items || []).reduce((sum,it)=>{
+                const v = it.parsed?.y;
+                return sum + (Number.isFinite(v) ? v : 0);
+              }, 0);
+              return `Total: ${Math.round(total)}`;
+            }
+          }
         }
       },
       scales:{
@@ -2421,6 +2449,7 @@ function ensureAnnual(){
     }
   });
 }
+
 
 function renderAnnual(){
   ensureAnnual();
@@ -3357,7 +3386,37 @@ function ensureMonthAvgChart(){
     options:{
       responsive:true,
       maintainAspectRatio:false,
-      plugins:{ legend:{position:"bottom",labels:{color:"rgba(234,240,255,.88)",font:{weight:"950"},boxWidth:16}} },
+
+      // ✅ KEY
+      interaction:{ mode:"index", intersect:false },
+
+      plugins:{
+        legend:{
+          position:"bottom",
+          labels:{color:"rgba(234,240,255,.88)",font:{weight:"950"},boxWidth:16}
+        },
+
+        // ✅ Show all three + Total (sum)
+        tooltip:{
+          mode:"index",
+          intersect:false,
+          callbacks:{
+            title:(items)=> items?.[0]?.label ?? "",  // Month name (x label)
+            label:(ctx)=>{
+              const v = ctx.parsed?.y;
+              if(!Number.isFinite(v)) return null;
+              return `${ctx.dataset.label}: ${v.toFixed(2)}`;
+            },
+            footer:(items)=>{
+              const total = (items || []).reduce((sum,it)=>{
+                const v = it.parsed?.y;
+                return sum + (Number.isFinite(v) ? v : 0);
+              }, 0);
+              return `Average Total: ${total.toFixed(2)}`;
+            }
+          }
+        }
+      },
       scales:{
         x:{stacked:true,ticks:{color:"rgba(169,182,211,.9)"},grid:{color:"rgba(255,255,255,.06)"}},
         y:{stacked:true,ticks:{color:"rgba(169,182,211,.9)"},grid:{color:"rgba(255,255,255,.06)"}}
@@ -3365,6 +3424,7 @@ function ensureMonthAvgChart(){
     }
   });
 }
+
 
 function renderMonthAveragesChart(monthStats){
   ensureMonthAvgChart();

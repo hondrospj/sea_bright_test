@@ -1086,11 +1086,34 @@ MAP — Leaflet gauge map
 
 // Edit these whenever you want (lat/lon + label + link)
 const GAUGES = [
-  { name:"Sea Bright (USGS 01407600)", lat:40.361, lon:-73.974, agency:"USGS", id:"01407600", url:"https://waterdata.usgs.gov/monitoring-location/01407600/" },
-  { name:"Sandy Hook (NOAA 8531680)",  lat:40.466, lon:-74.009, agency:"NOAA", id:"8531680", url:"https://tidesandcurrents.noaa.gov/stationhome.html?id=8531680" },
-  { name:"The Battery, NY (NOAA 8518750)", lat:40.700, lon:-74.014, agency:"NOAA", id:"8518750", url:"https://tidesandcurrents.noaa.gov/stationhome.html?id=8518750" },
-  { name:"Atlantic City (NOAA 8534720)", lat:39.356, lon:-74.418, agency:"NOAA", id:"8534720", url:"https://tidesandcurrents.noaa.gov/stationhome.html?id=8534720" }
+const GAUGES = [
+  // --- USGS NJ coastal/estuary network ---
+  { name:"Bivalve (Maurice River at Bivalve)", agency:"USGS", id:"01412150", lat:39.232500, lon:-75.032778 },
+  { name:"South Dennis (Sluice Creek near South Dennis)", agency:"USGS", id:"01411435", lat:39.161667, lon:-74.832222 },
+  { name:"Cape May Harbor (Cape May Harbor at Cape May)", agency:"USGS", id:"01411390", lat:38.948333, lon:-74.888889 },
+  { name:"Stone Harbor (Great Channel at Stone Harbor)", agency:"USGS", id:"01411360", lat:39.056944, lon:-74.765000 },
+  { name:"Avalon (Ingram Thorofare at Avalon)", agency:"USGS", id:"01411355", lat:39.108611, lon:-74.741944 },
+  { name:"Sea Isle (Ludlum Thorofare at Sea Isle City)", agency:"USGS", id:"01411350", lat:39.157778, lon:-74.697778 },
+  { name:"Ocean City (Great Egg Harbor Bay at Ocean City)", agency:"USGS", id:"01411320", lat:39.285833, lon:-74.575556 },
+  { name:"Margate (Beach Thorofare at Margate)", agency:"USGS", id:"01411330", lat:39.337500, lon:-74.513056 },
+  { name:"Atlantic City (Inside Thorofare at US Rt 40)", agency:"USGS", id:"01410560", lat:39.353611, lon:-74.456944 },
+  { name:"USGS Atlantic City (Absecon Channel)", agency:"USGS", id:"01410500", lat:39.356800, lon:-74.438200 },
+
+  { name:"Little Egg Inlet (near Tuckerton)", agency:"USGS", id:"01409335", lat:39.508889, lon:-74.324722 },
+  { name:"Ship Bottom (East Thorofare at Ship Bottom)", agency:"USGS", id:"01409146", lat:39.654167, lon:-74.185833 },
+  { name:"Barnegat Light (Barnegat Bay at Barnegat Light)", agency:"USGS", id:"01409125", lat:39.760833, lon:-74.110556 },
+  { name:"Mantoloking (Barnegat Bay at Mantoloking)", agency:"USGS", id:"01408168", lat:40.040556, lon:-74.054444 },
+  { name:"Manasquan (Watson Creek at Manasquan)", agency:"USGS", id:"01408048", lat:40.111667, lon:-74.044722 },
+  { name:"Belmar (Shark River at Belmar)", agency:"USGS", id:"01407770", lat:40.179167, lon:-74.038333 },
+  { name:"Sea Bright (Shrewsbury River at Sea Bright)", agency:"USGS", id:"01407600", lat:40.365556, lon:-73.974722 },
+  { name:"Keansburg (Raritan Bay at Keansburg)", agency:"USGS", id:"01407081", lat:40.449167, lon:-74.147500 },
+
+  // --- NOAA tide gauges ---
+  { name:"NOAA Cape May", agency:"NOAA", id:"8536110", lat:38.968000, lon:-74.960000 },
+  { name:"NOAA Atlantic City", agency:"NOAA", id:"8534720", lat:39.357000, lon:-74.418000 },
+  { name:"NOAA Sandy Hook", agency:"NOAA", id:"8531680", lat:40.466818, lon:-74.009391 }
 ];
+
 
 let _gaugeMap = null;
 let _gaugeLayer = null;

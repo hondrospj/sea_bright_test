@@ -6,6 +6,9 @@
   <title>Sea Bright, NJ — Tidal Flooding Dashboard</title>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<!-- Leaflet (map) -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <style>
     :root{
@@ -567,6 +570,21 @@ thead th{
     }
     details[open] .chev{transform:rotate(45deg);}
     .accBody{padding:0 14px 14px 14px;}
+
+    /* =========================
+   MAP (Leaflet)
+   ========================= */
+#gaugeMap{
+  height: 360px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: rgba(0,0,0,.20);
+}
+@media(max-width:520px){
+  #gaugeMap{ height: 320px; }
+}
+
   </style>
 </head>
 
@@ -883,11 +901,28 @@ thead th{
       <div class="foot" id="doyNote"></div>
     </div>
 
-    <div style="height:14px"></div>
+ <div style="height:14px"></div>
 
+<!-- MAP SECTION (PASTE THIS WHOLE BLOCK) -->
+<details class="acc" id="mapAcc">
+  <summary class="accHeader">
+    <h2 class="accTitle">NJ tide gauge map</h2>
+    <span class="chev"></span>
+  </summary>
+
+  <div class="accBody">
+    <div id="gaugeMap"></div>
+    <div class="foot">Click a marker for station info.</div>
   </div>
+</details>
+
+<div style="height:14px"></div>
+
+</div>   <!-- keep this — closes .wrap -->
+
 
   <script>
+
 
 /* Fixed EST year-round (UTC-5). */
 const TZ="Etc/GMT+5";
@@ -1044,6 +1079,102 @@ const TOP_TEN_MLLW = [
   {date:"02-02-2021", ft:7.26},
   {date:"01-24-2017", ft:7.18}
 ];
+
+    /* =========================
+MAP — Leaflet gauge map
+========================= */
+
+// Edit these whenever you want (lat/lon + label + link)
+const GAUGES = [
+  { name:"Sea Bright (USGS 01407600)", lat:40.361, lon:-73.974, agency:"USGS", id:"01407600", url:"https://waterdata.usgs.gov/monitoring-location/01407600/" },
+  { name:"Sandy Hook (NOAA 8531680)",  lat:40.466, lon:-74.009, agency:"NOAA", id:"8531680", url:"https://tidesandcurrents.noaa.gov/stationhome.html?id=8531680" },
+  { name:"The Battery, NY (NOAA 8518750)", lat:40.700, lon:-74.014, agency:"NOAA", id:"8518750", url:"https://tidesandcurrents.noaa.gov/stationhome.html?id=8518750" },
+  { name:"Atlantic City (NOAA 8534720)", lat:39.356, lon:-74.418, agency:"NOAA", id:"8534720", url:"https://tidesandcurrents.noaa.gov/stationhome.html?id=8534720" }
+];
+
+let _gaugeMap = null;
+let _gaugeLayer = null;
+
+function ensureGaugeMap(){
+  const el = document.getElementById("gaugeMap");
+  if(!el) return;
+
+  // Leaflet not loaded yet? Bail quietly.
+  if(typeof window.L === "undefined"){
+    console.warn("Leaflet not loaded (window.L missing).");
+    return;
+  }
+
+  // Already built
+  if(_gaugeMap){
+    // In case accordion opened later, force resize.
+    setTimeout(()=>_gaugeMap.invalidateSize(true), 50);
+    return;
+  }
+
+  _gaugeMap = L.map(el, {
+    scrollWheelZoom: false,
+    zoomControl: true
+  });
+
+  // Base tiles
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 18,
+    attribution: "&copy; OpenStreetMap"
+  }).addTo(_gaugeMap);
+
+  // Markers
+  _gaugeLayer = L.layerGroup().addTo(_gaugeMap);
+
+  const bounds = [];
+
+  for(const g of GAUGES){
+    const color =
+      (g.agency || "").toUpperCase() === "NOAA" ? "#60a5fa" : "#2dd4bf";
+
+    const m = L.circleMarker([g.lat, g.lon], {
+      radius: 8,
+      weight: 2,
+      color: color,
+      fillColor: color,
+      fillOpacity: 0.85
+    });
+
+    const popup = `
+      <div style="font-weight:900;margin-bottom:6px;">${g.name}</div>
+      <div style="opacity:.85;margin-bottom:8px;">${g.agency} · ${g.id || ""}</div>
+      ${g.url ? `<a href="${g.url}" target="_blank" rel="noopener" style="text-decoration:underline;">Open station</a>` : ""}
+    `;
+
+    m.bindPopup(popup);
+    m.addTo(_gaugeLayer);
+
+    bounds.push([g.lat, g.lon]);
+  }
+
+  if(bounds.length){
+    _gaugeMap.fitBounds(bounds, { padding:[30,30] });
+  }else{
+    _gaugeMap.setView([40.2,-74.0], 9);
+  }
+
+  // Fix initial render sizing issues (accordion hidden → shown)
+  setTimeout(()=>_gaugeMap.invalidateSize(true), 100);
+}
+
+function hookGaugeMapAccordion(){
+  const acc = document.getElementById("mapAcc");
+  if(!acc) return;
+
+  acc.addEventListener("toggle", ()=>{
+    if(acc.open){
+      setTimeout(()=>{
+        ensureGaugeMap();
+        if(_gaugeMap) _gaugeMap.invalidateSize(true);
+      }, 50);
+    }
+  });
+}
 
 /* DOM */
 const $=id=>document.getElementById(id);
@@ -3520,6 +3651,16 @@ Boot
 async function boot(){
   updateUnitsAndBadges();
   renderTopTen();
+
+    // Map accordion hook (runs once)
+  hookGaugeMapAccordion();
+
+  // If map accordion is already open for some reason, init immediately
+  const mapAcc = document.getElementById("mapAcc");
+  if(mapAcc && mapAcc.open){
+    ensureGaugeMap();
+  }
+
 
   // Alerts can run independently
  await Promise.allSettled([ initDOYCumulativeFromAPI_FAST() ]);

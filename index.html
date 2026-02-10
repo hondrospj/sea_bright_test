@@ -332,6 +332,15 @@ OBVIOUS DATUM DROPDOWN
       display:none;
     }
 
+    .rangeWhen{
+  margin-top:6px;
+  color:var(--muted);
+  font-size:12px;
+  font-weight:850;
+  letter-spacing:.15px;
+}
+
+
     @media(max-width:520px){
       .rangeVal{font-size:32px}
       .curVal{font-size:26px}
@@ -659,23 +668,27 @@ thead th{
               <div class="curMeta" id="nearMeta" style="display:none"></div>
             </div>
 
-            <div class="todayRange">
-              <div class="rangeRow">
-                <div class="rangeCol">
-                  <div class="rangeLab">Max</div>
-                  <div class="rangeVal">
-                    <span id="dayMaxFt">—</span>
-                    <span class="unit" data-unit>ft MLLW</span>
-                  </div>
-                </div>
-                <div class="rangeCol">
-                  <div class="rangeLab">Min</div>
-                  <div class="rangeVal">
-                    <span id="dayMinFt">—</span>
-                    <span class="unit" data-unit>ft MLLW</span>
-                  </div>
-                </div>
-              </div>
+         <div class="todayRange">
+  <div class="rangeRow">
+    <div class="rangeCol">
+      <div class="rangeLab">Max</div>
+      <div class="rangeVal">
+        <span id="dayMaxFt">—</span>
+        <span class="unit" data-unit>ft MLLW</span>
+      </div>
+      <div class="rangeWhen" id="dayMaxWhen">—</div>
+    </div>
+
+    <div class="rangeCol">
+      <div class="rangeLab">Min</div>
+      <div class="rangeVal">
+        <span id="dayMinFt">—</span>
+        <span class="unit" data-unit>ft MLLW</span>
+      </div>
+      <div class="rangeWhen" id="dayMinWhen">—</div>
+    </div>
+  </div>
+
 
               <div class="rangeMeta" id="dayRangeMeta">—</div>
             </div>
@@ -1203,7 +1216,12 @@ function hookGaugeMapAccordion(){
 const $=id=>document.getElementById(id);
 
 const curFtEl=$("curFt"), curMetaEl=$("curMeta");
-const dayMaxFtEl=$("dayMaxFt"), dayMinFtEl=$("dayMinFt"), dayRangeMeta=$("dayRangeMeta");
+const dayMaxFtEl = $("dayMaxFt"),
+      dayMinFtEl = $("dayMinFt"),
+      dayMaxWhenEl = $("dayMaxWhen"),
+      dayMinWhenEl = $("dayMinWhen"),
+      dayRangeMeta = $("dayRangeMeta");
+
 const stageTextEl=$("stageText"), stageDotEl=$("stageDot");
 const lastPill=$("lastPill");
 const alertBanner=$("alertBanner"), alertTitle=$("alertTitle"), alertBody=$("alertBody");
@@ -1302,25 +1320,6 @@ function startOfTodayEST_ISO(){
 }
 function startOfYearEST_ISO(y){ return new Date(Date.UTC(y,0,1,5,0,0)).toISOString(); }
 function nowISO(){ return new Date().toISOString(); }
-
-    /* Datum helpers */
-function datumLabel(){ return DISPLAY_DATUM; }
-function unitText(){ return "ft " + datumLabel(); }
-
-// NAVD88 -> DISPLAY datum
-function toDisplayFtFromNavd(navdFt){
-  return datumToDatum(navdFt, "NAVD88", DISPLAY_DATUM);
-}
-
-// MLLW -> DISPLAY datum
-function toDisplayFtFromMllw(mllwFt){
-  return datumToDatum(mllwFt, "MLLW", DISPLAY_DATUM);
-}
-
-// DISPLAY datum -> NAVD88
-function fromDisplayToNavd(displayFt){
-  return datumToDatum(displayFt, DISPLAY_DATUM, "NAVD88");
-}
 
 
 /* Stage classify uses NAVD thresholds */
@@ -3414,16 +3413,27 @@ async function updateLiveAndAnnualCounts(){
   const today = sliceAfter(ytd, startOfTodayEST_ISO());
   STATE.todayNavd = today;
 
-  if(today.length){
-    const dmx = maxPoint(today), dmn = minPoint(today);
-    dayMaxFtEl.textContent = toDisplayFtFromNavd(dmx.ft).toFixed(2);
-    dayMinFtEl.textContent = toDisplayFtFromNavd(dmn.ft).toFixed(2);
-    dayRangeMeta.textContent = `Max @ ${fmtESTFull(dmx.t)} · Min @ ${fmtESTFull(dmn.t)}`;
-  }else{
-    dayMaxFtEl.textContent="—";
-    dayMinFtEl.textContent="—";
-    dayRangeMeta.textContent="—";
-  }
+if(today.length){
+  const dmx = maxPoint(today), dmn = minPoint(today);
+
+  dayMaxFtEl.textContent = toDisplayFtFromNavd(dmx.ft).toFixed(2);
+  dayMinFtEl.textContent = toDisplayFtFromNavd(dmn.ft).toFixed(2);
+
+  // ✅ show time under each number (EST)
+  if(dayMaxWhenEl) dayMaxWhenEl.textContent = fmtESTTime(dmx.t);
+  if(dayMinWhenEl) dayMinWhenEl.textContent = fmtESTTime(dmn.t);
+
+  // optional: keep the long meta line (or delete it if you don’t want it)
+  dayRangeMeta.textContent = `Max @ ${fmtESTFull(dmx.t)} · Min @ ${fmtESTFull(dmn.t)}`;
+}else{
+  dayMaxFtEl.textContent = "—";
+  dayMinFtEl.textContent = "—";
+  if(dayMaxWhenEl) dayMaxWhenEl.textContent = "—";
+  if(dayMinWhenEl) dayMinWhenEl.textContent = "—";
+  dayRangeMeta.textContent = "—";
+}
+
+
 
   // ---- Current-year flooding bar: history-based (peaks list) ----
   // NOTE: requires HIGH_TIDES_NAVD already loaded (JSON/TXT init)
@@ -3781,15 +3791,21 @@ function setDatum(newDatum){
     setStage(STATE.lastNavd.ft); // stage classification is NAVD-based (fine)
   }
 
-  // Daily range refresh
-  if(STATE.todayNavd && STATE.todayNavd.length){
-    const dmx = maxPoint(STATE.todayNavd), dmn = minPoint(STATE.todayNavd);
-    dayMaxFtEl.textContent = toDisplayFtFromNavd(dmx.ft).toFixed(2);
-    dayMinFtEl.textContent = toDisplayFtFromNavd(dmn.ft).toFixed(2);
-  } else {
-    dayMaxFtEl.textContent = "—";
-    dayMinFtEl.textContent = "—";
-  }
+// Daily range refresh
+if(STATE.todayNavd && STATE.todayNavd.length){
+  const dmx = maxPoint(STATE.todayNavd), dmn = minPoint(STATE.todayNavd);
+  dayMaxFtEl.textContent = toDisplayFtFromNavd(dmx.ft).toFixed(2);
+  dayMinFtEl.textContent = toDisplayFtFromNavd(dmn.ft).toFixed(2);
+
+  if(dayMaxWhenEl) dayMaxWhenEl.textContent = fmtESTTime(dmx.t);
+  if(dayMinWhenEl) dayMinWhenEl.textContent = fmtESTTime(dmn.t);
+} else {
+  dayMaxFtEl.textContent = "—";
+  dayMinFtEl.textContent = "—";
+  if(dayMaxWhenEl) dayMaxWhenEl.textContent = "—";
+  if(dayMinWhenEl) dayMinWhenEl.textContent = "—";
+}
+
 
   // Charts that depend on display datum
   updatePred24RangeCard();

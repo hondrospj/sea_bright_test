@@ -11,6 +11,68 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <style>
+
+    /* ===== Historic filter UI upgrade ===== */
+.filterGrid{
+  display:grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap:12px;
+  align-items:end;
+}
+@media(max-width:820px){
+  .filterGrid{ grid-template-columns:1fr; }
+}
+
+.fieldGroup{
+  border:1px solid var(--line);
+  background:rgba(0,0,0,.14);
+  border-radius:14px;
+  padding:10px;
+}
+.fieldTitle{
+  color:var(--muted);
+  font-weight:950;
+  font-size:11px;
+  letter-spacing:.18px;
+  text-transform:uppercase;
+  margin:0 0 8px 0;
+  text-align:left;
+}
+
+.fieldRow{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:10px;
+}
+@media(max-width:520px){
+  .fieldRow{ grid-template-columns:1fr; }
+}
+
+.smallBtnRow{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+.smallBtn{
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid var(--line);
+  background:rgba(0,0,0,.18);
+  color:var(--text);
+  font-weight:950;
+  font-size:13px;
+  cursor:pointer;
+}
+.smallBtn:hover{filter:brightness(1.06)}
+
+.filterSummary{
+  margin-top:10px;
+  color:var(--muted);
+  font-size:12.5px;
+  line-height:1.25;
+}
+
     :root{
       --bg:#0b1220;
       --text:#eaf0ff;
@@ -864,20 +926,67 @@ thead th{
   </div>
   <div style="height:8px"></div>
 
-  <div class="filterRow">
+<div class="filterGrid">
 
-          <input class="input" id="minElev" type="number" step="0.01" placeholder="Min (ft)" />
-          <input class="input" id="maxElev" type="number" step="0.01" placeholder="Max (ft)" />
-          <input class="input" id="fromDate" type="date" autocomplete="off" />
-          <input class="input" id="toDate" type="date" autocomplete="off" />
-          <select id="sortMode">
-            <option value="desc">Highest first</option>
-            <option value="asc">Lowest first</option>
-            <option value="recent">Most recent</option>
-          </select>
-          <button class="btn" id="applyBtn">Apply</button>
-          <button class="btn" id="resetBtn">Reset</button>
-        </div>
+  <!-- Elevation group -->
+  <div class="fieldGroup">
+    <div class="fieldTitle">Elevation range (<span data-unit>ft MLLW</span>)</div>
+    <div class="fieldRow">
+      <input class="input" id="minElev" type="number" step="0.01" placeholder="Min elevation" />
+      <input class="input" id="maxElev" type="number" step="0.01" placeholder="Max elevation" />
+    </div>
+
+    <div style="height:8px"></div>
+    <div class="hint" style="margin:0;">
+      Leave blank to ignore elevation.
+    </div>
+  </div>
+
+  <!-- Date group -->
+  <div class="fieldGroup">
+    <div class="fieldTitle">Date range (EST)</div>
+    <div class="fieldRow">
+      <input class="input" id="fromDate" type="date" autocomplete="off" />
+      <input class="input" id="toDate" type="date" autocomplete="off" />
+    </div>
+
+    <div style="height:8px"></div>
+    <div class="hint" style="margin:0;">
+      Leave blank to ignore dates.
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div>
+    <div class="fieldTitle">Controls</div>
+
+    <select id="sortMode" class="input" style="min-width:180px;">
+      <option value="desc">Highest first</option>
+      <option value="asc">Lowest first</option>
+      <option value="recent">Most recent</option>
+    </select>
+
+    <div style="height:10px"></div>
+
+    <div class="smallBtnRow">
+      <button class="smallBtn" id="presetAll">All time</button>
+      <button class="smallBtn" id="presetYTD">YTD</button>
+      <button class="smallBtn" id="preset30">Last 30 days</button>
+      <button class="smallBtn" id="clearElev">Clear elevation</button>
+    </div>
+
+    <div style="height:10px"></div>
+
+    <div class="smallBtnRow">
+      <button class="btn" id="applyBtn">Apply</button>
+      <button class="btn" id="resetBtn">Reset</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="filterSummary" id="filterSummary">Loading…</div>
+
 
         <div class="hint" id="histMeta">Loading…</div>
         <div style="height:10px"></div>
@@ -1230,6 +1339,9 @@ const topTenBody=$("topTenBody");
 const topTenUnitTh=$("topTenUnitTh");
 const fcNote=$("fcNote");
 const txtNote=$("txtNote");
+   
+const filterSummaryEl = $("filterSummary");
+
 
 const histBody = $("histBody"),
       histMeta = $("histMeta"),
@@ -2083,10 +2195,23 @@ const floodBandsPlugin = {
 
 Chart.register(floodBandsPlugin);
 
+    function rebuildFastHistoryCache(){
+  HIGH_TIDES_FAST = (HIGH_TIDES_NAVD || [])
+    .map(r=>{
+      const tMs = new Date(r.t).getTime();
+      const ftNavd = Number(r.ft);
+      if(!Number.isFinite(tMs) || !Number.isFinite(ftNavd)) return null;
+      return { tISO: r.t, tMs, ftNavd };
+    })
+    .filter(Boolean);
+}
+
 
 /* =========================
 Core state
 ========================= */
+  let HIGH_TIDES_FAST = []; // { tISO, tMs, ftNavd }
+
 let HIGH_TIDES_NAVD=[];
 let annualChart=null, tsChart=null, monthAvgChart=null;
 let YEARS=[], annualMinor=[], annualModerate=[], annualMajor=[];
@@ -3253,44 +3378,58 @@ function renderHist(rowsNavd){
 }
 
 function applyFilter(){
-    const help = document.getElementById("histHelp");
-  if(help) help.textContent = "Use any combination: Elevation range and/or Date range. Leave fields blank to ignore them.";
+  const help = document.getElementById("histHelp");
+  if(help) help.textContent = "Filter by elevation and/or date. Leave fields blank to ignore them.";
 
-  // NEW: range inputs (display datum)
+  // Inputs in DISPLAY datum
   const minDisplay = parseFloat(minElevEl.value);
   const maxDisplay = parseFloat(maxElevEl.value);
 
-  // NEW: date inputs (YYYY-MM-DD) — inclusive
+  // Dates (YYYY-MM-DD) inclusive bounds
   const fromStr = (fromDateEl?.value || "").trim();
   const toStr   = (toDateEl?.value   || "").trim();
 
-  // Convert elev range -> NAVD (your data are NAVD)
+  // Convert elev range -> NAVD (data are NAVD)
   const minNavd = Number.isFinite(minDisplay) ? fromDisplayToNavd(minDisplay) : -Infinity;
   const maxNavd = Number.isFinite(maxDisplay) ? fromDisplayToNavd(maxDisplay) :  Infinity;
 
-  // Build date bounds in ms (inclusive). Using UTC parsing is fine since we compare ISO times.
   const fromMs = fromStr ? new Date(fromStr + "T00:00:00Z").getTime() : -Infinity;
   const toMs   = toStr   ? new Date(toStr   + "T23:59:59Z").getTime() :  Infinity;
 
   const mode = sortModeEl.value;
 
-  let rows = HIGH_TIDES_NAVD.filter(r=>{
-    if(r.ft < minNavd || r.ft > maxNavd) return false;
-
-    const tMs = new Date(r.t).getTime();
-    if(!Number.isFinite(tMs)) return false;
-
-    if(tMs < fromMs || tMs > toMs) return false;
-
+  // Filter using the FAST cache
+  let rows = (HIGH_TIDES_FAST || []).filter(r=>{
+    if(r.ftNavd < minNavd || r.ftNavd > maxNavd) return false;
+    if(r.tMs < fromMs || r.tMs > toMs) return false;
     return true;
   });
 
-  if(mode==="desc")   rows.sort((a,b)=>b.ft-a.ft);
-  if(mode==="asc")    rows.sort((a,b)=>a.ft-b.ft);
-  if(mode==="recent") rows.sort((a,b)=>new Date(b.t)-new Date(a.t));
+  // Sort
+  if(mode==="desc")   rows.sort((a,b)=>b.ftNavd-a.ftNavd);
+  if(mode==="asc")    rows.sort((a,b)=>a.ftNavd-b.ftNavd);
+  if(mode==="recent") rows.sort((a,b)=>b.tMs-a.tMs);
 
-  renderHist(rows);
+  // Render (convert back to the shape your renderHist expects)
+  const rowsForRender = rows.map(r=>({ t:r.tISO, ft:r.ftNavd }));
+
+  renderHist(rowsForRender);
+
+  // Summary line (much clearer than “histMeta” alone)
+  if(filterSummaryEl){
+    const elevTxt = (Number.isFinite(minDisplay) || Number.isFinite(maxDisplay))
+      ? `Elevation: ${Number.isFinite(minDisplay) ? minDisplay.toFixed(2) : "—"} to ${Number.isFinite(maxDisplay) ? maxDisplay.toFixed(2) : "—"} ${unitText()}`
+      : "Elevation: (any)";
+
+    const dateTxt = (fromStr || toStr)
+      ? `Dates: ${fromStr || "—"} to ${toStr || "—"} (EST)`
+      : "Dates: (any)";
+
+    filterSummaryEl.textContent =
+      `Matches: ${rows.length.toLocaleString()} of ${(HIGH_TIDES_FAST?.length || 0).toLocaleString()} · ${elevTxt} · ${dateTxt}`;
+  }
 }
+
 
 /* =========================
 Monthly averages
@@ -3639,6 +3778,8 @@ async function initJSONBackedHistory(){
       livePeaks = [];
     }
   }
+HIGH_TIDES_NAVD.sort((a,b)=>new Date(b.t)-new Date(a.t));
+rebuildFastHistoryCache();
 
   // Combine (may contain overlaps)
   const combined = [...peaks, ...livePeaks];
@@ -3804,6 +3945,53 @@ if (hist[0].status === "rejected") {
 /* =========================
 Controls
 ========================= */
+
+    const presetAll = $("presetAll");
+const presetYTD = $("presetYTD");
+const preset30  = $("preset30");
+const clearElev = $("clearElev");
+
+function setDateInputs(fromYMD, toYMD){
+  if(fromDateEl) fromDateEl.value = fromYMD || "";
+  if(toDateEl)   toDateEl.value   = toYMD || "";
+}
+
+function ymdEST(d){
+  // return YYYY-MM-DD in your fixed EST timezone logic
+  const parts = fmtPartsYMD.formatToParts(d);
+  const y = parts.find(p=>p.type==="year")?.value;
+  const m = parts.find(p=>p.type==="month")?.value;
+  const da= parts.find(p=>p.type==="day")?.value;
+  return `${y}-${m}-${da}`;
+}
+
+if(presetAll) presetAll.addEventListener("click", ()=>{
+  setDateInputs("", "");
+  sortModeEl.value = "desc";
+  applyFilter();
+});
+
+if(presetYTD) presetYTD.addEventListener("click", ()=>{
+  const { y } = getESTParts(new Date());
+  setDateInputs(`${y}-01-01`, ymdEST(new Date()));
+  sortModeEl.value = "recent";
+  applyFilter();
+});
+
+if(preset30) preset30.addEventListener("click", ()=>{
+  const now = new Date();
+  const past = new Date(now.getTime() - 30*86400000);
+  setDateInputs(ymdEST(past), ymdEST(now));
+  sortModeEl.value = "recent";
+  applyFilter();
+});
+
+if(clearElev) clearElev.addEventListener("click", ()=>{
+  if(minElevEl) minElevEl.value = "";
+  if(maxElevEl) maxElevEl.value = "";
+  applyFilter();
+});
+
 const applyBtn = $("applyBtn");
 if(applyBtn) applyBtn.addEventListener("click", applyFilter);
 

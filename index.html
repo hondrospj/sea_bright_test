@@ -15,10 +15,11 @@
     /* ===== Historic filter UI upgrade ===== */
 .filterGrid{
   display:grid;
-  grid-template-columns: 1fr 1fr auto;
+  grid-template-columns: 1fr 1fr minmax(240px, 320px);
   gap:12px;
   align-items:end;
 }
+
 @media(max-width:820px){
   .filterGrid{ grid-template-columns:1fr; }
 }
@@ -955,34 +956,31 @@ thead th{
       Leave blank to ignore dates.
     </div>
   </div>
+<!-- Controls -->
+<div class="fieldGroup">
+  <div class="fieldTitle">Controls</div>
 
-  <!-- Controls -->
-  <div>
-    <div class="fieldTitle">Controls</div>
+  <select id="sortMode" class="input" style="min-width:180px;">
+    <option value="desc">Highest first</option>
+    <option value="asc">Lowest first</option>
+    <option value="recent">Most recent</option>
+  </select>
 
-    <select id="sortMode" class="input" style="min-width:180px;">
-      <option value="desc">Highest first</option>
-      <option value="asc">Lowest first</option>
-      <option value="recent">Most recent</option>
-    </select>
+  <div style="height:10px"></div>
 
-    <div style="height:10px"></div>
-
-    <div class="smallBtnRow">
-      <button class="smallBtn" id="presetAll">All time</button>
-      <button class="smallBtn" id="presetYTD">YTD</button>
-      <button class="smallBtn" id="preset30">Last 30 days</button>
-      <button class="smallBtn" id="clearElev">Clear elevation</button>
-    </div>
-
-    <div style="height:10px"></div>
-
-    <div class="smallBtnRow">
-      <button class="btn" id="applyBtn">Apply</button>
-      <button class="btn" id="resetBtn">Reset</button>
-    </div>
+  <div class="smallBtnRow">
+    <button class="smallBtn" id="presetAll">All time</button>
+    <button class="smallBtn" id="presetYTD">YTD</button>
+    <button class="smallBtn" id="preset30">Last 30 days</button>
+    <button class="smallBtn" id="clearElev">Clear elevation</button>
   </div>
 
+  <div style="height:10px"></div>
+
+  <div class="smallBtnRow">
+    <button class="btn" id="applyBtn">Apply</button>
+    <button class="btn" id="resetBtn">Reset</button>
+  </div>
 </div>
 
 <div class="filterSummary" id="filterSummary">Loading…</div>

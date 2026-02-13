@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -10,416 +11,591 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-<style>
-/* =========================
-   PREMIUM DASHBOARD THEME
-   Drop-in CSS replacement
-   Keeps your JS logic unchanged
-   ========================= */
+  <style>
+    :root{
+      --bg:#0b1220;
+      --text:#eaf0ff;
+      --muted:#a9b6d3;
+      --line:rgba(255,255,255,.085);
+      --ok:#2dd4bf;
+      --minor:#fbbf24;
+      --moderate:#fb7185;
+      --major:#a78bfa;
+      --shadow:0 22px 70px rgba(0,0,0,.40);
+      --radius:18px;
 
-/* ---- Core tokens ---- */
-:root{
-  --bg0:#070b14;
-  --bg1:#0b1220;
-  --bg2:#0e1830;
+      /* NO “glow” backgrounds at all (removes greenish banding on iOS) */
+      --card:rgba(255,255,255,.035);
+      --card2:rgba(0,0,0,.18);
+    }
 
-  --text:#eaf0ff;
-  --muted:#a9b6d3;
-  --muted2:#8190b3;
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    html{background:var(--bg);}
+    body{
+      margin:0;
+      font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+      background:var(--bg);   /* solid only */
+      color:var(--text);
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      overflow-x:hidden;
+    }
+    /* KILL any old global overlay gradient */
+    body:before{content:none !important;}
 
-  --line:rgba(255,255,255,.10);
-  --line2:rgba(255,255,255,.06);
+    .wrap{max-width:1200px;margin:0 auto;padding:16px 16px 28px}
+    a{color:inherit;text-decoration:none}
+    canvas{display:block;max-width:100%}
 
-  --card:rgba(255,255,255,.045);
-  --card2:rgba(255,255,255,.030);
+    .banner{
+      display:none;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(251,113,133,.12);
+      border-radius:14px;
+      padding:12px 12px;
+      margin-bottom:12px;
+      box-shadow:var(--shadow);
+    }
+    .banner b{font-weight:950}
+    .banner .small{color:var(--muted);font-size:12.5px;margin-top:4px;line-height:1.25}
 
-  --shadow: 0 24px 60px rgba(0,0,0,.55);
-  --shadow2: 0 14px 36px rgba(0,0,0,.45);
-
-  --radius: 18px;
-  --radius2: 14px;
-
-  --focus: rgba(99, 179, 237, .45);
-  --accent: #66b8ff;
-
-  --ok:#2dd4bf;
-  --minor:#fbbf24;
-  --moderate:#fb7185;
-  --major:#a78bfa;
-
-  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
-}
-
-/* ---- Page background ---- */
-html, body{
-  height:100%;
-  margin:0;
-  font-family: var(--sans);
-  color: var(--text);
-  background:
-    radial-gradient(1100px 700px at 18% -10%, rgba(102,184,255,.18), transparent 55%),
-    radial-gradient(900px 700px at 80% 10%, rgba(167,139,250,.14), transparent 52%),
-    radial-gradient(800px 500px at 40% 110%, rgba(45,212,191,.10), transparent 55%),
-    linear-gradient(180deg, var(--bg0), var(--bg1) 30%, var(--bg0));
-  overflow-x:hidden;
-}
-
-/* Make the whole app feel centered and intentional */
-main, .container, .wrap, .page{
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 22px 18px 60px;
-}
-
-/* ---- Global typography polish ---- */
-h1,h2,h3{
-  margin:0 0 10px;
-  letter-spacing:.2px;
-}
-p{ margin: 0 0 12px; color: var(--muted); line-height: 1.5; }
-small{ color: var(--muted2); }
-
-/* ---- Utility: subtle section title ---- */
-.section-title{
-  font-weight: 800;
-  letter-spacing: .12em;
-  text-transform: uppercase;
-  font-size: .88rem;
-  color: rgba(234,240,255,.78);
-}
-
-/* =========================
-   CARDS + LAYOUT
-   ========================= */
-
-/* If you already use a grid layout somewhere, this improves it.
-   If not, it won't break anything. */
-.grid{
-  display:grid;
-  gap: 16px;
-}
-.grid.two{
-  grid-template-columns: 1.25fr .75fr;
-}
-@media (max-width: 980px){
-  .grid.two{ grid-template-columns: 1fr; }
-}
-
-/* Generic card styling (works if you already have .card etc.
-   Also applied to common components via attribute selectors below) */
-.card, .panel, .box, .tile{
-  background: linear-gradient(180deg, var(--card), var(--card2));
-  border: 1px solid var(--line2);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow2);
-  backdrop-filter: blur(10px);
-}
-
-/* Give any top-level sections some separation */
-.section, .block{
-  margin-top: 14px;
-}
-
-/* =========================
-   ACCORDION / COLLAPSIBLE HEADER
-   Your screenshot shows a collapsible "HISTORIC FLOODING FILTER..."
-   Many builds use <details><summary> or a button header.
-   This styles both without changing your logic.
-   ========================= */
-
-/* DETAILS/SUMMARY (best case) */
-details{
-  border-radius: var(--radius);
-  border: 1px solid var(--line2);
-  background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.028));
-  box-shadow: var(--shadow2);
-  overflow: hidden;
-}
-
-summary{
-  list-style:none;
-  cursor:pointer;
-  user-select:none;
-  padding: 16px 16px;
+    .top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+   .top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+    .brand{display:flex;align-items:center;gap:12px}
+.brandLogo{
+  width: 180px;     /* rectangle container */
+  height: 60px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: rgba(0,0,0,.25);
   display:flex;
   align-items:center;
-  justify-content:space-between;
-  gap: 12px;
-}
-summary::-webkit-details-marker{ display:none; }
-
-summary .title,
-summary strong,
-summary span:first-child{
-  font-weight: 900;
-  letter-spacing: .10em;
-  text-transform: uppercase;
-  font-size: .95rem;
-  color: rgba(234,240,255,.92);
+  justify-content:flex-start;
+  padding:6px 10px;
+  overflow:hidden;
 }
 
-/* A nicer chevron animation */
-summary::after{
-  content:"";
-  width: 10px;
-  height: 10px;
-  border-right: 2px solid rgba(234,240,255,.65);
-  border-bottom: 2px solid rgba(234,240,255,.65);
-  transform: rotate(45deg);
-  transition: transform .18s ease;
-  opacity:.9;
-}
-details[open] summary::after{
-  transform: rotate(-135deg);
-}
-
-/* When open, add padding inside */
-details > *:not(summary){
-  padding: 14px 16px 16px;
-}
-
-/* If your accordion header is NOT <summary>, but is a clickable div/button */
-.accordion-header, .collapsible-header, .filter-header{
-  padding: 16px 16px;
-  border-radius: var(--radius);
-  border: 1px solid var(--line2);
-  background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.028));
-  box-shadow: var(--shadow2);
-}
-
-/* =========================
-   FILTER AREA + CONTROLS PANEL
-   ========================= */
-
-/* These selectors match a lot of common structures without requiring new classes */
-.filters, .filter-grid, .controls, .control-panel, .right-panel{
-  border-radius: var(--radius);
-}
-
-/* Give any "controls" sidebar a stronger definition */
-.controls, .control-panel, aside, .right-panel{
-  background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
-  border: 1px solid var(--line2);
-  box-shadow: var(--shadow2);
-}
-
-/* Headings inside filter cards */
-label, .label{
+.brandLogo img{
+  height:100%;
+  width:auto;        /* keeps proportions (no stretching) */
+  object-fit:contain;
   display:block;
-  margin: 0 0 8px;
-  font-size: .86rem;
-  letter-spacing:.09em;
-  text-transform: uppercase;
-  color: rgba(234,240,255,.72);
 }
 
-/* A helper/hint line */
-.hint, .helper, .subtext{
-  font-size: .92rem;
-  color: rgba(169,182,211,.85);
-  margin-top: 8px;
-}
+    .brandTitle{display:flex;flex-direction:column;line-height:1.1}
+    .kicker{color:var(--muted);font-weight:850;font-size:12px;letter-spacing:.2px;text-transform:uppercase}
+    .name{font-size:18px;font-weight:950;letter-spacing:.2px}
+    .brandTitle{display:flex;flex-direction:column;line-height:1.1}
+    .kicker{color:var(--muted);font-weight:850;font-size:12px;letter-spacing:.2px;text-transform:uppercase}
+    .name{font-size:18px;font-weight:950;letter-spacing:.2px}
 
-/* Put filter rows into a neat grid if you already have containers */
-.row, .form-row{
-  display:flex;
-  gap: 14px;
-  flex-wrap: wrap;
-}
-.row > *, .form-row > *{
-  flex: 1 1 240px;
-}
+    .pill{
+      display:flex;align-items:center;gap:10px;
+      padding:10px 12px;border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(0,0,0,.16);
+      box-shadow:var(--shadow);
+      font-weight:950;font-size:12.5px;white-space:nowrap;
+    }
+    .dot{width:9px;height:9px;border-radius:999px;background:var(--ok);box-shadow:0 0 0 4px rgba(45,212,191,.16)}
 
-/* =========================
-   INPUTS (this is a huge part of “premium” feel)
-   ========================= */
+    /* --- Mobile header overflow fix (kept) --- */
+    .brand, .brandTitle { min-width: 0; }
+    .kicker, .name { min-width: 0; }
+    .kicker, .name{
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+    #lastPill, #stagePill, #datumBtn{ min-width:0; }
+    .pill{ max-width:100%; overflow:hidden; text-overflow:ellipsis; }
 
-input[type="text"],
-input[type="number"],
-input[type="date"],
-select{
+    @media (max-width: 720px){
+      .top{
+        flex-direction:column;
+        align-items:center;
+        justify-content:center;
+        gap:10px;
+        text-align:center;
+      }
+   .brand{
   width:100%;
-  box-sizing:border-box;
-  height: 46px;
-  padding: 10px 12px;
-  border-radius: 14px;
-  border: 1px solid rgba(255,255,255,.12);
-  background: rgba(10,16,32,.55);
-  color: var(--text);
-  outline: none;
-  transition: border-color .15s ease, box-shadow .15s ease, transform .08s ease;
+  justify-content:flex-start;  /* ✅ keep logo left */
+  text-align:left;
+}
+.brandTitle{
+  align-items:flex-start;      /* ✅ keep text aligned right of logo */
+  text-align:left;
 }
 
-input::placeholder{
-  color: rgba(169,182,211,.55);
+      .kicker, .name{
+        white-space:normal;
+        overflow:visible;
+        text-overflow:clip;
+      }
+      .top > div{
+        width:100%;
+        justify-content:center !important;
+        flex-wrap:wrap;
+      }
+      .pill, .btn{ max-width:100%; }
+    }
+    /* =========================
+OBVIOUS DATUM DROPDOWN
+========================= */
+.datumPick{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 12px;
+  border-radius:14px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.06);
+  box-shadow:var(--shadow);
 }
 
-input:focus, select:focus{
-  border-color: rgba(102,184,255,.55);
-  box-shadow: 0 0 0 4px var(--focus);
+.datumLbl{
+  font-weight:950;
+  font-size:12px;
+  letter-spacing:.18px;
+  text-transform:uppercase;
+  color:var(--muted);
 }
 
-input:hover, select:hover{
-  border-color: rgba(255,255,255,.18);
-}
-
-/* Date inputs often look ugly by default; this helps */
-input[type="date"]{
-  font-variant-numeric: tabular-nums;
-}
-
-/* =========================
-   BUTTONS
-   ========================= */
-
-button, .btn{
-  border: 1px solid rgba(255,255,255,.14);
-  background: linear-gradient(180deg, rgba(102,184,255,.18), rgba(102,184,255,.10));
-  color: rgba(234,240,255,.95);
-  padding: 10px 12px;
-  border-radius: 14px;
+.datumSelect{
+  appearance:auto;
   cursor:pointer;
-  transition: transform .08s ease, box-shadow .15s ease, border-color .15s ease;
-  box-shadow: 0 10px 26px rgba(0,0,0,.35);
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.16);
+  background:rgba(0,0,0,.22);
+  color:var(--text);
+  font-weight:950;
+  font-size:13px;
+  min-width:120px;
+  outline:none;
 }
 
-button:hover, .btn:hover{
-  border-color: rgba(102,184,255,.38);
-  box-shadow: 0 14px 34px rgba(0,0,0,.45);
-  transform: translateY(-1px);
+.datumSelect:focus{
+  border-color:rgba(45,212,191,.45);
+  box-shadow:0 0 0 4px rgba(45,212,191,.12);
 }
 
-button:active, .btn:active{
-  transform: translateY(0px);
+
+    .grid{display:grid;grid-template-columns:1.15fr .85fr;gap:14px;margin-top:10px}
+    @media(max-width:980px){.grid{grid-template-columns:1fr}}
+
+    .card{
+      background:var(--card);        /* flat */
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:14px;
+      overflow:hidden;
+      position:relative;
+
+      /* keep iOS hardening, but NO overlay gradients */
+      isolation:isolate;
+      contain:paint;
+      transform:translateZ(0);
+      -webkit-transform:translateZ(0);
+    }
+    /* KILL glow overlays inside cards */
+    .card:before{content:none !important;}
+    .card>*{position:relative;z-index:1}
+
+    .hrow{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:10px;
+    }
+    .hrow h2{margin:0;font-size:12.5px;letter-spacing:.22px;text-transform:uppercase;color:var(--muted);font-weight:950}
+
+    /* ===== Live Conditions layout ===== */
+    .liveGrid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin-top:8px;
+    }
+    @media(max-width:820px){ .liveGrid{grid-template-columns:1fr;} }
+
+    .panel{
+      background:var(--card2);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:12px;
+      position:relative;
+      overflow:hidden;
+      min-height:168px;
+
+      isolation:isolate;
+      contain:paint;
+      transform:translateZ(0);
+      -webkit-transform:translateZ(0);
+    }
+    /* KILL glow overlays inside panels */
+    .panel:before{content:none !important;}
+    .panel>*{position:relative;z-index:1}
+
+    .panelTitle{
+      color:var(--muted);
+      font-weight:950;
+      font-size:11.5px;
+      text-transform:uppercase;
+      letter-spacing:.2px;
+      text-align:center;
+      margin-bottom:10px;
+    }
+
+    /* TODAY */
+    .todayTop{
+      display:flex;
+      align-items:stretch;
+      justify-content:center;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
+    .curBox{
+      flex:1 1 260px;
+      min-width:260px;
+      border:1px solid var(--line);
+      background:rgba(0,0,0,.14);
+      border-radius:14px;
+      padding:10px 12px;
+      text-align:center;
+    }
+    .curLabel{
+      color:var(--muted);
+      font-weight:950;
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:.2px;
+      text-align:center;
+    }
+    .curRow{
+      display:flex;
+      align-items:baseline;
+      justify-content:center;
+      gap:10px;
+      margin-top:8px;
+    }
+    .curVal{
+      display:flex;
+      align-items:baseline;
+      justify-content:center;
+      gap:8px;
+      font-weight:950;
+      font-size:28px;
+      letter-spacing:.2px;
+      white-space:nowrap;
+    }
+    .curMeta{
+      margin-top:8px;
+      color:var(--muted);
+      font-size:12.5px;
+      line-height:1.25;
+      text-align:center;
+      display:none;
+    }
+
+    /* remove progress bar under Current water elevation */
+    .levelMeter{display:none !important;}
+    .levelFill{display:none !important;}
+
+    .todayRange{
+      flex:0 0 320px;
+      min-width:260px;
+      border:1px solid var(--line);
+      background:rgba(0,0,0,.14);
+      border-radius:14px;
+      padding:10px 12px;
+      text-align:center;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+    }
+    .rangeRow{display:flex;justify-content:center;gap:18px;flex-wrap:wrap;margin-top:6px}
+    .rangeCol{min-width:140px}
+    .rangeLab{color:var(--muted);font-weight:950;font-size:11px;letter-spacing:.18px;text-transform:uppercase;text-align:center}
+    .rangeVal{font-weight:950;font-size:34px;line-height:1;margin-top:6px;white-space:nowrap;text-align:center}
+    .unit{color:var(--muted);font-size:12px;font-weight:950}
+    .rangeMeta{
+      margin-top:10px;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.25;
+      text-align:center;
+      display:none;
+    }
+
+    .rangeWhen{
+  margin-top:6px;
+  color:var(--muted);
+  font-size:12px;
+  font-weight:850;
+  letter-spacing:.15px;
 }
 
-/* Secondary buttons */
-.btn.secondary, button.secondary{
-  background: rgba(255,255,255,.045);
-  border-color: rgba(255,255,255,.10);
-}
 
-/* =========================
-   “STATS / MATCHES” LINE
-   ========================= */
+    @media(max-width:520px){
+      .rangeVal{font-size:32px}
+      .curVal{font-size:26px}
+    }
 
-.matches, .statusline, .meta-line{
-  margin-top: 12px;
-  padding: 10px 12px;
-  border-radius: 14px;
-  background: rgba(255,255,255,.03);
-  border: 1px solid rgba(255,255,255,.07);
-  color: rgba(234,240,255,.78);
-}
+    /* OUTLOOK */
+    .outlookTop{
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+      gap:10px;
+      align-items:stretch;
+      justify-items:stretch;
+      margin-bottom:10px;
+    }
+    @media(max-width:520px){
+      .outlookTop{grid-template-columns:1fr;}
+    }
 
-/* =========================
-   TABLE (your screenshot shows Date/Time, Peak, Type)
-   ========================= */
+    .miniStat{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      padding:12px 12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.05);
+      font-weight:950;
+      font-size:12.5px;
+      white-space:nowrap;
+      text-align:center;
+      min-height:52px;
+      width:100%;
+    }
+    .miniChip{width:12px;height:12px;border-radius:99px;display:inline-block}
+    .miniStat b{font-weight:950}
 
+    .events{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      margin-top:6px;
+    }
+    .event{
+      border:1px solid var(--line);
+      background:rgba(0,0,0,.14);
+      border-radius:14px;
+      padding:10px 10px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .eventLeft{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+      min-width:0;
+    }
+    .eventWhen{
+      font-weight:950;
+      font-size:13px;
+      letter-spacing:.1px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .eventSub{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.2;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .eventBadge{
+      font-weight:950;
+      font-size:12px;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.06);
+      white-space:nowrap;
+      flex:0 0 auto;
+    }
+    @media(max-width:520px){
+      .event{align-items:flex-start}
+      .eventWhen,.eventSub{white-space:normal}
+      .eventBadge{margin-left:auto}
+    }
+
+    /* Flood stage strip (stack on mobile so nothing goes off-screen) */
+    .stages{
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+      gap:10px;
+      margin-top:10px;
+    }
+    @media(max-width:520px){
+      .stages{grid-template-columns:1fr;}
+    }
+
+    .stage{
+      background:var(--card2);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:16px 14px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:12px;
+      width:100%;
+      overflow:hidden;
+      text-align:center;
+    }
+    .stageName{
+      font-weight:950;
+      font-size:20px;
+      letter-spacing:.2px;
+      width:100%;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+      text-align:center;
+    }
+    .badge{
+      font-weight:950;
+      font-size:18px;
+      padding:10px 14px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.06);
+      white-space:nowrap;
+      text-align:center;
+    }
+
+    .table{border-radius:14px;overflow:hidden;border:1px solid var(--line);background:var(--card2)}
 table{
   width:100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  overflow:hidden;
-  border-radius: var(--radius);
-  border: 1px solid rgba(255,255,255,.08);
-  background: rgba(255,255,255,.02);
+  border-collapse:collapse;
+  text-align:center;            /* center everything */
 }
+
+th,td{
+  padding:8px 6px;
+  border-bottom:1px solid var(--line);
+  font-size:13px;
+  text-align:center;            /* center each column */
+}
+
+th{
+  color:var(--muted);
+  font-weight:800;
+}
+
+td{
+  color:var(--text);
+}
+
+tr:last-child td{border-bottom:none}
 
 thead th{
-  text-align:left;
-  padding: 12px 12px;
-  font-size: .85rem;
-  letter-spacing:.10em;
-  text-transform: uppercase;
-  color: rgba(234,240,255,.80);
-  background: rgba(255,255,255,.03);
-  border-bottom: 1px solid rgba(255,255,255,.08);
+  text-transform:uppercase;
+  letter-spacing:.2px;
+  font-size:11px;
+  font-weight:950;
 }
 
-tbody td{
-  padding: 12px 12px;
-  border-bottom: 1px solid rgba(255,255,255,.06);
-  color: rgba(234,240,255,.88);
-}
+    .tag{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.05);font-weight:950;font-size:12px;white-space:nowrap}
+    .chip{width:9px;height:9px;border-radius:99px;display:inline-block}
 
-tbody tr:hover td{
-  background: rgba(102,184,255,.06);
-}
+    .chartWrapTall{height:320px;width:100%}
+    .chartWrap{height:240px;width:100%}
+    .foot{margin-top:10px;color:var(--muted);font-size:12.5px;line-height:1.25;text-align:center}
 
-/* Type pills if you render flood type text */
-.badge, .pill{
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(255,255,255,.10);
-  background: rgba(255,255,255,.04);
-  font-size: .9rem;
-}
+    .filterRow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+    .input,.btn,select{
+      background:rgba(0,0,0,.18);
+      border:1px solid var(--line);
+      color:var(--text);
+      border-radius:12px;
+      padding:10px 10px;
+      font-weight:950;
+      font-size:13px;
+      outline:none
+    }
+    .input{min-width:240px}
+    .btn{cursor:pointer}
+    .btn:hover{filter:brightness(1.06)}
+    .hint{color:var(--muted);font-size:12.5px;line-height:1.25}
 
-/* If your TYPE column contains words like Minor/Moderate/Major, color them */
-.type-minor, .minor{ color: var(--minor); }
-.type-moderate, .moderate{ color: var(--moderate); }
-.type-major, .major{ color: var(--major); }
-.type-ok, .ok{ color: var(--ok); }
+    .btn:focus,.input:focus,select:focus{
+      border-color:rgba(45,212,191,.35);
+      box-shadow:0 0 0 4px rgba(45,212,191,.10);
+    }
 
-/* =========================
-   SCROLLBARS (desktop polish)
+    /* Hide footer notes you called out */
+    #f48Meta{display:none !important;}
+    #curMeta{display:none !important;}
+
+    /* ==============================
+       ACCORDION SYSTEM (NEW)
+       ============================== */
+    details.acc{
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      background:var(--card);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    details.acc summary{list-style:none;cursor:pointer;}
+    details.acc summary::-webkit-details-marker{display:none;}
+
+    .accHeader{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:14px;
+    }
+    .accTitle{
+      margin:0;
+      font-size:12.5px;
+      letter-spacing:.22px;
+      text-transform:uppercase;
+      color:var(--muted);
+      font-weight:950;
+    }
+    .chev{
+      width:12px;
+      height:12px;
+      border-right:2px solid rgba(234,240,255,.7);
+      border-bottom:2px solid rgba(234,240,255,.7);
+      transform:rotate(-45deg);
+      transition:.18s;
+    }
+    details[open] .chev{transform:rotate(45deg);}
+    .accBody{padding:0 14px 14px 14px;}
+
+    /* =========================
+   MAP (Leaflet)
    ========================= */
-*::-webkit-scrollbar{ height: 10px; width: 10px; }
-*::-webkit-scrollbar-thumb{
-  background: rgba(255,255,255,.12);
-  border-radius: 999px;
-  border: 2px solid rgba(0,0,0,.25);
+#gaugeMap{
+  height: 360px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: rgba(0,0,0,.20);
 }
-*::-webkit-scrollbar-track{
-  background: rgba(255,255,255,.03);
-}
-
-/* =========================
-   OPTIONAL: Title block (if you have h1/h2 near top)
-   ========================= */
-.hero{
-  padding: 14px 0 10px;
-}
-.hero h1{
-  font-size: 1.55rem;
-  font-weight: 900;
-  letter-spacing: .2px;
-}
-.hero p{
-  margin-top: 6px;
-  color: rgba(169,182,211,.92);
+@media(max-width:520px){
+  #gaugeMap{ height: 320px; }
 }
 
-/* =========================
-   OPTIONAL: Make any "side controls" look like a real sidebar
-   ========================= */
-aside, .control-panel, .controls{
-  padding: 14px;
-}
-.controls h3, .control-panel h3{
-  margin: 0 0 10px;
-  font-size: .92rem;
-  letter-spacing: .12em;
-  text-transform: uppercase;
-  color: rgba(234,240,255,.75);
-}
-
-/* =========================
-   Mobile tightening
-   ========================= */
-@media (max-width: 680px){
-  main, .container, .wrap, .page{ padding: 16px 14px 46px; }
-  summary{ padding: 14px 14px; }
-  details > *:not(summary){ padding: 12px 14px 14px; }
-  input[type="text"], input[type="number"], input[type="date"], select{ height: 44px; }
-}
-</style>
-
+  </style>
 </head>
 
 <body>
@@ -689,64 +865,20 @@ aside, .control-panel, .controls{
   </div>
   <div style="height:8px"></div>
 
-<div class="filterGrid">
+  <div class="filterRow">
 
-  <!-- Elevation group -->
-  <div class="fieldGroup">
-    <div class="fieldTitle">Elevation range (<span data-unit>ft MLLW</span>)</div>
-    <div class="fieldRow">
-      <input class="input" id="minElev" type="number" step="0.01" placeholder="Min elevation" />
-      <input class="input" id="maxElev" type="number" step="0.01" placeholder="Max elevation" />
-    </div>
-
-    <div style="height:8px"></div>
-    <div class="hint" style="margin:0;">
-      Leave blank to ignore elevation.
-    </div>
-  </div>
-
-  <!-- Date group -->
-  <div class="fieldGroup">
-    <div class="fieldTitle">Date range (EST)</div>
-    <div class="fieldRow">
-      <input class="input" id="fromDate" type="date" autocomplete="off" />
-      <input class="input" id="toDate" type="date" autocomplete="off" />
-    </div>
-
-    <div style="height:8px"></div>
-    <div class="hint" style="margin:0;">
-      Leave blank to ignore dates.
-    </div>
-  </div>
-<!-- Controls -->
-<div class="fieldGroup">
-  <div class="fieldTitle">Controls</div>
-
-  <select id="sortMode" class="input" style="min-width:180px;">
-    <option value="desc">Highest first</option>
-    <option value="asc">Lowest first</option>
-    <option value="recent">Most recent</option>
-  </select>
-
-  <div style="height:10px"></div>
-
-  <div class="smallBtnRow">
-    <button class="smallBtn" id="presetAll">All time</button>
-    <button class="smallBtn" id="presetYTD">YTD</button>
-    <button class="smallBtn" id="preset30">Last 30 days</button>
-    <button class="smallBtn" id="clearElev">Clear elevation</button>
-  </div>
-
-  <div style="height:10px"></div>
-
-  <div class="smallBtnRow">
-    <button class="btn" id="applyBtn">Apply</button>
-    <button class="btn" id="resetBtn">Reset</button>
-  </div>
-</div>
-
-<div class="filterSummary" id="filterSummary">Loading…</div>
-
+          <input class="input" id="minElev" type="number" step="0.01" placeholder="Min (ft)" />
+          <input class="input" id="maxElev" type="number" step="0.01" placeholder="Max (ft)" />
+          <input class="input" id="fromDate" type="date" autocomplete="off" />
+          <input class="input" id="toDate" type="date" autocomplete="off" />
+          <select id="sortMode">
+            <option value="desc">Highest first</option>
+            <option value="asc">Lowest first</option>
+            <option value="recent">Most recent</option>
+          </select>
+          <button class="btn" id="applyBtn">Apply</button>
+          <button class="btn" id="resetBtn">Reset</button>
+        </div>
 
         <div class="hint" id="histMeta">Loading…</div>
         <div style="height:10px"></div>
@@ -1099,9 +1231,6 @@ const topTenBody=$("topTenBody");
 const topTenUnitTh=$("topTenUnitTh");
 const fcNote=$("fcNote");
 const txtNote=$("txtNote");
-   
-const filterSummaryEl = $("filterSummary");
-
 
 const histBody = $("histBody"),
       histMeta = $("histMeta"),
@@ -1955,23 +2084,10 @@ const floodBandsPlugin = {
 
 Chart.register(floodBandsPlugin);
 
-    function rebuildFastHistoryCache(){
-  HIGH_TIDES_FAST = (HIGH_TIDES_NAVD || [])
-    .map(r=>{
-      const tMs = new Date(r.t).getTime();
-      const ftNavd = Number(r.ft);
-      if(!Number.isFinite(tMs) || !Number.isFinite(ftNavd)) return null;
-      return { tISO: r.t, tMs, ftNavd };
-    })
-    .filter(Boolean);
-}
-
 
 /* =========================
 Core state
 ========================= */
-  let HIGH_TIDES_FAST = []; // { tISO, tMs, ftNavd }
-
 let HIGH_TIDES_NAVD=[];
 let annualChart=null, tsChart=null, monthAvgChart=null;
 let YEARS=[], annualMinor=[], annualModerate=[], annualMajor=[];
@@ -3138,58 +3254,44 @@ function renderHist(rowsNavd){
 }
 
 function applyFilter(){
-  const help = document.getElementById("histHelp");
-  if(help) help.textContent = "Filter by elevation and/or date. Leave fields blank to ignore them.";
+    const help = document.getElementById("histHelp");
+  if(help) help.textContent = "Use any combination: Elevation range and/or Date range. Leave fields blank to ignore them.";
 
-  // Inputs in DISPLAY datum
+  // NEW: range inputs (display datum)
   const minDisplay = parseFloat(minElevEl.value);
   const maxDisplay = parseFloat(maxElevEl.value);
 
-  // Dates (YYYY-MM-DD) inclusive bounds
+  // NEW: date inputs (YYYY-MM-DD) — inclusive
   const fromStr = (fromDateEl?.value || "").trim();
   const toStr   = (toDateEl?.value   || "").trim();
 
-  // Convert elev range -> NAVD (data are NAVD)
+  // Convert elev range -> NAVD (your data are NAVD)
   const minNavd = Number.isFinite(minDisplay) ? fromDisplayToNavd(minDisplay) : -Infinity;
   const maxNavd = Number.isFinite(maxDisplay) ? fromDisplayToNavd(maxDisplay) :  Infinity;
 
+  // Build date bounds in ms (inclusive). Using UTC parsing is fine since we compare ISO times.
   const fromMs = fromStr ? new Date(fromStr + "T00:00:00Z").getTime() : -Infinity;
   const toMs   = toStr   ? new Date(toStr   + "T23:59:59Z").getTime() :  Infinity;
 
   const mode = sortModeEl.value;
 
-  // Filter using the FAST cache
-  let rows = (HIGH_TIDES_FAST || []).filter(r=>{
-    if(r.ftNavd < minNavd || r.ftNavd > maxNavd) return false;
-    if(r.tMs < fromMs || r.tMs > toMs) return false;
+  let rows = HIGH_TIDES_NAVD.filter(r=>{
+    if(r.ft < minNavd || r.ft > maxNavd) return false;
+
+    const tMs = new Date(r.t).getTime();
+    if(!Number.isFinite(tMs)) return false;
+
+    if(tMs < fromMs || tMs > toMs) return false;
+
     return true;
   });
 
-  // Sort
-  if(mode==="desc")   rows.sort((a,b)=>b.ftNavd-a.ftNavd);
-  if(mode==="asc")    rows.sort((a,b)=>a.ftNavd-b.ftNavd);
-  if(mode==="recent") rows.sort((a,b)=>b.tMs-a.tMs);
+  if(mode==="desc")   rows.sort((a,b)=>b.ft-a.ft);
+  if(mode==="asc")    rows.sort((a,b)=>a.ft-b.ft);
+  if(mode==="recent") rows.sort((a,b)=>new Date(b.t)-new Date(a.t));
 
-  // Render (convert back to the shape your renderHist expects)
-  const rowsForRender = rows.map(r=>({ t:r.tISO, ft:r.ftNavd }));
-
-  renderHist(rowsForRender);
-
-  // Summary line (much clearer than “histMeta” alone)
-  if(filterSummaryEl){
-    const elevTxt = (Number.isFinite(minDisplay) || Number.isFinite(maxDisplay))
-      ? `Elevation: ${Number.isFinite(minDisplay) ? minDisplay.toFixed(2) : "—"} to ${Number.isFinite(maxDisplay) ? maxDisplay.toFixed(2) : "—"} ${unitText()}`
-      : "Elevation: (any)";
-
-    const dateTxt = (fromStr || toStr)
-      ? `Dates: ${fromStr || "—"} to ${toStr || "—"} (EST)`
-      : "Dates: (any)";
-
-    filterSummaryEl.textContent =
-      `Matches: ${rows.length.toLocaleString()} of ${(HIGH_TIDES_FAST?.length || 0).toLocaleString()} · ${elevTxt} · ${dateTxt}`;
-  }
+  renderHist(rows);
 }
-
 
 /* =========================
 Monthly averages
@@ -3538,8 +3640,6 @@ async function initJSONBackedHistory(){
       livePeaks = [];
     }
   }
-HIGH_TIDES_NAVD.sort((a,b)=>new Date(b.t)-new Date(a.t));
-rebuildFastHistoryCache();
 
   // Combine (may contain overlaps)
   const combined = [...peaks, ...livePeaks];
@@ -3705,53 +3805,6 @@ if (hist[0].status === "rejected") {
 /* =========================
 Controls
 ========================= */
-
-    const presetAll = $("presetAll");
-const presetYTD = $("presetYTD");
-const preset30  = $("preset30");
-const clearElev = $("clearElev");
-
-function setDateInputs(fromYMD, toYMD){
-  if(fromDateEl) fromDateEl.value = fromYMD || "";
-  if(toDateEl)   toDateEl.value   = toYMD || "";
-}
-
-function ymdEST(d){
-  // return YYYY-MM-DD in your fixed EST timezone logic
-  const parts = fmtPartsYMD.formatToParts(d);
-  const y = parts.find(p=>p.type==="year")?.value;
-  const m = parts.find(p=>p.type==="month")?.value;
-  const da= parts.find(p=>p.type==="day")?.value;
-  return `${y}-${m}-${da}`;
-}
-
-if(presetAll) presetAll.addEventListener("click", ()=>{
-  setDateInputs("", "");
-  sortModeEl.value = "desc";
-  applyFilter();
-});
-
-if(presetYTD) presetYTD.addEventListener("click", ()=>{
-  const { y } = getESTParts(new Date());
-  setDateInputs(`${y}-01-01`, ymdEST(new Date()));
-  sortModeEl.value = "recent";
-  applyFilter();
-});
-
-if(preset30) preset30.addEventListener("click", ()=>{
-  const now = new Date();
-  const past = new Date(now.getTime() - 30*86400000);
-  setDateInputs(ymdEST(past), ymdEST(now));
-  sortModeEl.value = "recent";
-  applyFilter();
-});
-
-if(clearElev) clearElev.addEventListener("click", ()=>{
-  if(minElevEl) minElevEl.value = "";
-  if(maxElevEl) maxElevEl.value = "";
-  applyFilter();
-});
-
 const applyBtn = $("applyBtn");
 if(applyBtn) applyBtn.addEventListener("click", applyFilter);
 

@@ -63,24 +63,25 @@
    .top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
     .brand{display:flex;align-items:center;gap:12px}
 .brandLogo{
-  width: 180px;     /* rectangle container */
+  width: 220px;
   height: 60px;
   border-radius: 12px;
   border: 1px solid var(--line);
   background: rgba(0,0,0,.25);
+  padding:0;              /* ✅ important */
+  overflow:hidden;        /* ✅ crops inside badge */
   display:flex;
   align-items:center;
-  justify-content:flex-start;
-  padding:6px 10px;
-  overflow:hidden;
+  justify-content:center;
 }
 
 .brandLogo img{
+  width:100%;
   height:100%;
-  width:auto;        /* keeps proportions (no stretching) */
-  object-fit:contain;
+  object-fit:cover;       /* ✅ fills box (crops extra margins) */
   display:block;
 }
+
 
     .brandTitle{display:flex;flex-direction:column;line-height:1.1}
     .kicker{color:var(--muted);font-weight:850;font-size:12px;letter-spacing:.2px;text-transform:uppercase}

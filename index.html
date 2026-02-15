@@ -3576,23 +3576,22 @@ async function updateTimeseries(){
   });
   STATE.obs24Navd = obs || [];
 
-  // Forecast: PETSS (MLLW)
-  try {
- const { issuedTime, points, urlUsed } =  await fetchPETSSForecast_MLLW({ hours: 72 });
-    STATE.pred72Mllw = points || [];
+// Forecast: PETSS (MLLW)
+try {
+  const { issuedTime, points } = await fetchPETSSForecast_MLLW({ hours: 72 });
+  STATE.pred72Mllw = points || [];
 
-    if (STATE.pred72Mllw.length) {
-      fcNote.textContent =
-        (issuedTime ? `NOAA/PETSS forecast issued: ${fmtESTFull(issuedTime)}
-        
-    } else {
-      fcNote.textContent = `NOAA/PETSS returned no points · Source: ${urlUsed}`;
-    }
-  } catch (e) {
-    console.error("PETSS forecast failed:", e);
-    STATE.pred72Mllw = [];
-    fcNote.textContent = "NOAA/PETSS forecast unavailable";
-  }
+  // 🔕 no message shown under chart
+  if (fcNote) fcNote.textContent = "";
+
+} catch (e) {
+  console.error("PETSS forecast failed:", e);
+  STATE.pred72Mllw = [];
+
+  // 🔕 still show nothing even if PETSS fails
+  if (fcNote) fcNote.textContent = "";
+}
+
 
   // ✅ IMPORTANT: actually render the chart + 24h range card after STATE updates
   updateTsChartFromState();

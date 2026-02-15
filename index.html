@@ -1,5 +1,6 @@
 
 
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -627,70 +628,20 @@ details[open] .chev{transform:rotate(45deg)}
   </div>
   <div style="height:8px"></div>
 
- <div class="filterRow" style="flex-wrap:wrap; gap:10px; align-items:end">
+  <div class="filterRow">
 
-  <!-- Existing filters -->
-  <input class="input" id="minElev" type="number" step="0.01" placeholder="Min (ft)" />
-  <input class="input" id="maxElev" type="number" step="0.01" placeholder="Max (ft)" />
-  <input class="input" id="fromDate" type="date" autocomplete="off" />
-  <input class="input" id="toDate" type="date" autocomplete="off" />
-
-  <select id="sortMode">
-    <option value="desc">Highest first</option>
-    <option value="asc">Lowest first</option>
-    <option value="recent">Most recent</option>
-  </select>
-
-  <button class="btn" id="applyBtn">Apply</button>
-  <button class="btn" id="resetBtn">Reset</button>
-
-  <!-- NEW: Event intelligence controls -->
-  <div style="width:100%; height:8px"></div>
-
-  <div class="panel" style="width:100%; padding:12px; border-radius:14px;">
-    <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:end">
-
-      <div style="display:flex; flex-direction:column; gap:6px">
-        <div class="kicker" style="opacity:.9">Mode</div>
-        <select id="histMode">
-          <option value="peaks">Single tides (current)</option>
-          <option value="events">Flood events (grouped)</option>
-        </select>
-      </div>
-
-      <div style="display:flex; flex-direction:column; gap:6px">
-        <div class="kicker" style="opacity:.9">Threshold</div>
-        <select id="eventThreshold">
-          <option value="Minor">Minor+</option>
-          <option value="Moderate">Moderate+</option>
-          <option value="Major">Major only</option>
-        </select>
-      </div>
-
-      <div style="display:flex; flex-direction:column; gap:6px">
-        <div class="kicker" style="opacity:.9">Min consecutive tides</div>
-        <input class="input" id="minConsecutive" type="number" min="1" step="1" value="3" style="width:160px" />
-      </div>
-
-      <div style="display:flex; flex-direction:column; gap:6px">
-        <div class="kicker" style="opacity:.9">Max gap (hours)</div>
-        <input class="input" id="maxGapHours" type="number" min="1" step="1" value="12" style="width:140px" />
-      </div>
-
-      <div style="display:flex; flex-direction:column; gap:6px">
-        <div class="kicker" style="opacity:.9">Min duration (hours)</div>
-        <input class="input" id="minDurationHours" type="number" min="0" step="0.5" value="0" style="width:160px" />
-      </div>
-
-    </div>
-
-    <div class="hint" style="margin-top:8px; opacity:.85">
-      Event mode groups high tides into episodes using Max gap. Threshold + Min consecutive filters those episodes.
-    </div>
-  </div>
-
-</div>
-
+          <input class="input" id="minElev" type="number" step="0.01" placeholder="Min (ft)" />
+          <input class="input" id="maxElev" type="number" step="0.01" placeholder="Max (ft)" />
+          <input class="input" id="fromDate" type="date" autocomplete="off" />
+          <input class="input" id="toDate" type="date" autocomplete="off" />
+          <select id="sortMode">
+            <option value="desc">Highest first</option>
+            <option value="asc">Lowest first</option>
+            <option value="recent">Most recent</option>
+          </select>
+          <button class="btn" id="applyBtn">Apply</button>
+          <button class="btn" id="resetBtn">Reset</button>
+        </div>
 
         <div class="hint" id="histMeta">Loading…</div>
         <div style="height:10px"></div>
@@ -1057,13 +1008,6 @@ const minElevEl  = $("minElev"),
 const minorBadge = $("minorBadge"),
       moderateBadge = $("moderateBadge"),
       majorBadge = $("majorBadge");
-
-    const histModeEl        = $("histMode");
-const eventThresholdEl  = $("eventThreshold");
-const minConsecEl       = $("minConsecutive");
-const maxGapHoursEl     = $("maxGapHours");
-const minDurHoursEl     = $("minDurationHours");
-
 
 
       // Flood outlook (next 48h) DOM
@@ -3051,18 +2995,7 @@ async function hydrateHistoricFromTXT(){
 
 
 function renderHist(rowsNavd){
-  // ✅ ensure peaks headers (in case events mode changed them)
-  const thRow = histBody?.closest("table")?.querySelector("thead tr");
-  if(thRow){
-    thRow.innerHTML = `
-      <th>Date/Time (EST)</th>
-      <th id="histUnitTh">Peak (${unitText()})</th>
-      <th>Type</th>
-    `;
-  }
-
   histBody.innerHTML = "";
-
 
   const LIMIT = 10;                      // ✅ only show 10
   const show = rowsNavd.slice(0, LIMIT);
@@ -3081,139 +3014,6 @@ function renderHist(rowsNavd){
   }
 
   histMeta.textContent = `Showing ${Math.min(LIMIT, rowsNavd.length)} of ${rowsNavd.length.toLocaleString()}`;
-}
-
-    function thresholdToNavdMin(threshName){
-  // We classify events in NAVD88 internally (your data are NAVD).
-  // Convert the selected threshold in DISPLAY datum -> NAVD.
-  const Tdisp = THRESH[DISPLAY_DATUM];
-  let dispMin = Tdisp.minorLow;
-  if(threshName === "Moderate") dispMin = Tdisp.moderateLow;
-  if(threshName === "Major")    dispMin = Tdisp.majorLow;
-
-  // Convert display threshold to NAVD, so we can compare with r.ft (NAVD).
-  return fromDisplayToNavd(dispMin);
-}
-
-function buildEventsFromPeaks_NAVD(rowsNavd, {
-  thresholdName = "Minor",
-  maxGapHours = 12,
-  minConsecutive = 3,
-  minDurationHours = 0
-} = {}){
-  const minNavd = thresholdToNavdMin(thresholdName);
-  const gapMs = Math.max(1, Number(maxGapHours) || 12) * 3600 * 1000;
-
-  const pts = (rowsNavd || [])
-    .map(r => ({ t:r.t, ft:Number(r.ft) }))
-    .filter(p => p.t && Number.isFinite(p.ft))
-    .sort((a,b)=> new Date(a.t) - new Date(b.t));
-
-  const events = [];
-  let cur = null;
-
-  function closeEvent(){
-    if(!cur) return;
-
-    // Only keep peaks that meet threshold within the event
-    const qualifying = cur.peaks.filter(p => p.ft >= minNavd);
-
-    if(qualifying.length < (Number(minConsecutive) || 1)) {
-      cur = null;
-      return;
-    }
-
-    const startMs = cur.startMs;
-    const endMs   = cur.endMs;
-    const durH = Math.max(0, (endMs - startMs) / 3600000);
-
-    if(durH < (Number(minDurationHours) || 0)){
-      cur = null;
-      return;
-    }
-
-    // Event peak among qualifying peaks (or overall if you want)
-    let peak = qualifying[0];
-    for(const p of qualifying){
-      if(p.ft > peak.ft) peak = p;
-    }
-
-    events.push({
-      startT: new Date(startMs).toISOString(),
-      endT:   new Date(endMs).toISOString(),
-      startMs, endMs,
-      peaks: qualifying,
-      count: qualifying.length,
-      peakNavd: peak.ft,
-      peakT: peak.t
-    });
-
-    cur = null;
-  }
-
-  for(const p of pts){
-    const ms = new Date(p.t).getTime();
-    if(!Number.isFinite(ms)) continue;
-
-    // We only care about threshold-qualified peaks in event logic
-    if(p.ft < minNavd) continue;
-
-    if(!cur){
-      cur = { startMs: ms, endMs: ms, peaks: [p] };
-      continue;
-    }
-
-    if(ms - cur.endMs <= gapMs){
-      cur.endMs = ms;
-      cur.peaks.push(p);
-    }else{
-      closeEvent();
-      cur = { startMs: ms, endMs: ms, peaks: [p] };
-    }
-  }
-  closeEvent();
-
-  // default: newest events first
-  events.sort((a,b)=> b.peakNavd - a.peakNavd);
-  return events;
-}
-
-function renderHistEvents(events){
-  // Replace table to show event info
-  histBody.innerHTML = "";
-
-  const LIMIT = 10;
-  const show = (events || []).slice(0, LIMIT);
-
-  // Update headers
-  const thRow = histBody?.closest("table")?.querySelector("thead tr");
-  if(thRow){
-    thRow.innerHTML = `
-      <th>Event window (EST)</th>
-      <th>Peaks</th>
-      <th id="histUnitTh">Event peak (${unitText()})</th>
-      <th>Type</th>
-    `;
-  }
-
-  for(const e of show){
-    const peakDisp = toDisplayFtFromNavd(e.peakNavd);
-    const tag = stageTagByNavd(e.peakNavd);
-
-    // Event window string (EST)
-    const when = `${fmtNiceDate(e.startT)} · ${fmtESTTime(e.startT)} → ${fmtESTTime(e.endT)}`;
-
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${when}</td>
-      <td><b>${e.count}</b></td>
-      <td><b>${peakDisp.toFixed(2)}</b></td>
-      <td><span class="tag"><span class="chip" style="background:${tag.c}"></span>${tag.txt}</span></td>
-    `;
-    histBody.appendChild(tr);
-  }
-
-  histMeta.textContent = `Showing ${Math.min(LIMIT, events.length)} of ${events.length.toLocaleString()} events`;
 }
 
 function applyFilter(){
@@ -3236,50 +3036,25 @@ function applyFilter(){
   const fromMs = fromStr ? new Date(fromStr + "T00:00:00Z").getTime() : -Infinity;
   const toMs   = toStr   ? new Date(toStr   + "T23:59:59Z").getTime() :  Infinity;
 
- const sortMode = sortModeEl.value;
+  const mode = sortModeEl.value;
 
-let rows = HIGH_TIDES_NAVD.filter(r=>{
-  if(r.ft < minNavd || r.ft > maxNavd) return false;
+  let rows = HIGH_TIDES_NAVD.filter(r=>{
+    if(r.ft < minNavd || r.ft > maxNavd) return false;
 
-  const tMs = new Date(r.t).getTime();
-  if(!Number.isFinite(tMs)) return false;
+    const tMs = new Date(r.t).getTime();
+    if(!Number.isFinite(tMs)) return false;
 
-  if(tMs < fromMs || tMs > toMs) return false;
-  return true;
-});
+    if(tMs < fromMs || tMs > toMs) return false;
 
-if(sortMode==="desc")   rows.sort((a,b)=>b.ft-a.ft);
-if(sortMode==="asc")    rows.sort((a,b)=>a.ft-b.ft);
-if(sortMode==="recent") rows.sort((a,b)=>new Date(b.t)-new Date(a.t));
-
-const histMode = (histModeEl?.value || "peaks");
-
-if(histMode === "events"){
-  const thresholdName   = (eventThresholdEl?.value || "Minor");
-  const minConsecutive  = parseInt(minConsecEl?.value || "3", 10);
-  const maxGapHours     = parseFloat(maxGapHoursEl?.value || "12");
-  const minDurationHours= parseFloat(minDurHoursEl?.value || "0");
-
-  const events = buildEventsFromPeaks_NAVD(rows, {
-    thresholdName,
-    maxGapHours,
-    minConsecutive,
-    minDurationHours
+    return true;
   });
 
-  if(sortMode === "recent"){
-    events.sort((a,b)=> b.endMs - a.endMs);
-  }else if(sortMode === "asc"){
-    events.sort((a,b)=> a.peakNavd - b.peakNavd);
-  }else{
-    events.sort((a,b)=> b.peakNavd - a.peakNavd);
-  }
+  if(mode==="desc")   rows.sort((a,b)=>b.ft-a.ft);
+  if(mode==="asc")    rows.sort((a,b)=>a.ft-b.ft);
+  if(mode==="recent") rows.sort((a,b)=>new Date(b.t)-new Date(a.t));
 
-  renderHistEvents(events);
-}else{
   renderHist(rows);
 }
-
 
 /* =========================
 Monthly averages
@@ -3795,16 +3570,6 @@ Controls
 ========================= */
 const applyBtn = $("applyBtn");
 if(applyBtn) applyBtn.addEventListener("click", applyFilter);
-    [histModeEl, eventThresholdEl, minConsecEl, maxGapHoursEl, minDurHoursEl].forEach(el=>{
-  if(!el) return;
-  el.addEventListener("change", applyFilter);
-  el.addEventListener("input", ()=>{
-    // keep it snappy but not too spammy: simple debounce
-    clearTimeout(el._t);
-    el._t = setTimeout(applyFilter, 250);
-  });
-});
-
 
 const resetBtn = $("resetBtn");
 if(resetBtn) resetBtn.addEventListener("click", ()=>{
@@ -3813,12 +3578,6 @@ if(resetBtn) resetBtn.addEventListener("click", ()=>{
   if(fromDateEl) fromDateEl.value = "";
   if(toDateEl)   toDateEl.value = "";
   sortModeEl.value = "desc";
-  if(histModeEl) histModeEl.value = "peaks";
-if(eventThresholdEl) eventThresholdEl.value = "Minor";
-if(minConsecEl) minConsecEl.value = "3";
-if(maxGapHoursEl) maxGapHoursEl.value = "12";
-if(minDurHoursEl) minDurHoursEl.value = "0";
-
   applyFilter();
 });
 

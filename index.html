@@ -1,6 +1,3 @@
-
-
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -121,6 +118,57 @@
         gap:10px;
         text-align:center;
       }
+      /* ===== RIGHT SIDE HEADER FIX ===== */
+.topRight{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:10px;
+  flex-wrap:nowrap;
+  min-width:0;
+}
+
+/* Last updated box stretches nicely */
+#lastPill{
+  flex:1 1 320px;
+  min-width:240px;
+}
+
+/* Keep datum + status tight */
+.datumPick,
+#stagePill{
+  flex:0 0 auto;
+}
+
+/* Medium screens (ipad-ish) */
+@media (max-width: 980px){
+  .topRight{
+    flex-wrap:wrap;
+    justify-content:center;
+  }
+
+  #lastPill{
+    flex:1 1 100%;
+    min-width:0;
+  }
+}
+
+/* Mobile clean stack */
+@media (max-width: 720px){
+  .topRight{
+    flex-direction:column;
+    align-items:stretch;
+    gap:10px;
+  }
+
+  .datumPick,
+  #lastPill,
+  #stagePill{
+    width:100%;
+    justify-content:center;
+  }
+}
+
    .brand{
   width:100%;
   justify-content:flex-start;  /* ✅ keep logo left */
@@ -620,7 +668,7 @@ thead th{
         </div>
       </a>
 
-   <div style="display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap">
+   <div class="topRight">
 
   <!-- OBVIOUS datum selector -->
   <div class="datumPick" aria-label="Datum selector">

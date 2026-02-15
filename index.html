@@ -3583,8 +3583,8 @@ async function updateTimeseries(){
 
     if (STATE.pred72Mllw.length) {
       fcNote.textContent =
-        (issuedTime ? `NOAA/PETSS forecast issued: ${fmtESTFull(issuedTime)}` : "NOAA/PETSS forecast loaded") +
-        ` · Source: ${urlUsed}`;
+        (issuedTime ? `NOAA/PETSS forecast issued: ${fmtESTFull(issuedTime)}
+        
     } else {
       fcNote.textContent = `NOAA/PETSS returned no points · Source: ${urlUsed}`;
     }

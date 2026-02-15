@@ -1,4 +1,5 @@
 
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -11,527 +12,929 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-<style>
-:root{
-  --bg:#0b1220;
-  --text:#eaf0ff;
-  --muted:#a9b6d3;
-  --line:rgba(255,255,255,.085);
-  --ok:#2dd4bf;
-  --minor:#fbbf24;
-  --moderate:#fb7185;
-  --major:#a78bfa;
-  --shadow:0 22px 70px rgba(0,0,0,.40);
-  --radius:18px;
-  --card:rgba(255,255,255,.035);
-  --card2:rgba(0,0,0,.18);
-}
+  <style>
+    :root{
+      --bg:#0b1220;
+      --text:#eaf0ff;
+      --muted:#a9b6d3;
+      --line:rgba(255,255,255,.085);
+      --ok:#2dd4bf;
+      --minor:#fbbf24;
+      --moderate:#fb7185;
+      --major:#a78bfa;
+      --shadow:0 22px 70px rgba(0,0,0,.40);
+      --radius:18px;
 
-*{box-sizing:border-box}
-html,body{height:100%}
-body{
-  margin:0;
-  font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
-  background:var(--bg);
-  color:var(--text);
-  overflow-x:hidden;
-}
+      /* NO “glow” backgrounds at all (removes greenish banding on iOS) */
+      --card:rgba(255,255,255,.035);
+      --card2:rgba(0,0,0,.18);
+    }
 
-.wrap{max-width:1200px;margin:auto;padding:16px 16px 40px}
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    html{background:var(--bg);}
+    body{
+      margin:0;
+      font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+      background:var(--bg);   /* solid only */
+      color:var(--text);
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      overflow-x:hidden;
+    }
+    /* KILL any old global overlay gradient */
+    body:before{content:none !important;}
 
-a{color:inherit;text-decoration:none}
-canvas{max-width:100%}
+    .wrap{max-width:1200px;margin:0 auto;padding:16px 16px 28px}
+    a{color:inherit;text-decoration:none}
+    canvas{display:block;max-width:100%}
 
-/* ================= HEADER ================= */
+    .banner{
+      display:none;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(251,113,133,.12);
+      border-radius:14px;
+      padding:12px 12px;
+      margin-bottom:12px;
+      box-shadow:var(--shadow);
+    }
+    .banner b{font-weight:950}
+    .banner .small{color:var(--muted);font-size:12.5px;margin-top:4px;line-height:1.25}
 
-.top{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:20px;
-  margin-bottom:14px;
-  flex-wrap:wrap;
-}
-
-.brand{
-  display:flex;
-  align-items:center;
-  gap:14px;
-  min-width:0;
-}
-
-/* LOGO CLEAN */
+    .top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+   .top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+    .brand{display:flex;align-items:center;gap:12px}
 .brandLogo{
-  height:60px;
+  width: 180px;     /* rectangle container */
+  height: 60px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: rgba(0,0,0,.25);
   display:flex;
   align-items:center;
-  justify-content:center;
-}
-.brandLogo img{
-  height:60px;
-  width:auto;
-  display:block;
-}
-
-.brandTitle{
-  display:flex;
-  flex-direction:column;
-  line-height:1.1;
-  min-width:0;
-}
-
-.kicker{
-  color:var(--muted);
-  font-weight:800;
-  font-size:12px;
-  text-transform:uppercase;
-}
-
-.name{
-  font-size:18px;
-  font-weight:900;
-}
-
-/* RIGHT HEADER AREA */
-.headerRight{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  flex-wrap:wrap;
-}
-
-/* ================= PILLS ================= */
-
-.pill{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  padding:10px 14px;
-  border-radius:999px;
-  border:1px solid var(--line);
-  background:rgba(0,0,0,.2);
-  font-weight:800;
-  font-size:13px;
-  white-space:nowrap;
-}
-
-.dot{
-  width:10px;height:10px;border-radius:50%;
-  background:var(--ok);
-}
-
-/* DATUM BOX */
-.datumPick{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  padding:10px 12px;
-  border-radius:12px;
-  border:1px solid var(--line);
-  background:rgba(255,255,255,.06);
-}
-
-.datumLbl{
-  font-size:11px;
-  color:var(--muted);
-  font-weight:800;
-  text-transform:uppercase;
-}
-
-.datumSelect{
-  padding:8px 10px;
-  border-radius:10px;
-  border:1px solid var(--line);
-  background:rgba(0,0,0,.3);
-  color:white;
-  font-weight:800;
-  cursor:pointer;
-}
-
-/* ================= CARDS ================= */
-
-.card{
-  background:var(--card);
-  border:1px solid var(--line);
-  border-radius:var(--radius);
-  padding:16px;
-  box-shadow:var(--shadow);
-}
-
-.panel{
-  background:var(--card2);
-  border:1px solid var(--line);
-  border-radius:14px;
-  padding:14px;
-}
-
-.hrow{
-  display:flex;
-  justify-content:space-between;
-  margin-bottom:10px;
-}
-
-h2{
-  margin:0;
-  font-size:13px;
-  text-transform:uppercase;
-  color:var(--muted);
-  font-weight:900;
-}
-
-/* ================= GRID ================= */
-
-.grid{
-  display:grid;
-  grid-template-columns:1.15fr .85fr;
-  gap:14px;
-}
-
-@media(max-width:980px){
-  .grid{grid-template-columns:1fr}
-}
-
-/* ================= LIVE ================= */
-
-.liveGrid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px;
-}
-
-@media(max-width:820px){
-  .liveGrid{grid-template-columns:1fr}
-}
-
-.panelTitle{
-  text-align:center;
-  font-size:12px;
-  color:var(--muted);
-  margin-bottom:8px;
-  font-weight:900;
-}
-
-/* CURRENT */
-.curBox{
-  border:1px solid var(--line);
-  border-radius:14px;
-  padding:12px;
-  text-align:center;
-}
-
-.curVal{
-  font-size:30px;
-  font-weight:900;
-}
-
-/* RANGE */
-.todayRange{
-  border:1px solid var(--line);
-  border-radius:14px;
-  padding:12px;
-  text-align:center;
-}
-
-.rangeVal{
-  font-size:32px;
-  font-weight:900;
-}
-
-/* ================= TABLE ================= */
-
-.table{
-  border:1px solid var(--line);
-  border-radius:14px;
+  justify-content:flex-start;
+  padding:6px 10px;
   overflow:hidden;
 }
 
+.brandLogo img{
+  height:100%;
+  width:auto;        /* keeps proportions (no stretching) */
+  object-fit:contain;
+  display:block;
+}
+
+    .brandTitle{display:flex;flex-direction:column;line-height:1.1}
+    .kicker{color:var(--muted);font-weight:850;font-size:12px;letter-spacing:.2px;text-transform:uppercase}
+    .name{font-size:18px;font-weight:950;letter-spacing:.2px}
+    .brandTitle{display:flex;flex-direction:column;line-height:1.1}
+    .kicker{color:var(--muted);font-weight:850;font-size:12px;letter-spacing:.2px;text-transform:uppercase}
+    .name{font-size:18px;font-weight:950;letter-spacing:.2px}
+
+    .pill{
+      display:flex;align-items:center;gap:10px;
+      padding:10px 12px;border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(0,0,0,.16);
+      box-shadow:var(--shadow);
+      font-weight:950;font-size:12.5px;white-space:nowrap;
+    }
+    .dot{width:9px;height:9px;border-radius:999px;background:var(--ok);box-shadow:0 0 0 4px rgba(45,212,191,.16)}
+
+    /* --- Mobile header overflow fix (kept) --- */
+    .brand, .brandTitle { min-width: 0; }
+    .kicker, .name { min-width: 0; }
+    .kicker, .name{
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+    #lastPill, #stagePill, #datumBtn{ min-width:0; }
+    .pill{ max-width:100%; overflow:hidden; text-overflow:ellipsis; }
+
+    @media (max-width: 720px){
+      .top{
+        flex-direction:column;
+        align-items:center;
+        justify-content:center;
+        gap:10px;
+        text-align:center;
+      }
+   .brand{
+  width:100%;
+  justify-content:flex-start;  /* ✅ keep logo left */
+  text-align:left;
+}
+.brandTitle{
+  align-items:flex-start;      /* ✅ keep text aligned right of logo */
+  text-align:left;
+}
+
+      .kicker, .name{
+        white-space:normal;
+        overflow:visible;
+        text-overflow:clip;
+      }
+      .top > div{
+        width:100%;
+        justify-content:center !important;
+        flex-wrap:wrap;
+      }
+      .pill, .btn{ max-width:100%; }
+    }
+    /* =========================
+OBVIOUS DATUM DROPDOWN
+========================= */
+.datumPick{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 12px;
+  border-radius:14px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.06);
+  box-shadow:var(--shadow);
+}
+
+.datumLbl{
+  font-weight:950;
+  font-size:12px;
+  letter-spacing:.18px;
+  text-transform:uppercase;
+  color:var(--muted);
+}
+
+.datumSelect{
+  appearance:auto;
+  cursor:pointer;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.16);
+  background:rgba(0,0,0,.22);
+  color:var(--text);
+  font-weight:950;
+  font-size:13px;
+  min-width:120px;
+  outline:none;
+}
+
+.datumSelect:focus{
+  border-color:rgba(45,212,191,.45);
+  box-shadow:0 0 0 4px rgba(45,212,191,.12);
+}
+
+
+    .grid{display:grid;grid-template-columns:1.15fr .85fr;gap:14px;margin-top:10px}
+    @media(max-width:980px){.grid{grid-template-columns:1fr}}
+
+    .card{
+      background:var(--card);        /* flat */
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:14px;
+      overflow:hidden;
+      position:relative;
+
+      /* keep iOS hardening, but NO overlay gradients */
+      isolation:isolate;
+      contain:paint;
+      transform:translateZ(0);
+      -webkit-transform:translateZ(0);
+    }
+    /* KILL glow overlays inside cards */
+    .card:before{content:none !important;}
+    .card>*{position:relative;z-index:1}
+
+    .hrow{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:10px;
+    }
+    .hrow h2{margin:0;font-size:12.5px;letter-spacing:.22px;text-transform:uppercase;color:var(--muted);font-weight:950}
+
+    /* ===== Live Conditions layout ===== */
+    .liveGrid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin-top:8px;
+    }
+    @media(max-width:820px){ .liveGrid{grid-template-columns:1fr;} }
+
+    .panel{
+      background:var(--card2);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:12px;
+      position:relative;
+      overflow:hidden;
+      min-height:168px;
+
+      isolation:isolate;
+      contain:paint;
+      transform:translateZ(0);
+      -webkit-transform:translateZ(0);
+    }
+    /* KILL glow overlays inside panels */
+    .panel:before{content:none !important;}
+    .panel>*{position:relative;z-index:1}
+
+    .panelTitle{
+      color:var(--muted);
+      font-weight:950;
+      font-size:11.5px;
+      text-transform:uppercase;
+      letter-spacing:.2px;
+      text-align:center;
+      margin-bottom:10px;
+    }
+
+    /* TODAY */
+    .todayTop{
+      display:flex;
+      align-items:stretch;
+      justify-content:center;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
+    .curBox{
+      flex:1 1 260px;
+      min-width:260px;
+      border:1px solid var(--line);
+      background:rgba(0,0,0,.14);
+      border-radius:14px;
+      padding:10px 12px;
+      text-align:center;
+    }
+    .curLabel{
+      color:var(--muted);
+      font-weight:950;
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:.2px;
+      text-align:center;
+    }
+    .curRow{
+      display:flex;
+      align-items:baseline;
+      justify-content:center;
+      gap:10px;
+      margin-top:8px;
+    }
+    .curVal{
+      display:flex;
+      align-items:baseline;
+      justify-content:center;
+      gap:8px;
+      font-weight:950;
+      font-size:28px;
+      letter-spacing:.2px;
+      white-space:nowrap;
+    }
+    .curMeta{
+      margin-top:8px;
+      color:var(--muted);
+      font-size:12.5px;
+      line-height:1.25;
+      text-align:center;
+      display:none;
+    }
+
+    /* remove progress bar under Current water elevation */
+    .levelMeter{display:none !important;}
+    .levelFill{display:none !important;}
+
+    .todayRange{
+      flex:0 0 320px;
+      min-width:260px;
+      border:1px solid var(--line);
+      background:rgba(0,0,0,.14);
+      border-radius:14px;
+      padding:10px 12px;
+      text-align:center;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+    }
+    .rangeRow{display:flex;justify-content:center;gap:18px;flex-wrap:wrap;margin-top:6px}
+    .rangeCol{min-width:140px}
+    .rangeLab{color:var(--muted);font-weight:950;font-size:11px;letter-spacing:.18px;text-transform:uppercase;text-align:center}
+    .rangeVal{font-weight:950;font-size:34px;line-height:1;margin-top:6px;white-space:nowrap;text-align:center}
+    .unit{color:var(--muted);font-size:12px;font-weight:950}
+    .rangeMeta{
+      margin-top:10px;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.25;
+      text-align:center;
+      display:none;
+    }
+
+    .rangeWhen{
+  margin-top:6px;
+  color:var(--muted);
+  font-size:12px;
+  font-weight:850;
+  letter-spacing:.15px;
+}
+
+
+    @media(max-width:520px){
+      .rangeVal{font-size:32px}
+      .curVal{font-size:26px}
+    }
+
+    /* OUTLOOK */
+    .outlookTop{
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+      gap:10px;
+      align-items:stretch;
+      justify-items:stretch;
+      margin-bottom:10px;
+    }
+    @media(max-width:520px){
+      .outlookTop{grid-template-columns:1fr;}
+    }
+
+    .miniStat{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      padding:12px 12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.05);
+      font-weight:950;
+      font-size:12.5px;
+      white-space:nowrap;
+      text-align:center;
+      min-height:52px;
+      width:100%;
+    }
+    .miniChip{width:12px;height:12px;border-radius:99px;display:inline-block}
+    .miniStat b{font-weight:950}
+
+    .events{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      margin-top:6px;
+    }
+    .event{
+      border:1px solid var(--line);
+      background:rgba(0,0,0,.14);
+      border-radius:14px;
+      padding:10px 10px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .eventLeft{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+      min-width:0;
+    }
+    .eventWhen{
+      font-weight:950;
+      font-size:13px;
+      letter-spacing:.1px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .eventSub{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.2;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .eventBadge{
+      font-weight:950;
+      font-size:12px;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.06);
+      white-space:nowrap;
+      flex:0 0 auto;
+    }
+    @media(max-width:520px){
+      .event{align-items:flex-start}
+      .eventWhen,.eventSub{white-space:normal}
+      .eventBadge{margin-left:auto}
+    }
+
+    /* Flood stage strip (stack on mobile so nothing goes off-screen) */
+    .stages{
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+      gap:10px;
+      margin-top:10px;
+    }
+    @media(max-width:520px){
+      .stages{grid-template-columns:1fr;}
+    }
+
+    .stage{
+      background:var(--card2);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:16px 14px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:12px;
+      width:100%;
+      overflow:hidden;
+      text-align:center;
+    }
+    .stageName{
+      font-weight:950;
+      font-size:20px;
+      letter-spacing:.2px;
+      width:100%;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+      text-align:center;
+    }
+    .badge{
+      font-weight:950;
+      font-size:18px;
+      padding:10px 14px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.06);
+      white-space:nowrap;
+      text-align:center;
+    }
+
+    .table{border-radius:14px;overflow:hidden;border:1px solid var(--line);background:var(--card2)}
 table{
   width:100%;
   border-collapse:collapse;
-  text-align:center;
+  text-align:center;            /* center everything */
 }
 
 th,td{
-  padding:8px;
+  padding:8px 6px;
   border-bottom:1px solid var(--line);
+  font-size:13px;
+  text-align:center;            /* center each column */
 }
 
 th{
   color:var(--muted);
-  font-size:11px;
-  text-transform:uppercase;
+  font-weight:800;
+}
+
+td{
+  color:var(--text);
 }
 
 tr:last-child td{border-bottom:none}
 
-/* ================= CHART ================= */
-
-.chartWrapTall{height:320px}
-.chartWrap{height:240px}
-
-/* ================= ACCORDION ================= */
-
-details.acc{
-  border:1px solid var(--line);
-  border-radius:var(--radius);
-  background:var(--card);
-  overflow:hidden;
+thead th{
+  text-transform:uppercase;
+  letter-spacing:.2px;
+  font-size:11px;
+  font-weight:950;
 }
 
-.accHeader{
-  display:flex;
-  justify-content:space-between;
-  padding:14px;
-  cursor:pointer;
-}
+    .tag{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.05);font-weight:950;font-size:12px;white-space:nowrap}
+    .chip{width:9px;height:9px;border-radius:99px;display:inline-block}
 
-.chev{
-  width:12px;height:12px;
-  border-right:2px solid #fff;
-  border-bottom:2px solid #fff;
-  transform:rotate(-45deg);
-  transition:.2s;
-}
-details[open] .chev{transform:rotate(45deg)}
+    .chartWrapTall{height:320px;width:100%}
+    .chartWrap{height:240px;width:100%}
+    .foot{margin-top:10px;color:var(--muted);font-size:12.5px;line-height:1.25;text-align:center}
 
-.accBody{padding:14px}
+    .filterRow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+    .input,.btn,select{
+      background:rgba(0,0,0,.18);
+      border:1px solid var(--line);
+      color:var(--text);
+      border-radius:12px;
+      padding:10px 10px;
+      font-weight:950;
+      font-size:13px;
+      outline:none
+    }
+    .input{min-width:240px}
+    .btn{cursor:pointer}
+    .btn:hover{filter:brightness(1.06)}
+    .hint{color:var(--muted);font-size:12.5px;line-height:1.25}
 
-/* ================= MAP ================= */
+    .btn:focus,.input:focus,select:focus{
+      border-color:rgba(45,212,191,.35);
+      box-shadow:0 0 0 4px rgba(45,212,191,.10);
+    }
 
+    /* Hide footer notes you called out */
+    #f48Meta{display:none !important;}
+    #curMeta{display:none !important;}
+
+    /* ==============================
+       ACCORDION SYSTEM (NEW)
+       ============================== */
+    details.acc{
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      background:var(--card);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    details.acc summary{list-style:none;cursor:pointer;}
+    details.acc summary::-webkit-details-marker{display:none;}
+
+    .accHeader{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:14px;
+    }
+    .accTitle{
+      margin:0;
+      font-size:12.5px;
+      letter-spacing:.22px;
+      text-transform:uppercase;
+      color:var(--muted);
+      font-weight:950;
+    }
+    .chev{
+      width:12px;
+      height:12px;
+      border-right:2px solid rgba(234,240,255,.7);
+      border-bottom:2px solid rgba(234,240,255,.7);
+      transform:rotate(-45deg);
+      transition:.18s;
+    }
+    details[open] .chev{transform:rotate(45deg);}
+    .accBody{padding:0 14px 14px 14px;}
+
+    /* =========================
+   MAP (Leaflet)
+   ========================= */
 #gaugeMap{
-  height:360px;
-  border-radius:14px;
-  border:1px solid var(--line);
+  height: 360px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: rgba(0,0,0,.20);
+}
+@media(max-width:520px){
+  #gaugeMap{ height: 320px; }
 }
 
-/* ================= MOBILE ================= */
-
-@media(max-width:720px){
-
-.top{
-  flex-direction:column;
-  align-items:center;
-  text-align:center;
-}
-
-.brand{
-  justify-content:center;
-}
-
-.headerRight{
-  justify-content:center;
-}
-
-}
-</style>
-
+  </style>
 </head>
 
 <body>
-<div class="wrap">
+  <div class="wrap">
 
-<!-- ALERT BANNER -->
-<div class="banner" id="alertBanner">
-  <div><b id="alertTitle">Coastal Flood Advisory</b></div>
-  <div class="small" id="alertBody"></div>
+    <div class="banner" id="alertBanner">
+      <div><b id="alertTitle">Coastal Flood Advisory</b></div>
+      <div class="small" id="alertBody"></div>
+    </div>
+
+    <div class="top">
+      <a class="brand" href="https://cupajoe.live/" target="_blank" rel="noopener">
+<div class="brandLogo">
+  <img src="assets/cupajoe-logo.png" alt="Cupajoe logo">
 </div>
 
-<!-- ================= HEADER ================= -->
-<div class="top">
+        <div class="brandTitle">
+          <div class="kicker">USGS 01412150 · Sea Bright, NJ</div>
+          <div class="name">Sea Bright Tidal Flooding Dashboard</div>
+        </div>
+      </a>
 
-  <!-- LEFT BRAND -->
-  <a class="brand" href="https://cupajoe.live/" target="_blank">
+   <div style="display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap">
 
-    <div class="brandLogo">
-      <img src="assets/cupajoe-logo.png">
-    </div>
-
-    <div class="brandTitle">
-      <div class="kicker">USGS 01412150 · Sea Bright, NJ</div>
-      <div class="name">Sea Bright Tidal Flooding Dashboard</div>
-    </div>
-
-  </a>
-
-  <!-- RIGHT CONTROLS -->
-  <div class="headerRight">
-
-    <div class="datumPick">
-      <span class="datumLbl">Datum</span>
-      <select id="datumSelect" class="datumSelect"></select>
-    </div>
-
-    <div class="pill" id="lastPill">
-      Last updated: —
-    </div>
-
-    <div class="pill" id="stagePill">
-      <span class="dot" id="stageDot"></span>
-      <span id="stageText">Loading…</span>
-    </div>
-
+  <!-- OBVIOUS datum selector -->
+  <div class="datumPick" aria-label="Datum selector">
+    <span class="datumLbl">Datum</span>
+    <select id="datumSelect" class="datumSelect" title="Choose datum">
+      <!-- options are filled by JS so order matches DATUMS -->
+    </select>
   </div>
+     
 
+  <div class="pill" id="lastPill">Last updated: —</div>
+
+  <div class="pill" id="stagePill">
+    <span class="dot" id="stageDot"></span>
+    <span id="stageText">Loading…</span>
+  </div>
 </div>
-<!-- ============== END HEADER ============== -->
-
-
-
-<!-- ================= LIVE CONDITIONS ================= -->
-<div class="card">
-
-<div class="hrow">
-  <h2>Live conditions</h2>
-  <div class="kicker" style="text-transform:none">Time expressed in EST</div>
 </div>
 
-<div class="liveGrid">
-
-  <!-- CURRENT -->
-  <div class="panel">
-    <div class="panelTitle">Current + daily range</div>
-
-    <div class="curBox">
-      <div class="curVal">
-        <div id="curMeta" style="margin-top:6px;font-size:12px;color:var(--muted);font-weight:700">
-Updated: —
-</div>
-
-        <span id="curFt">—</span>
-        <span class="unit" data-unit>ft</span>
+    <!-- 1) Live Conditions (NOT accordion) -->
+    <div class="card">
+      <div class="hrow">
+        <h2>Live conditions</h2>
+        <div class="kicker" style="text-transform:none">Time Expressed In EST</div>
       </div>
-    </div>
 
-    <div style="height:12px"></div>
+      <div class="liveGrid">
+        <!-- TODAY (current + today's max/min) -->
+        <div class="panel">
+          <div class="panelTitle">Daily range (today)</div>
 
-    <div class="todayRange">
+          <div class="todayTop">
+            <div class="curBox">
+              <div class="curLabel">Current water elevation</div>
 
+              <div class="curRow">
+                <div class="curVal">
+                  <span id="curFt">—</span>
+                  <span class="unit" data-unit>ft MLLW</span>
+                </div>
+              </div>
+
+              <div class="levelMeter" aria-hidden="true">
+                <div class="levelFill" id="curFill"></div>
+              </div>
+
+              <div class="curMeta" id="curMeta">Updated: —</div>
+              <div class="curMeta" id="nearMeta" style="display:none"></div>
+            </div>
+
+         <div class="todayRange">
+  <div class="rangeRow">
+    <div class="rangeCol">
+      <div class="rangeLab">Max</div>
       <div class="rangeVal">
-    Max: <span id="dayMaxFt">—</span>
-<div id="dayMaxWhen" style="font-size:11px;color:var(--muted)"></div>
-
+        <span id="dayMaxFt">—</span>
+        <span class="unit" data-unit>ft MLLW</span>
       </div>
+      <div class="rangeWhen" id="dayMaxWhen">—</div>
+    </div>
 
+    <div class="rangeCol">
+      <div class="rangeLab">Min</div>
       <div class="rangeVal">
-        Min: <span id="dayMinFt">—</span>
-<div id="dayMinWhen" style="font-size:11px;color:var(--muted)"></div>
+        <span id="dayMinFt">—</span>
+        <span class="unit" data-unit>ft MLLW</span>
+      </div>
+      <div class="rangeWhen" id="dayMinWhen">—</div>
+    </div>
+  </div>
 
+
+              <div class="rangeMeta" id="dayRangeMeta">—</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- NEXT 3 DAYS FLOOD OUTLOOK (inside Live Conditions) -->
+        <div class="panel">
+          <div class="panelTitle">Flood outlook (Next 3 Days)</div>
+
+          <div class="outlookTop" aria-label="Total flood hours by type">
+            <div class="miniStat">
+              <span class="miniChip" style="background:var(--minor)"></span>
+              Minor <b id="f48MinorHrs">—</b> hrs
+            </div>
+            <div class="miniStat">
+              <span class="miniChip" style="background:var(--moderate)"></span>
+              Moderate <b id="f48ModerHrs">—</b> hrs
+            </div>
+            <div class="miniStat">
+              <span class="miniChip" style="background:var(--major)"></span>
+              Major <b id="f48MajorHrs">—</b> hrs
+            </div>
+          </div>
+
+          <div class="events" id="f48List">
+            <div class="event">
+              <div class="eventLeft">
+                <div class="eventWhen">Loading…</div>
+                <div class="eventSub">—</div>
+              </div>
+              <div class="eventBadge" style="color:var(--muted)">—</div>
+            </div>
+          </div>
+
+          <div class="rangeMeta" id="f48Meta">—</div>
+        </div>
       </div>
 
-    </div>
-  </div>
-
-  <!-- OUTLOOK -->
-  <div class="panel">
-    <div class="panelTitle">Next 3 days flood outlook</div>
-
-    <div class="miniStat">
-      Minor: <b id="f48MinorHrs">—</b> hrs
-    </div>
-
-    <div class="miniStat">
-      Moderate: <b id="f48ModerHrs">—</b> hrs
-    </div>
-
-    <div class="miniStat">
-      Major: <b id="f48MajorHrs">—</b> hrs
+      <div class="stages" aria-label="Flood stages">
+        <div class="stage">
+          <div class="stageName">Minor</div>
+          <div class="badge" id="minorBadge" style="color:var(--minor)">5.20–6.20 feet</div>
+        </div>
+        <div class="stage">
+          <div class="stageName">Moderate</div>
+          <div class="badge" id="moderateBadge" style="color:var(--moderate)">6.20–7.20 feet</div>
+        </div>
+        <div class="stage">
+          <div class="stageName">Major</div>
+          <div class="badge" id="majorBadge" style="color:var(--major)">≥ 7.20 feet</div>
+        </div>
+      </div>
     </div>
 
-    <div style="height:10px"></div>
+    <div style="height:14px"></div>
 
-    <div id="f48List">Loading…</div>
-    <div id="f48Meta" style="margin-top:6px;font-size:11px;color:var(--muted)"></div>
+    <!-- 2) Top 10 Highest Tides (ACCORDION) -->
+    <details class="acc">
+      <summary class="accHeader">
+        <h2 class="accTitle">Top ten highest tides</h2>
+        <span class="chev"></span>
+      </summary>
+      <div class="accBody">
+        <div class="table">
+          <table aria-label="Top ten highest tides">
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Date</th>
+                <th id="topTenUnitTh">Height (ft MLLW)</th>
+                <th>Type</th>
+              </tr>
+            </thead>
+            <tbody id="topTenBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </details>
 
+    <div style="height:14px"></div>
 
+    <!-- 3) Observations & Predictions (NOT accordion) -->
+    <div class="card">
+      <div class="hrow">
+        <h2>Observations (USGS) & Predictions (NOAA)</h2>
+        <div class="kicker" style="text-transform:none"></div>
+      </div>
+
+      <div class="chartWrapTall">
+        <canvas id="tsChart"></canvas>
+      </div>
+
+      <div class="foot" id="threshKey" style="font-size:18px;">
+        <span class="tag" style="padding:10px 16px;">
+          <span class="chip" style="background:var(--minor); width:14px; height:14px;"></span>
+          Minor
+        </span>
+        <span class="tag" style="padding:10px 16px;">
+          <span class="chip" style="background:var(--moderate); width:14px; height:14px;"></span>
+          Moderate
+        </span>
+        <span class="tag" style="padding:10px 16px;">
+          <span class="chip" style="background:var(--major); width:14px; height:14px;"></span>
+          Major
+        </span>
+      </div>
+
+      <div class="foot" id="fcNote"></div>
+      <div class="foot" id="txtNote"></div>
+    </div>
+
+    <div style="height:14px"></div>
+
+    <!-- 4) Average Floods Per Month (ACCORDION) -->
+    <details class="acc">
+      <summary class="accHeader">
+        <h2 class="accTitle">Average number of floods per month</h2>
+        <span class="chev"></span>
+      </summary>
+
+      <div class="accBody">
+        <div class="hint" id="monthAvgMeta">Computing…</div>
+        <div style="height:10px"></div>
+        <div class="chartWrap"><canvas id="monthAvgChart"></canvas></div>
+        <div style="height:10px"></div>
+
+        <div class="table">
+          <table aria-label="Average floods by month of year">
+            <thead>
+              <tr>
+                <th>Month</th>
+                <th>Average Total Number of Floods</th>
+                <th>Average Minor</th>
+                <th>Average Moderate</th>
+                <th>Average Major</th>
+              </tr>
+            </thead>
+            <tbody id="monthAvgBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </details>
+
+    <div style="height:14px"></div>
+
+    <!-- 5) Flooding over the years bar chart (ACCORDION) -->
+    <details class="acc">
+      <summary class="accHeader">
+        <h2 class="accTitle">Flooding over the years</h2>
+        <span class="chev"></span>
+      </summary>
+
+      <div class="accBody">
+        <div class="chartWrap"><canvas id="annualChart"></canvas></div>
+        <div class="foot" id="annualNote"></div>
+      </div>
+    </details>
+
+    <div style="height:14px"></div>
+
+    <!-- 6) Historic Flooding Filter (ACCORDION) -->
+    <details class="acc">
+      <summary class="accHeader">
+        <h2 class="accTitle">Historic flooding filter (enter a range)</h2>
+        <span class="chev"></span>
+      </summary>
+
+   <div class="accBody">
+
+  <div class="hint" id="histHelp">
+    Use any combination: Elevation range and/or Date range. Leave fields blank to ignore them.
   </div>
+  <div style="height:8px"></div>
 
-</div>
+  <div class="filterRow">
 
-<div style="height:12px"></div>
+          <input class="input" id="minElev" type="number" step="0.01" placeholder="Min (ft)" />
+          <input class="input" id="maxElev" type="number" step="0.01" placeholder="Max (ft)" />
+          <input class="input" id="fromDate" type="date" autocomplete="off" />
+          <input class="input" id="toDate" type="date" autocomplete="off" />
+          <select id="sortMode">
+            <option value="desc">Highest first</option>
+            <option value="asc">Lowest first</option>
+            <option value="recent">Most recent</option>
+          </select>
+          <button class="btn" id="applyBtn">Apply</button>
+          <button class="btn" id="resetBtn">Reset</button>
+        </div>
 
-<!-- FLOOD STAGES -->
-<div class="stages">
+        <div class="hint" id="histMeta">Loading…</div>
+        <div style="height:10px"></div>
 
-  <div class="stage">
-    <div class="stageName">Minor</div>
-    <div class="badge" id="minorBadge">—</div>
+        <div class="table">
+          <table aria-label="Historic tides above threshold">
+            <thead>
+              <tr>
+                <th>Date/Time (EST)</th>
+                <th id="histUnitTh">Peak (ft MLLW)</th>
+                <th>Type</th>
+              </tr>
+            </thead>
+            <tbody id="histBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </details>
+
+    <div style="height:14px"></div>
+
+    <!-- 7) Cumulative flooding by day-of-year (Avg + Min/Max band) (NOT accordion) -->
+    <div class="card">
+      <div class="hrow">
+        <h2>Cumulative annual flooding</h2>
+        <div class="kicker" id="doyMeta">Computing…</div>
+      </div>
+
+      <div class="hint" id="doyHint"></div>
+
+      <div style="height:10px"></div>
+      <div class="chartWrapTall"><canvas id="doyCumChart"></canvas></div>
+
+      <div class="foot" id="doyNote"></div>
+    </div>
+
+ <div style="height:14px"></div>
+
+<!-- MAP SECTION (PASTE THIS WHOLE BLOCK) -->
+<details class="acc" id="mapAcc">
+  <summary class="accHeader">
+    <h2 class="accTitle">NJ tide gauge map</h2>
+    <span class="chev"></span>
+  </summary>
+
+  <div class="accBody">
+    <div id="gaugeMap"></div>
+    <div class="foot">Click a marker for station info.</div>
   </div>
-
-  <div class="stage">
-    <div class="stageName">Moderate</div>
-    <div class="badge" id="moderateBadge">—</div>
-  </div>
-
-  <div class="stage">
-    <div class="stageName">Major</div>
-    <div class="badge" id="majorBadge">—</div>
-  </div>
-
-</div>
-</div>
-
-
-
-<!-- ================= MAIN CHART ================= -->
-<div style="height:14px"></div>
-
-<div class="card">
-  <div class="hrow">
-    <h2>Observations & predictions</h2>
-  </div>
-
-  <div class="chartWrapTall">
-    <canvas id="tsChart"></canvas>
-    <div id="fcNote" style="margin-top:6px;font-size:12px;color:var(--muted)"></div>
-  </div>
-</div>
-
-
-
-<!-- ================= TOP 10 ================= -->
-<div style="height:14px"></div>
-
-<details class="acc">
-<summary class="accHeader">
-<h2 class="accTitle">Top 10 highest tides</h2>
-<span class="chev"></span>
-</summary>
-
-<div class="accBody">
-<div class="table">
-<table>
-<thead>
-<tr>
-<th>Rank</th>
-<th>Date</th>
-<th>Height</th>
-<th>Type</th>
-</tr>
-</thead>
-<tbody id="topTenBody"></tbody>
-</table>
-</div>
-</div>
 </details>
 
-
-
-<!-- ================= MAP ================= -->
 <div style="height:14px"></div>
 
-<details class="acc">
-<summary class="accHeader">
-<h2 class="accTitle">NJ tide gauge map</h2>
-<span class="chev"></span>
-</summary>
+</div>   <!-- keep this — closes .wrap -->
 
-<div class="accBody">
-<div id="gaugeMap"></div>
-</div>
-</details>
-
-
-</div>
 
   <script>
 

@@ -64,25 +64,10 @@
     .brand{display:flex;align-items:center;gap:12px}
 /* ✅ Logo container stays inside the header */
 .brandLogo{
-  height:60px;
-  max-width: min(520px, 100%);   /* never exceed header width */
-  width: 100%;
-  padding:0;
-  border:none;
-  background:transparent;
-  display:flex;
-  align-items:center;
-  justify-content:flex-start;    /* or center if you want */
-  overflow:hidden;               /* prevents spillover */
-}
-
-/* ✅ Image scales down instead of overflowing */
-.brandLogo img{
-  height:60px;
+  height:52px;        /* controls logo size */
   width:auto;
-  max-width:100%;
   display:block;
-  object-fit:contain;
+  flex:0 0 auto;      /* prevents flex stretching */
 }
 
 

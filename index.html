@@ -4243,24 +4243,25 @@ function setDatum(newDatum){
     setStage(STATE.lastNavd.ft); // stage classification is NAVD-based (fine)
   }
 
+function refreshUIFromState() {
   // Daily range refresh (from today's NAVD series)
   if (STATE.todayNavd && STATE.todayNavd.length) {
     const dmx = maxPoint(STATE.todayNavd);
     const dmn = minPoint(STATE.todayNavd);
 
-    dayMaxFtEl.textContent = toDisplayFtFromNavd(dmx.ft).toFixed(2);
-    dayMinFtEl.textContent = toDisplayFtFromNavd(dmn.ft).toFixed(2);
+    if (dayMaxFtEl) dayMaxFtEl.textContent = toDisplayFtFromNavd(dmx.ft).toFixed(2);
+    if (dayMinFtEl) dayMinFtEl.textContent = toDisplayFtFromNavd(dmn.ft).toFixed(2);
 
     if (dayMaxWhenEl) dayMaxWhenEl.textContent = fmtESTTime(dmx.t);
     if (dayMinWhenEl) dayMinWhenEl.textContent = fmtESTTime(dmn.t);
   } else {
-    dayMaxFtEl.textContent = "—";
-    dayMinFtEl.textContent = "—";
+    if (dayMaxFtEl) dayMaxFtEl.textContent = "—";
+    if (dayMinFtEl) dayMinFtEl.textContent = "—";
     if (dayMaxWhenEl) dayMaxWhenEl.textContent = "—";
     if (dayMinWhenEl) dayMinWhenEl.textContent = "—";
   }
 
-  // Charts that depend on display datum
+  // Charts/cards that depend on display datum
   updatePred24RangeCard();
   updateTsChartFromState();
   updateFloodOutlook48();
@@ -4268,22 +4269,22 @@ function setDatum(newDatum){
 
 
 // Dropdown jumps directly (also triggers chart/card refresh through setDatum)
-datumSelect.addEventListener("change", () => {
-  setDatum(datumSelect.value);
+datumSelect?.addEventListener("change", async () => {
+  try {
+    // if setDatum is async, await it; if it isn't, await is harmless
+    await setDatum(datumSelect.value);
+    // optional: if setDatum doesn't call refreshUIFromState internally, do it here:
+    // refreshUIFromState();
+  } catch (e) {
+    console.error("setDatum failed:", e);
+  }
 });
 
 
-/* Start */
-boot().catch(err => {
-  console.error(err);
-  stageTextEl.textContent = "LIVE DATA UNAVAILABLE";
-  lastPill.textContent = "Last updated: —";
-});
-
-
-/* Auto-refresh (LIVE only) */
+// ------------------ LIVE AUTO-REFRESH ------------------
 const REFRESH_MS = 5 * 60 * 1000;
 let refreshInFlight = false;
+let refreshIntervalId = null;
 
 async function refreshLiveCycle() {
   if (refreshInFlight) return; // prevent overlap if a refresh runs long
@@ -4295,16 +4296,40 @@ async function refreshLiveCycle() {
       updateLiveAndAnnualCounts(),
       updateTimeseries()
     ]);
+
+    // If updateTimeseries mutates STATE, refresh UI after it completes:
+    refreshUIFromState();
   } catch (e) {
-    console.error(e);
+    console.error("refreshLiveCycle error:", e);
   } finally {
     refreshInFlight = false;
   }
 }
 
-// run once shortly after load, then interval
-setTimeout(() => { refreshLiveCycle(); }, 1500);
-setInterval(() => { refreshLiveCycle(); }, REFRESH_MS);
+function startAutoRefreshLiveOnly() {
+  // avoid multiple intervals if called twice
+  if (refreshIntervalId) clearInterval(refreshIntervalId);
+
+  // run once shortly after load, then interval
+  setTimeout(refreshLiveCycle, 1500);
+  refreshIntervalId = setInterval(refreshLiveCycle, REFRESH_MS);
+}
+
+
+// ------------------ Start ------------------
+boot()
+  .then(() => {
+    // Make sure initial UI is consistent with whatever boot loaded
+    refreshUIFromState();
+
+    // Start refresh only after boot is done
+    startAutoRefreshLiveOnly();
+  })
+  .catch(err => {
+    console.error(err);
+    if (stageTextEl) stageTextEl.textContent = "LIVE DATA UNAVAILABLE";
+    if (lastPill) lastPill.textContent = "Last updated: —";
+  });
 
     
 

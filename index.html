@@ -4243,21 +4243,22 @@ function setDatum(newDatum){
     setStage(STATE.lastNavd.ft); // stage classification is NAVD-based (fine)
   }
 
-// Daily range refresh
-if(STATE.todayNavd && STATE.todayNavd.length){
-  const dmx = maxPoint(STATE.todayNavd), dmn = minPoint(STATE.todayNavd);
-  dayMaxFtEl.textContent = toDisplayFtFromNavd(dmx.ft).toFixed(2);
-  dayMinFtEl.textContent = toDisplayFtFromNavd(dmn.ft).toFixed(2);
+  // Daily range refresh (from today's NAVD series)
+  if (STATE.todayNavd && STATE.todayNavd.length) {
+    const dmx = maxPoint(STATE.todayNavd);
+    const dmn = minPoint(STATE.todayNavd);
 
-  if(dayMaxWhenEl) dayMaxWhenEl.textContent = fmtESTTime(dmx.t);
-  if(dayMinWhenEl) dayMinWhenEl.textContent = fmtESTTime(dmn.t);
-} else {
-  dayMaxFtEl.textContent = "—";
-  dayMinFtEl.textContent = "—";
-  if(dayMaxWhenEl) dayMaxWhenEl.textContent = "—";
-  if(dayMinWhenEl) dayMinWhenEl.textContent = "—";
-}
+    dayMaxFtEl.textContent = toDisplayFtFromNavd(dmx.ft).toFixed(2);
+    dayMinFtEl.textContent = toDisplayFtFromNavd(dmn.ft).toFixed(2);
 
+    if (dayMaxWhenEl) dayMaxWhenEl.textContent = fmtESTTime(dmx.t);
+    if (dayMinWhenEl) dayMinWhenEl.textContent = fmtESTTime(dmn.t);
+  } else {
+    dayMaxFtEl.textContent = "—";
+    dayMinFtEl.textContent = "—";
+    if (dayMaxWhenEl) dayMaxWhenEl.textContent = "—";
+    if (dayMinWhenEl) dayMinWhenEl.textContent = "—";
+  }
 
   // Charts that depend on display datum
   updatePred24RangeCard();
@@ -4266,33 +4267,44 @@ if(STATE.todayNavd && STATE.todayNavd.length){
 }
 
 
-// Dropdown jumps directly
-datumSelect.addEventListener("change", ()=>{
+// Dropdown jumps directly (also triggers chart/card refresh through setDatum)
+datumSelect.addEventListener("change", () => {
   setDatum(datumSelect.value);
 });
 
 
-
-
 /* Start */
-boot().catch(err=>{
+boot().catch(err => {
   console.error(err);
-  stageTextEl.textContent="LIVE DATA UNAVAILABLE";
-  lastPill.textContent="Last updated: —";
+  stageTextEl.textContent = "LIVE DATA UNAVAILABLE";
+  lastPill.textContent = "Last updated: —";
 });
 
-/* Auto-refresh (LIVE only — don’t reload TXT every time) */
-setInterval(async ()=>{
-  try{
+
+/* Auto-refresh (LIVE only) */
+const REFRESH_MS = 5 * 60 * 1000;
+let refreshInFlight = false;
+
+async function refreshLiveCycle() {
+  if (refreshInFlight) return; // prevent overlap if a refresh runs long
+  refreshInFlight = true;
+
+  try {
     await Promise.allSettled([
       updateAlerts(),
       updateLiveAndAnnualCounts(),
       updateTimeseries()
     ]);
-  }catch(e){
+  } catch (e) {
     console.error(e);
+  } finally {
+    refreshInFlight = false;
   }
-}, 5*60*1000);
+}
+
+// run once shortly after load, then interval
+setTimeout(() => { refreshLiveCycle(); }, 1500);
+setInterval(() => { refreshLiveCycle(); }, REFRESH_MS);
 
     
 

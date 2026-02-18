@@ -2695,7 +2695,7 @@ function overwriteCurrentYearBarWithLiveCounts(liveCounts){
   annualModerate[idx] = liveCounts.moderate;
   annualMajor[idx] = liveCounts.major;
   annualTotal[idx] = (liveCounts.minor || 0) + (liveCounts.moderate || 0) + (liveCounts.major || 0);
-
+}
 
 function applyAnnualModeToChart(){
   if(!annualChart) return;

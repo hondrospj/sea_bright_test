@@ -4207,14 +4207,13 @@ function setDatum(newDatum){
   const vMin = parseFloat(minElevEl.value);
   const vMax = parseFloat(maxElevEl.value);
 
-  // Convert current input values OLD -> NAVD (stable internal)
+  // Convert OLD -> NAVD (stable internal)
   const navdMin = Number.isFinite(vMin) ? datumToDatum(vMin, oldDatum, "NAVD88") : null;
   const navdMax = Number.isFinite(vMax) ? datumToDatum(vMax, oldDatum, "NAVD88") : null;
 
   // Switch datum
   DISPLAY_DATUM = newDatum;
 
-  // Update dropdown + button text immediately
   if(datumSelect) datumSelect.value = DISPLAY_DATUM;
 
   // Convert NAVD -> NEW datum for showing in the boxes
@@ -4227,59 +4226,34 @@ function setDatum(newDatum){
 
   maxElevEl.value = (newMax === null) ? "" : newMax.toFixed(2);
 
-  // Recompute DOY + YTD in new datum (you already built this)
+  // Recompute DOY panel in new datum
   refreshDOYAfterDatumToggle();
 
-  // Refresh everything that depends on DISPLAY_DATUM
+  // Refresh UI that depends on datum
   updateUnitsAndBadges();
   renderTopTen();
   applyFilter();
   updateMonthAveragesFromHistory();
   renderAnnual();
 
-  // Live card refresh (STATE.lastNavd is NAVD)
+  // Update live card values (STATE is NAVD)
   if(STATE.lastNavd){
     curFtEl.textContent = toDisplayFtFromNavd(STATE.lastNavd.ft).toFixed(2);
-    setStage(STATE.lastNavd.ft); // stage classification is NAVD-based (fine)
+    setStage(STATE.lastNavd.ft);
   }
 
-function refreshUIFromState() {
-  // Daily range refresh (from today's NAVD series)
-  if (STATE.todayNavd && STATE.todayNavd.length) {
-    const dmx = maxPoint(STATE.todayNavd);
-    const dmn = minPoint(STATE.todayNavd);
-
-    if (dayMaxFtEl) dayMaxFtEl.textContent = toDisplayFtFromNavd(dmx.ft).toFixed(2);
-    if (dayMinFtEl) dayMinFtEl.textContent = toDisplayFtFromNavd(dmn.ft).toFixed(2);
-
-    if (dayMaxWhenEl) dayMaxWhenEl.textContent = fmtESTTime(dmx.t);
-    if (dayMinWhenEl) dayMinWhenEl.textContent = fmtESTTime(dmn.t);
-  } else {
-    if (dayMaxFtEl) dayMaxFtEl.textContent = "—";
-    if (dayMinFtEl) dayMinFtEl.textContent = "—";
-    if (dayMaxWhenEl) dayMaxWhenEl.textContent = "—";
-    if (dayMinWhenEl) dayMinWhenEl.textContent = "—";
-  }
-
-  // Charts/cards that depend on display datum
-  updatePred24RangeCard();
+  // Re-render timeseries + forecast-derived panels in new datum
   updateTsChartFromState();
   updateFloodOutlook48();
 }
 
 
 // Dropdown jumps directly (also triggers chart/card refresh through setDatum)
-datumSelect?.addEventListener("change", async () => {
-  try {
-    // if setDatum is async, await it; if it isn't, await is harmless
-    await setDatum(datumSelect.value);
-    // optional: if setDatum doesn't call refreshUIFromState internally, do it here:
-    // refreshUIFromState();
-  } catch (e) {
-    console.error("setDatum failed:", e);
-  }
-});
-
+if (datumSelect) {
+  datumSelect.addEventListener("change", () => {
+    setDatum(datumSelect.value);
+  });
+}
 
 // ------------------ LIVE AUTO-REFRESH ------------------
 const REFRESH_MS = 5 * 60 * 1000;
@@ -4331,8 +4305,16 @@ boot()
     if (lastPill) lastPill.textContent = "Last updated: —";
   });
 
-    
+    document.addEventListener("DOMContentLoaded", () => {
+  boot().catch(err => {
+    console.error("BOOT FAILED:", err);
+    const st = document.getElementById("stageText");
+    if(st) st.textContent = "BOOT FAILED (open Console)";
+  });
+});
 
-    </script>
+  boot();
+  </script>
 </body>
 </html>
+

@@ -12,6 +12,53 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <style>
+/* ===== Annual chart mode tabs ===== */
+.annualTabs{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  padding:8px;
+  margin-bottom:10px;
+  border:1px solid var(--line);
+  background:rgba(0,0,0,.14);
+  border-radius:999px;
+}
+
+.annualTab{
+  appearance:none;
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  font-weight:950;
+  letter-spacing:.18px;
+  padding:12px 14px;
+  border-radius:999px;
+  cursor:pointer;
+  position:relative;
+  text-transform:uppercase;
+}
+
+.annualTab.isActive{
+  color:var(--text);
+}
+
+.annualTab.isActive::after{
+  content:"";
+  position:absolute;
+  left:12px;
+  right:12px;
+  bottom:6px;
+  height:3px;
+  border-radius:999px;
+  background: linear-gradient(90deg, var(--major), rgba(167,139,250,.55));
+  opacity:.95;
+}
+
+@media(max-width:520px){
+  .annualTabs{flex-wrap:wrap;border-radius:18px}
+  .annualTab{flex:1 1 auto;text-align:center}
+}
 
     :root{
       --bg:#0b1220;
@@ -995,20 +1042,22 @@ thead th{
         <span class="chev"></span>
       </summary>
 
-      <div class="accBody">
-        <!-- Annual view switch -->
-<div class="filterRow" style="margin-bottom:8px;">
-  <div class="seg" id="annualViewSeg" aria-label="Annual floods view">
-    <button class="segBtn isActive" type="button" data-val="minor">Minor</button>
-    <button class="segBtn" type="button" data-val="moderate">Moderate</button>
-    <button class="segBtn" type="button" data-val="major">Major</button>
+   <div class="accBody">
+
+  <!-- ✅ NEW: annual mode tabs -->
+  <div class="annualTabs" role="tablist" aria-label="Annual flooding mode">
+    <button class="annualTab isActive" data-annual-mode="total" role="tab" aria-selected="true">TOTAL</button>
+    <button class="annualTab" data-annual-mode="minor" role="tab" aria-selected="false">MINOR</button>
+    <button class="annualTab" data-annual-mode="moderate" role="tab" aria-selected="false">MODERATE</button>
+    <button class="annualTab" data-annual-mode="major" role="tab" aria-selected="false">MAJOR</button>
   </div>
+
+  <div class="chartWrap"><canvas id="annualChart"></canvas></div>
+  <div class="foot" id="annualNote"></div>
 </div>
 
-        <div class="chartWrap"><canvas id="annualChart"></canvas></div>
-        <div class="foot" id="annualNote"></div>
-      </div>
-    </details>
+
+    
 
     <div style="height:14px"></div>
 
@@ -2345,7 +2394,11 @@ Core state
 ========================= */
 let HIGH_TIDES_NAVD=[];
 let annualChart=null, tsChart=null, monthAvgChart=null;
-let YEARS=[], annualMinor=[], annualModerate=[], annualMajor=[];
+let YEARS=[], annualMinor=[], annualModerate=[], annualMajor=[], annualTotal=[];
+
+    // ✅ Annual view mode: total shows all stacks, others show one class
+let ANNUAL_MODE = "total"; // "total" | "minor" | "moderate" | "major"
+
 
 const STATE = { lastNavd:null, ytdNavd:null, todayNavd:null, obs24Navd:null, pred72Mllw:null };
 
@@ -2613,6 +2666,10 @@ function buildAnnualArraysFromHistory_completedYears(){
   annualMinor = yearsCompleted.map(y => yearCounts.get(y)?.minor ?? 0);
   annualModerate = yearsCompleted.map(y => yearCounts.get(y)?.moderate ?? 0);
   annualMajor = yearsCompleted.map(y => yearCounts.get(y)?.major ?? 0);
+
+  annualTotal = yearsCompleted.map((y, i) =>
+    (annualMinor[i] || 0) + (annualModerate[i] || 0) + (annualMajor[i] || 0)
+  );
 }
 
 
@@ -2634,11 +2691,50 @@ function overwriteCurrentYearBarWithLiveCounts(liveCounts){
     // (If you sort, you must reorder the arrays too; simplest is to not sort here.)
   }
 
-  annualMinor[idx] = liveCounts.minor;
+   annualMinor[idx] = liveCounts.minor;
   annualModerate[idx] = liveCounts.moderate;
   annualMajor[idx] = liveCounts.major;
+  annualTotal[idx] = (liveCounts.minor || 0) + (liveCounts.moderate || 0) + (liveCounts.major || 0);
+
+
+function applyAnnualModeToChart(){
+  if(!annualChart) return;
+
+  const showTotal = (ANNUAL_MODE === "total");
+  const showMinor = (ANNUAL_MODE === "minor");
+  const showModer = (ANNUAL_MODE === "moderate");
+  const showMajor = (ANNUAL_MODE === "major");
+
+  // datasets: 0 Total, 1 Minor, 2 Moderate, 3 Major
+  annualChart.setDatasetVisibility(0, showTotal);
+  annualChart.setDatasetVisibility(1, showTotal || showMinor);
+  annualChart.setDatasetVisibility(2, showTotal || showModer);
+  annualChart.setDatasetVisibility(3, showTotal || showMajor);
+
+  const note = document.getElementById("annualNote");
+  if(note){
+    if(showTotal) note.textContent = "Showing TOTAL floods per year.";
+    else note.textContent = `Showing ${ANNUAL_MODE.toUpperCase()} only.`;
+  }
+
+  annualChart.update();
 }
 
+function hookAnnualTabs(){
+  const btns = document.querySelectorAll(".annualTab");
+  if(!btns.length) return;
+
+  btns.forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      btns.forEach(b=>{ b.classList.remove("isActive"); b.setAttribute("aria-selected","false"); });
+      btn.classList.add("isActive");
+      btn.setAttribute("aria-selected","true");
+
+      ANNUAL_MODE = btn.dataset.annualMode || "total";
+      applyAnnualModeToChart();
+    });
+  });
+}
 
 /* Annual chart */
 function ensureAnnual(){
@@ -2648,10 +2744,15 @@ function ensureAnnual(){
     data:{
       labels:YEARS,
       datasets:[
-        {label:"Minor",data:annualMinor,stack:"f",borderWidth:0,backgroundColor:"rgba(251,191,36,.85)"},
-        {label:"Moderate",data:annualModerate,stack:"f",borderWidth:0,backgroundColor:"rgba(251,113,133,.80)"},
-        {label:"Major",data:annualMajor,stack:"f",borderWidth:0,backgroundColor:"rgba(167,139,250,.80)"}
-      ]
+  // Total (not stacked) — shows in TOTAL tab
+  {label:"Total", data:annualTotal, borderWidth:0, backgroundColor:"rgba(234,240,255,.22)"},
+
+  // Stacks (used when not TOTAL)
+  {label:"Minor",data:annualMinor,stack:"f",borderWidth:0,backgroundColor:"rgba(251,191,36,.85)"},
+  {label:"Moderate",data:annualModerate,stack:"f",borderWidth:0,backgroundColor:"rgba(251,113,133,.80)"},
+  {label:"Major",data:annualMajor,stack:"f",borderWidth:0,backgroundColor:"rgba(167,139,250,.80)"}
+]
+
     },
     options:{
       responsive:true,
@@ -2710,9 +2811,10 @@ function ensureAnnual(){
 function renderAnnual(){
   ensureAnnual();
   annualChart.data.labels = YEARS;
-  annualChart.data.datasets[0].data = annualMinor;
-  annualChart.data.datasets[1].data = annualModerate;
-  annualChart.data.datasets[2].data = annualMajor;
+annualChart.data.datasets[0].data = annualTotal;
+annualChart.data.datasets[1].data = annualMinor;
+annualChart.data.datasets[2].data = annualModerate;
+annualChart.data.datasets[3].data = annualMajor;
   annualChart.update();
     applyAnnualView();
 }

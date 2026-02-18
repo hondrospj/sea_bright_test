@@ -1,5 +1,4 @@
 
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -13,6 +12,53 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <style>
+/* ===== Annual chart mode tabs ===== */
+.annualTabs{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  padding:8px;
+  margin-bottom:10px;
+  border:1px solid var(--line);
+  background:rgba(0,0,0,.14);
+  border-radius:999px;
+}
+
+.annualTab{
+  appearance:none;
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  font-weight:950;
+  letter-spacing:.18px;
+  padding:12px 14px;
+  border-radius:999px;
+  cursor:pointer;
+  position:relative;
+  text-transform:uppercase;
+}
+
+.annualTab.isActive{
+  color:var(--text);
+}
+
+.annualTab.isActive::after{
+  content:"";
+  position:absolute;
+  left:12px;
+  right:12px;
+  bottom:6px;
+  height:3px;
+  border-radius:999px;
+  background: linear-gradient(90deg, var(--major), rgba(167,139,250,.55));
+  opacity:.95;
+}
+
+@media(max-width:520px){
+  .annualTabs{flex-wrap:wrap;border-radius:18px}
+  .annualTab{flex:1 1 auto;text-align:center}
+}
 
     :root{
       --bg:#0b1220;
@@ -996,20 +1042,22 @@ thead th{
         <span class="chev"></span>
       </summary>
 
-      <div class="accBody">
-        <!-- Annual view switch -->
-<div class="filterRow" style="margin-bottom:8px;">
-  <div class="seg" id="annualViewSeg" aria-label="Annual floods view">
-    <button class="segBtn isActive" type="button" data-val="minor">Minor</button>
-    <button class="segBtn" type="button" data-val="moderate">Moderate</button>
-    <button class="segBtn" type="button" data-val="major">Major</button>
+   <div class="accBody">
+
+  <!-- ✅ NEW: annual mode tabs -->
+  <div class="annualTabs" role="tablist" aria-label="Annual flooding mode">
+    <button class="annualTab isActive" data-annual-mode="total" role="tab" aria-selected="true">TOTAL</button>
+    <button class="annualTab" data-annual-mode="minor" role="tab" aria-selected="false">MINOR</button>
+    <button class="annualTab" data-annual-mode="moderate" role="tab" aria-selected="false">MODERATE</button>
+    <button class="annualTab" data-annual-mode="major" role="tab" aria-selected="false">MAJOR</button>
   </div>
+
+  <div class="chartWrap"><canvas id="annualChart"></canvas></div>
+  <div class="foot" id="annualNote"></div>
 </div>
 
-        <div class="chartWrap"><canvas id="annualChart"></canvas></div>
-        <div class="foot" id="annualNote"></div>
-      </div>
-    </details>
+
+    
 
     <div style="height:14px"></div>
 
@@ -2346,7 +2394,11 @@ Core state
 ========================= */
 let HIGH_TIDES_NAVD=[];
 let annualChart=null, tsChart=null, monthAvgChart=null;
-let YEARS=[], annualMinor=[], annualModerate=[], annualMajor=[];
+let YEARS=[], annualMinor=[], annualModerate=[], annualMajor=[], annualTotal=[];
+
+    // ✅ Annual view mode: total shows all stacks, others show one class
+let ANNUAL_MODE = "total"; // "total" | "minor" | "moderate" | "major"
+
 
 const STATE = { lastNavd:null, ytdNavd:null, todayNavd:null, obs24Navd:null, pred72Mllw:null };
 
@@ -2614,6 +2666,10 @@ function buildAnnualArraysFromHistory_completedYears(){
   annualMinor = yearsCompleted.map(y => yearCounts.get(y)?.minor ?? 0);
   annualModerate = yearsCompleted.map(y => yearCounts.get(y)?.moderate ?? 0);
   annualMajor = yearsCompleted.map(y => yearCounts.get(y)?.major ?? 0);
+
+  annualTotal = yearsCompleted.map((y, i) =>
+    (annualMinor[i] || 0) + (annualModerate[i] || 0) + (annualMajor[i] || 0)
+  );
 }
 
 
@@ -2635,103 +2691,49 @@ function overwriteCurrentYearBarWithLiveCounts(liveCounts){
     // (If you sort, you must reorder the arrays too; simplest is to not sort here.)
   }
 
-  annualMinor[idx] = liveCounts.minor;
+   annualMinor[idx] = liveCounts.minor;
   annualModerate[idx] = liveCounts.moderate;
   annualMajor[idx] = liveCounts.major;
-}
+  annualTotal[idx] = (liveCounts.minor || 0) + (liveCounts.moderate || 0) + (liveCounts.major || 0);
 
-// =========================
-// Quadratic trendline helpers
-// Fits y = a*x^2 + b*x + c using normal equations + Gaussian elimination.
-// x should be numeric; easiest is x = 0..n-1 (index of year).
-// =========================
 
-function fitQuadratic(x, y){
-  // Filter to finite pairs
-  const pts = [];
-  for(let i=0;i<x.length;i++){
-    const xi = Number(x[i]);
-    const yi = Number(y[i]);
-    if(Number.isFinite(xi) && Number.isFinite(yi)) pts.push([xi, yi]);
-  }
-  if(pts.length < 3) return null;
+function applyAnnualModeToChart(){
+  if(!annualChart) return;
 
-  let S0=0, S1=0, S2=0, S3=0, S4=0;
-  let T0=0, T1=0, T2=0;
+  const showTotal = (ANNUAL_MODE === "total");
+  const showMinor = (ANNUAL_MODE === "minor");
+  const showModer = (ANNUAL_MODE === "moderate");
+  const showMajor = (ANNUAL_MODE === "major");
 
-  for(const [xi, yi] of pts){
-    const x2 = xi*xi;
-    const x3 = x2*xi;
-    const x4 = x2*x2;
+  // datasets: 0 Total, 1 Minor, 2 Moderate, 3 Major
+  annualChart.setDatasetVisibility(0, showTotal);
+  annualChart.setDatasetVisibility(1, showTotal || showMinor);
+  annualChart.setDatasetVisibility(2, showTotal || showModer);
+  annualChart.setDatasetVisibility(3, showTotal || showMajor);
 
-    S0 += 1;
-    S1 += xi;
-    S2 += x2;
-    S3 += x3;
-    S4 += x4;
-
-    T0 += yi;
-    T1 += xi*yi;
-    T2 += x2*yi;
+  const note = document.getElementById("annualNote");
+  if(note){
+    if(showTotal) note.textContent = "Showing TOTAL floods per year.";
+    else note.textContent = `Showing ${ANNUAL_MODE.toUpperCase()} only.`;
   }
 
-  // Normal equations:
-  // [S4 S3 S2][a] = [T2]
-  // [S3 S2 S1][b]   [T1]
-  // [S2 S1 S0][c]   [T0]
-  const A = [
-    [S4, S3, S2, T2],
-    [S3, S2, S1, T1],
-    [S2, S1, S0, T0]
-  ];
-
-  const sol = solve3x3(A);
-  if(!sol) return null;
-
-  const [a,b,c] = sol;
-  return {a,b,c};
+  annualChart.update();
 }
 
-function solve3x3(M){
-  // M is 3 rows of 4: augmented matrix
-  const m = M.map(r=>r.slice());
+function hookAnnualTabs(){
+  const btns = document.querySelectorAll(".annualTab");
+  if(!btns.length) return;
 
-  for(let col=0; col<3; col++){
-    // pivot
-    let pivot = col;
-    for(let r=col+1; r<3; r++){
-      if(Math.abs(m[r][col]) > Math.abs(m[pivot][col])) pivot = r;
-    }
-    if(Math.abs(m[pivot][col]) < 1e-12) return null;
-    if(pivot !== col){
-      const tmp = m[col]; m[col] = m[pivot]; m[pivot] = tmp;
-    }
+  btns.forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      btns.forEach(b=>{ b.classList.remove("isActive"); b.setAttribute("aria-selected","false"); });
+      btn.classList.add("isActive");
+      btn.setAttribute("aria-selected","true");
 
-    // normalize pivot row
-    const div = m[col][col];
-    for(let j=col; j<4; j++) m[col][j] /= div;
-
-    // eliminate
-    for(let r=0; r<3; r++){
-      if(r === col) continue;
-      const f = m[r][col];
-      for(let j=col; j<4; j++){
-        m[r][j] -= f * m[col][j];
-      }
-    }
-  }
-
-  return [m[0][3], m[1][3], m[2][3]];
-}
-
-function buildQuadraticTrend(values){
-  // x as index makes the math stable and avoids huge year numbers
-  const x = values.map((_,i)=>i);
-  const model = fitQuadratic(x, values);
-  if(!model) return values.map(()=>null);
-
-  const {a,b,c} = model;
-  return x.map(xi => a*xi*xi + b*xi + c);
+      ANNUAL_MODE = btn.dataset.annualMode || "total";
+      applyAnnualModeToChart();
+    });
+  });
 }
 
 /* Annual chart */
@@ -2741,26 +2743,16 @@ function ensureAnnual(){
     type:"bar",
     data:{
       labels:YEARS,
-  datasets: [
-  { label:"Minor", data:annualMinor, stack:"f", borderWidth:0, backgroundColor:"rgba(251,191,36,.85)" },
-  { label:"Moderate", data:annualModerate, stack:"f", borderWidth:0, backgroundColor:"rgba(251,113,133,.80)" },
-  { label:"Major", data:annualMajor, stack:"f", borderWidth:0, backgroundColor:"rgba(167,139,250,.80)" },
+      datasets:[
+  // Total (not stacked) — shows in TOTAL tab
+  {label:"Total", data:annualTotal, borderWidth:0, backgroundColor:"rgba(234,240,255,.22)"},
 
-  {
-    label:"Trend",
-    type:"line",
-    data: YEARS.map(()=>null),
-    borderColor:"#ffffff",
-    backgroundColor:"#ffffff",
-    borderWidth:3,
-    pointRadius:0,
-    tension:.25,
-    yAxisID:"y"
-  }
+  // Stacks (used when not TOTAL)
+  {label:"Minor",data:annualMinor,stack:"f",borderWidth:0,backgroundColor:"rgba(251,191,36,.85)"},
+  {label:"Moderate",data:annualModerate,stack:"f",borderWidth:0,backgroundColor:"rgba(251,113,133,.80)"},
+  {label:"Major",data:annualMajor,stack:"f",borderWidth:0,backgroundColor:"rgba(167,139,250,.80)"}
 ]
 
-
-      ]
     },
     options:{
       responsive:true,
@@ -2819,15 +2811,10 @@ function ensureAnnual(){
 function renderAnnual(){
   ensureAnnual();
   annualChart.data.labels = YEARS;
-  annualChart.data.datasets[0].data = annualMinor;
-  annualChart.data.datasets[1].data = annualModerate;
-  annualChart.data.datasets[2].data = annualMajor;
-  const annualTotal = YEARS.map((_,i)=>
-  (annualMinor[i]||0) + (annualModerate[i]||0) + (annualMajor[i]||0)
-);
-
-annualChart.data.datasets[3].data = buildQuadraticTrend(annualTotal);
-
+annualChart.data.datasets[0].data = annualTotal;
+annualChart.data.datasets[1].data = annualMinor;
+annualChart.data.datasets[2].data = annualModerate;
+annualChart.data.datasets[3].data = annualMajor;
   annualChart.update();
     applyAnnualView();
 }
@@ -4207,13 +4194,14 @@ function setDatum(newDatum){
   const vMin = parseFloat(minElevEl.value);
   const vMax = parseFloat(maxElevEl.value);
 
-  // Convert OLD -> NAVD (stable internal)
+  // Convert current input values OLD -> NAVD (stable internal)
   const navdMin = Number.isFinite(vMin) ? datumToDatum(vMin, oldDatum, "NAVD88") : null;
   const navdMax = Number.isFinite(vMax) ? datumToDatum(vMax, oldDatum, "NAVD88") : null;
 
   // Switch datum
   DISPLAY_DATUM = newDatum;
 
+  // Update dropdown + button text immediately
   if(datumSelect) datumSelect.value = DISPLAY_DATUM;
 
   // Convert NAVD -> NEW datum for showing in the boxes
@@ -4226,95 +4214,75 @@ function setDatum(newDatum){
 
   maxElevEl.value = (newMax === null) ? "" : newMax.toFixed(2);
 
-  // Recompute DOY panel in new datum
+  // Recompute DOY + YTD in new datum (you already built this)
   refreshDOYAfterDatumToggle();
 
-  // Refresh UI that depends on datum
+  // Refresh everything that depends on DISPLAY_DATUM
   updateUnitsAndBadges();
   renderTopTen();
   applyFilter();
   updateMonthAveragesFromHistory();
   renderAnnual();
 
-  // Update live card values (STATE is NAVD)
+  // Live card refresh (STATE.lastNavd is NAVD)
   if(STATE.lastNavd){
     curFtEl.textContent = toDisplayFtFromNavd(STATE.lastNavd.ft).toFixed(2);
-    setStage(STATE.lastNavd.ft);
+    setStage(STATE.lastNavd.ft); // stage classification is NAVD-based (fine)
   }
 
-  // Re-render timeseries + forecast-derived panels in new datum
+// Daily range refresh
+if(STATE.todayNavd && STATE.todayNavd.length){
+  const dmx = maxPoint(STATE.todayNavd), dmn = minPoint(STATE.todayNavd);
+  dayMaxFtEl.textContent = toDisplayFtFromNavd(dmx.ft).toFixed(2);
+  dayMinFtEl.textContent = toDisplayFtFromNavd(dmn.ft).toFixed(2);
+
+  if(dayMaxWhenEl) dayMaxWhenEl.textContent = fmtESTTime(dmx.t);
+  if(dayMinWhenEl) dayMinWhenEl.textContent = fmtESTTime(dmn.t);
+} else {
+  dayMaxFtEl.textContent = "—";
+  dayMinFtEl.textContent = "—";
+  if(dayMaxWhenEl) dayMaxWhenEl.textContent = "—";
+  if(dayMinWhenEl) dayMinWhenEl.textContent = "—";
+}
+
+
+  // Charts that depend on display datum
+  updatePred24RangeCard();
   updateTsChartFromState();
   updateFloodOutlook48();
 }
 
 
-// Dropdown jumps directly (also triggers chart/card refresh through setDatum)
-if (datumSelect) {
-  datumSelect.addEventListener("change", () => {
-    setDatum(datumSelect.value);
-  });
-}
+// Dropdown jumps directly
+datumSelect.addEventListener("change", ()=>{
+  setDatum(datumSelect.value);
+});
 
-// ------------------ LIVE AUTO-REFRESH ------------------
-const REFRESH_MS = 5 * 60 * 1000;
-let refreshInFlight = false;
-let refreshIntervalId = null;
 
-async function refreshLiveCycle() {
-  if (refreshInFlight) return; // prevent overlap if a refresh runs long
-  refreshInFlight = true;
 
-  try {
+
+/* Start */
+boot().catch(err=>{
+  console.error(err);
+  stageTextEl.textContent="LIVE DATA UNAVAILABLE";
+  lastPill.textContent="Last updated: —";
+});
+
+/* Auto-refresh (LIVE only — don’t reload TXT every time) */
+setInterval(async ()=>{
+  try{
     await Promise.allSettled([
       updateAlerts(),
       updateLiveAndAnnualCounts(),
       updateTimeseries()
     ]);
-
-    // If updateTimeseries mutates STATE, refresh UI after it completes:
-    refreshUIFromState();
-  } catch (e) {
-    console.error("refreshLiveCycle error:", e);
-  } finally {
-    refreshInFlight = false;
+  }catch(e){
+    console.error(e);
   }
-}
+}, 5*60*1000);
 
-function startAutoRefreshLiveOnly() {
-  // avoid multiple intervals if called twice
-  if (refreshIntervalId) clearInterval(refreshIntervalId);
+    
 
-  // run once shortly after load, then interval
-  setTimeout(refreshLiveCycle, 1500);
-  refreshIntervalId = setInterval(refreshLiveCycle, REFRESH_MS);
-}
-
-
-// ------------------ Start ------------------
-boot()
-  .then(() => {
-    // Make sure initial UI is consistent with whatever boot loaded
-    refreshUIFromState();
-
-    // Start refresh only after boot is done
-    startAutoRefreshLiveOnly();
-  })
-  .catch(err => {
-    console.error(err);
-    if (stageTextEl) stageTextEl.textContent = "LIVE DATA UNAVAILABLE";
-    if (lastPill) lastPill.textContent = "Last updated: —";
-  });
-
-    document.addEventListener("DOMContentLoaded", () => {
-  boot().catch(err => {
-    console.error("BOOT FAILED:", err);
-    const st = document.getElementById("stageText");
-    if(st) st.textContent = "BOOT FAILED (open Console)";
-  });
-});
-
-  boot();
-  </script>
+    </script>
 </body>
 </html>
-

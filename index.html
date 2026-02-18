@@ -77,6 +77,62 @@
   object-fit:contain;
 }
 
+    .brandLogo img{
+  height:52px;
+  max-width:200px;
+  object-fit:contain;
+  display:block;
+}
+
+/* ADD THIS RIGHT HERE (desktop only) */
+@media (min-width: 980px){
+  .brand{ gap:16px; }
+
+  .townLogo{
+    width:68px;
+    height:68px;
+    flex:0 0 68px;
+  }
+  .townLogo img{
+    max-width:68px;
+    max-height:68px;
+  }
+
+  .brandLogo img{
+    height:68px;       /* bigger Shorely Safe logo on desktop */
+    max-width:260px;
+  }
+
+  .kicker{
+    font-size:13px;
+  }
+
+  .name{
+    font-size:24px;    /* bigger title on desktop */
+    letter-spacing:.2px;
+  }
+}
+
+
+    /* NEW: Town logo slot */
+.townLogo{
+  width:56px;          /* reserved space on left */
+  height:56px;
+  flex:0 0 56px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.townLogo img{
+  max-width:56px;
+  max-height:56px;
+  width:auto;
+  height:auto;
+  object-fit:contain;
+  display:block;
+}
+
 
 
 
@@ -115,7 +171,24 @@
         justify-content:center;
         gap:10px;
         text-align:center;
-      }
+    
+
+        /* ADD THIS INSIDE YOUR EXISTING MOBILE BLOCK */
+  .townLogo{
+    width:44px;
+    height:44px;
+    flex:0 0 44px;
+  }
+  .townLogo img{
+    max-width:44px;
+    max-height:44px;
+  }
+
+  .brandLogo img{
+    height:48px;
+    max-width:180px;
+  }
+
       /* ===== RIGHT SIDE HEADER FIX ===== */
 .topRight{
   display:flex;
@@ -665,37 +738,44 @@ thead th{
       <div class="small" id="alertBody"></div>
     </div>
 
-    <div class="top">
-      <a class="brand" href="https://cupajoe.live/" target="_blank" rel="noopener">
-<div class="brandLogo">
-  <img src="assets/shorelysafe" alt="Cupajoe logo">
-</div>
+<div class="top">
 
-        <div class="brandTitle">
-          <div class="kicker">USGS 01412150 · Sea Bright, NJ</div>
-          <div class="name">Sea Bright Tidal Flooding Dashboard</div>
-        </div>
-      </a>
+  <a class="brand" href="https://cupajoe.live/" target="_blank" rel="noopener">
 
-   <div class="topRight">
+    <!-- Town logo slot -->
+    <div class="townLogo" aria-label="Town logo">
+      <img src="assets/town-logo.png" alt="Town logo">
+    </div>
 
-  <!-- OBVIOUS datum selector -->
-  <div class="datumPick" aria-label="Datum selector">
-    <span class="datumLbl">Datum</span>
-    <select id="datumSelect" class="datumSelect" title="Choose datum">
-      <!-- options are filled by JS so order matches DATUMS -->
-    </select>
+    <!-- Shorely Safe logo -->
+    <div class="brandLogo">
+      <img src="assets/shorelysafe.png" alt="Shorely Safe logo">
+    </div>
+
+    <div class="brandTitle">
+      <div class="kicker">USGS 01412150 · Sea Bright, NJ</div>
+      <div class="name">Sea Bright Tidal Flooding Dashboard</div>
+    </div>
+
+  </a>
+
+  <div class="topRight">
+
+    <div class="datumPick" aria-label="Datum selector">
+      <span class="datumLbl">Datum</span>
+      <select id="datumSelect" class="datumSelect" title="Choose datum"></select>
+    </div>
+
+    <div class="pill" id="lastPill">Last updated: —</div>
+
+    <div class="pill" id="stagePill">
+      <span class="dot" id="stageDot"></span>
+      <span id="stageText">Loading…</span>
+    </div>
+
   </div>
-     
-
-  <div class="pill" id="lastPill">Last updated: —</div>
-
-  <div class="pill" id="stagePill">
-    <span class="dot" id="stageDot"></span>
-    <span id="stageText">Loading…</span>
-  </div>
 </div>
-</div>
+
 
     <!-- 1) Live Conditions (NOT accordion) -->
     <div class="card">
@@ -3999,7 +4079,17 @@ setInterval(async ()=>{
   }
 }, 5*60*1000);
 
-    
+    /* ===== Auto-hide town logo slot if image missing ===== */
+document.addEventListener("DOMContentLoaded", function(){
+  const townImg = document.querySelector(".townLogo img");
+
+  if(!townImg) return;
+
+  townImg.addEventListener("error", function(){
+    const slot = townImg.closest(".townLogo");
+    if(slot) slot.style.display = "none";
+  });
+});
 
     </script>
 </body>

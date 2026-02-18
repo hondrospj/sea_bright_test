@@ -562,6 +562,17 @@ thead th{
     .tag{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.05);font-weight:950;font-size:12px;white-space:nowrap}
     .chip{width:9px;height:9px;border-radius:99px;display:inline-block}
 
+    /* ===== Threshold number text inside the pills ===== */
+.thNum{
+  font-weight:950;
+  margin-left:6px;
+  letter-spacing:.1px;
+}
+.thMinor{ color: var(--minor); }
+.thModer{ color: var(--moderate); }
+.thMajor{ color: var(--major); }
+
+
     .chartWrapTall{height:320px;width:100%}
     .chartWrap{height:240px;width:100%}
     .foot{margin-top:10px;color:var(--muted);font-size:12.5px;line-height:1.25;text-align:center}
@@ -831,20 +842,26 @@ thead th{
         <canvas id="tsChart"></canvas>
       </div>
 
-      <div class="foot" id="threshKey" style="font-size:18px;">
-        <span class="tag" style="padding:10px 16px;">
-          <span class="chip" style="background:var(--minor); width:14px; height:14px;"></span>
-          Minor
-        </span>
-        <span class="tag" style="padding:10px 16px;">
-          <span class="chip" style="background:var(--moderate); width:14px; height:14px;"></span>
-          Moderate
-        </span>
-        <span class="tag" style="padding:10px 16px;">
-          <span class="chip" style="background:var(--major); width:14px; height:14px;"></span>
-          Major
-        </span>
-      </div>
+     <div class="foot" id="threshKey" style="font-size:18px;">
+  <span class="tag" style="padding:10px 16px;">
+    <span class="chip" style="background:var(--minor); width:14px; height:14px;"></span>
+    Minor
+    <span class="thNum thMinor" id="thMinorTxt">—</span>
+  </span>
+
+  <span class="tag" style="padding:10px 16px;">
+    <span class="chip" style="background:var(--moderate); width:14px; height:14px;"></span>
+    Moderate
+    <span class="thNum thModer" id="thModerTxt">—</span>
+  </span>
+
+  <span class="tag" style="padding:10px 16px;">
+    <span class="chip" style="background:var(--major); width:14px; height:14px;"></span>
+    Major
+    <span class="thNum thMajor" id="thMajorTxt">—</span>
+  </span>
+</div>
+
 
       <div class="foot" id="fcNote"></div>
       <div class="foot" id="txtNote"></div>
@@ -1280,6 +1297,11 @@ const topTenUnitTh=$("topTenUnitTh");
 const fcNote=$("fcNote");
 const txtNote=$("txtNote");
 
+    const thMinorTxt = $("thMinorTxt");
+const thModerTxt = $("thModerTxt");
+const thMajorTxt = $("thMajorTxt");
+
+
 const histBody = $("histBody"),
       histMeta = $("histMeta"),
       histUnitTh = $("histUnitTh");
@@ -1400,16 +1422,27 @@ function unitText(){
 
 
 function updateUnitsAndBadges(){
-  document.querySelectorAll("[data-unit]").forEach(el=>{ el.textContent = "ft " + datumLabel(); });
-  topTenUnitTh.textContent = "Height (" + unitText() + ")";
-  histUnitTh.textContent = "Peak (" + unitText() + ")";
+  // Update all the little "ft DATUM" unit labels around the page
+  document.querySelectorAll("[data-unit]").forEach(el=>{
+    el.textContent = "ft " + datumLabel();
+  });
 
+  // Update table headers
+  topTenUnitTh.textContent = "Height (" + unitText() + ")";
+  histUnitTh.textContent   = "Peak (" + unitText() + ")";
+
+  // Update the stage badges under Live conditions (Minor/Moderate/Major boxes)
   const T = THRESH[DISPLAY_DATUM];
-  minorBadge.textContent = `${T.minorLow.toFixed(2)}–${T.moderateLow.toFixed(2)}`;
+  minorBadge.textContent    = `${T.minorLow.toFixed(2)}–${T.moderateLow.toFixed(2)}`;
   moderateBadge.textContent = `${T.moderateLow.toFixed(2)}–${T.majorLow.toFixed(2)}`;
-  majorBadge.textContent = `≥ ${T.majorLow.toFixed(2)}`
+  majorBadge.textContent    = `≥ ${T.majorLow.toFixed(2)}`;
+
+  // ✅ NEW: Update the numbers next to Minor/Moderate/Major in Observations & Predictions
+  if(thMinorTxt) thMinorTxt.textContent = `${T.minorLow.toFixed(2)} ${unitText()}`;
+  if(thModerTxt) thModerTxt.textContent = `${T.moderateLow.toFixed(2)} ${unitText()}`;
+  if(thMajorTxt) thMajorTxt.textContent = `${T.majorLow.toFixed(2)} ${unitText()}`;
 }
-    
+
 
 /* Simple helpers */
 function maxPoint(arr){ return arr.reduce((a,b)=>b.ft>a.ft?b:a, arr[0]); }

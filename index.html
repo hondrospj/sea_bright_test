@@ -2640,6 +2640,99 @@ function overwriteCurrentYearBarWithLiveCounts(liveCounts){
   annualMajor[idx] = liveCounts.major;
 }
 
+// =========================
+// Quadratic trendline helpers
+// Fits y = a*x^2 + b*x + c using normal equations + Gaussian elimination.
+// x should be numeric; easiest is x = 0..n-1 (index of year).
+// =========================
+
+function fitQuadratic(x, y){
+  // Filter to finite pairs
+  const pts = [];
+  for(let i=0;i<x.length;i++){
+    const xi = Number(x[i]);
+    const yi = Number(y[i]);
+    if(Number.isFinite(xi) && Number.isFinite(yi)) pts.push([xi, yi]);
+  }
+  if(pts.length < 3) return null;
+
+  let S0=0, S1=0, S2=0, S3=0, S4=0;
+  let T0=0, T1=0, T2=0;
+
+  for(const [xi, yi] of pts){
+    const x2 = xi*xi;
+    const x3 = x2*xi;
+    const x4 = x2*x2;
+
+    S0 += 1;
+    S1 += xi;
+    S2 += x2;
+    S3 += x3;
+    S4 += x4;
+
+    T0 += yi;
+    T1 += xi*yi;
+    T2 += x2*yi;
+  }
+
+  // Normal equations:
+  // [S4 S3 S2][a] = [T2]
+  // [S3 S2 S1][b]   [T1]
+  // [S2 S1 S0][c]   [T0]
+  const A = [
+    [S4, S3, S2, T2],
+    [S3, S2, S1, T1],
+    [S2, S1, S0, T0]
+  ];
+
+  const sol = solve3x3(A);
+  if(!sol) return null;
+
+  const [a,b,c] = sol;
+  return {a,b,c};
+}
+
+function solve3x3(M){
+  // M is 3 rows of 4: augmented matrix
+  const m = M.map(r=>r.slice());
+
+  for(let col=0; col<3; col++){
+    // pivot
+    let pivot = col;
+    for(let r=col+1; r<3; r++){
+      if(Math.abs(m[r][col]) > Math.abs(m[pivot][col])) pivot = r;
+    }
+    if(Math.abs(m[pivot][col]) < 1e-12) return null;
+    if(pivot !== col){
+      const tmp = m[col]; m[col] = m[pivot]; m[pivot] = tmp;
+    }
+
+    // normalize pivot row
+    const div = m[col][col];
+    for(let j=col; j<4; j++) m[col][j] /= div;
+
+    // eliminate
+    for(let r=0; r<3; r++){
+      if(r === col) continue;
+      const f = m[r][col];
+      for(let j=col; j<4; j++){
+        m[r][j] -= f * m[col][j];
+      }
+    }
+  }
+
+  return [m[0][3], m[1][3], m[2][3]];
+}
+
+function buildQuadraticTrend(values){
+  // x as index makes the math stable and avoids huge year numbers
+  const x = values.map((_,i)=>i);
+  const model = fitQuadratic(x, values);
+  if(!model) return values.map(()=>null);
+
+  const {a,b,c} = model;
+  return x.map(xi => a*xi*xi + b*xi + c);
+}
 
 /* Annual chart */
 function ensureAnnual(){
@@ -2648,10 +2741,25 @@ function ensureAnnual(){
     type:"bar",
     data:{
       labels:YEARS,
-      datasets:[
-        {label:"Minor",data:annualMinor,stack:"f",borderWidth:0,backgroundColor:"rgba(251,191,36,.85)"},
-        {label:"Moderate",data:annualModerate,stack:"f",borderWidth:0,backgroundColor:"rgba(251,113,133,.80)"},
-        {label:"Major",data:annualMajor,stack:"f",borderWidth:0,backgroundColor:"rgba(167,139,250,.80)"}
+  datasets: [
+  { label:"Minor", data:annualMinor, stack:"f", borderWidth:0, backgroundColor:"rgba(251,191,36,.85)" },
+  { label:"Moderate", data:annualModerate, stack:"f", borderWidth:0, backgroundColor:"rgba(251,113,133,.80)" },
+  { label:"Major", data:annualMajor, stack:"f", borderWidth:0, backgroundColor:"rgba(167,139,250,.80)" },
+
+  {
+    label:"Trend",
+    type:"line",
+    data: YEARS.map(()=>null),
+    borderColor:"#ffffff",
+    backgroundColor:"#ffffff",
+    borderWidth:3,
+    pointRadius:0,
+    tension:.25,
+    yAxisID:"y"
+  }
+]
+
+
       ]
     },
     options:{
@@ -2714,6 +2822,12 @@ function renderAnnual(){
   annualChart.data.datasets[0].data = annualMinor;
   annualChart.data.datasets[1].data = annualModerate;
   annualChart.data.datasets[2].data = annualMajor;
+  const annualTotal = YEARS.map((_,i)=>
+  (annualMinor[i]||0) + (annualModerate[i]||0) + (annualMajor[i]||0)
+);
+
+annualChart.data.datasets[3].data = buildQuadraticTrend(annualTotal);
+
   annualChart.update();
     applyAnnualView();
 }

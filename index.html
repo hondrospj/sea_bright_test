@@ -2838,13 +2838,17 @@ function ensureAnnual(){
               if (!Number.isFinite(v)) return null;
               return `${ctx.dataset.label}: ${Math.round(v)}`;
             },
-            footer: (items) => {
-              const total = (items || []).reduce((sum, it) => {
-                const v = it.parsed?.y;
-                return sum + (Number.isFinite(v) ? v : 0);
-              }, 0);
-              return `Total: ${Math.round(total)}`;
-            }
+         footer: (items) => {
+  const total = (items || [])
+    .filter(it => it.dataset.type !== "line") // ✅ exclude quadratic
+    .reduce((sum, it) => {
+      const v = it.parsed?.y;
+      return sum + (Number.isFinite(v) ? v : 0);
+    }, 0);
+
+  return `Total: ${Math.round(total)}`;
+}
+
           }
         }
       },
@@ -2871,7 +2875,6 @@ function ensureAnnual(){
 }
 
 
-
 function renderAnnual(){
   ensureAnnual();
 
@@ -2881,28 +2884,46 @@ function renderAnnual(){
   annualChart.data.datasets[2].data = annualMajor;
 
   // ---- Quadratic trend on TOTAL (minor+moderate+major) ----
-  const totals = YEARS.map((_, i) =>
-    (annualMinor[i] || 0) + (annualModerate[i] || 0) + (annualMajor[i] || 0)
+  const lastFullYear = 2025; // adjust if needed
+
+  // Build totals for each year
+  const totalsAll = YEARS.map((y,i)=>
+    (annualMinor[i]||0) + (annualModerate[i]||0) + (annualMajor[i]||0)
   );
 
-  // Use a centered x to reduce numerical weirdness: x = year - meanYear
-  const meanYear = YEARS.reduce((s,y)=>s+y,0) / (YEARS.length || 1);
-  const xs = YEARS.map(y => y - meanYear);
+  // Fit only through lastFullYear (so partial current year doesn’t skew)
+  const fit = YEARS
+    .map((y,i)=>({ y, t: totalsAll[i] }))
+    .filter(d => d.y <= lastFullYear);
 
-  const fit = quadFit(xs, totals);
+  // If not enough points, trend = nulls
+  let trend = totalsAll.map(_=>null);
 
-  const trend = fit
-    ? xs.map(x => evalQuad(fit, x))
-    : totals.map(_ => null);
+  if(fit.length >= 3){
+    const fitYears  = fit.map(d=>d.y);
+    const fitTotals = fit.map(d=>d.t);
 
-  // dataset index 3 = trend (as added above)
+    const meanYear = fitYears.reduce((s,y)=>s+y,0) / fitYears.length;
+    const xsFit = fitYears.map(y => y - meanYear);
+
+    const coeff = quadFit(xsFit, fitTotals);
+
+    if(coeff){
+      // Evaluate trend for ALL YEARS on same centered x-scale
+      const xsAll = YEARS.map(y => y - meanYear);
+      trend = xsAll.map(x => evalQuad(coeff, x));
+    }
+  }
+
+  // dataset index 3 = trend
   if(annualChart.data.datasets[3]){
     annualChart.data.datasets[3].data = trend;
   }
 
   annualChart.update();
-  applyAnnualView(); // keeps your minor/mod/major toggles working
+  applyAnnualView();
 }
+
 
 /* Timeseries tick labels (daily) */
 function buildDailyTickCallbackSkipFirstDay(labels){
@@ -3851,13 +3872,17 @@ function ensureMonthAvgChart(){
               if(!Number.isFinite(v)) return null;
               return `${ctx.dataset.label}: ${v.toFixed(2)}`;
             },
-            footer:(items)=>{
-              const total = (items || []).reduce((sum,it)=>{
-                const v = it.parsed?.y;
-                return sum + (Number.isFinite(v) ? v : 0);
-              }, 0);
-              return `Average Total: ${total.toFixed(2)}`;
-            }
+           footer:(items)=>{
+  const total = (items || [])
+    .filter(it => it.dataset.type !== "line")   // <-- exclude quadratic
+    .reduce((sum,it)=>{
+      const v = it.parsed?.y;
+      return sum + (Number.isFinite(v) ? v : 0);
+    }, 0);
+
+  return `Total: ${Math.round(total)}`;
+}
+
           }
         }
       },

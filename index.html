@@ -230,6 +230,8 @@
 .segBtn.isActive[data-val="minor"]{ box-shadow: inset 0 -2px 0 rgba(251,191,36,.75); }
 .segBtn.isActive[data-val="moderate"]{ box-shadow: inset 0 -2px 0 rgba(251,113,133,.75); }
 .segBtn.isActive[data-val="major"]{ box-shadow: inset 0 -2px 0 rgba(167,139,250,.75); }
+    .segBtn.isActive[data-val="total"]{ box-shadow: inset 0 -2px 0 rgba(234,240,255,.65); }
+
 
 /* =========================
    Monthly table column hiding
@@ -266,6 +268,12 @@
 #monthAvgTable.show-major  td:nth-child(4){
   display:none;
 }
+    /* ===== TOTAL VIEW: show all columns ===== */
+#monthAvgTable.show-total th,
+#monthAvgTable.show-total td{
+  display:table-cell;
+}
+
 
     /* =========================
 OBVIOUS DATUM DROPDOWN
@@ -957,11 +965,13 @@ thead th{
       <div class="accBody">
         <!-- Monthly view switch -->
 <div class="filterRow" style="margin-bottom:8px;">
-  <div class="seg" id="monthViewSeg" aria-label="Monthly floods view">
-    <button class="segBtn isActive" type="button" data-val="minor">Minor</button>
-    <button class="segBtn" type="button" data-val="moderate">Moderate</button>
-    <button class="segBtn" type="button" data-val="major">Major</button>
-  </div>
+ <div class="seg" id="monthViewSeg" aria-label="Monthly floods view">
+  <button class="segBtn isActive" type="button" data-val="minor">Minor</button>
+  <button class="segBtn" type="button" data-val="moderate">Moderate</button>
+  <button class="segBtn" type="button" data-val="major">Major</button>
+  <button class="segBtn" type="button" data-val="total">Total</button>
+</div>
+
 </div>
 
         <div class="hint" id="monthAvgMeta">Computing…</div>
@@ -999,12 +1009,13 @@ thead th{
       <div class="accBody">
         <!-- Annual view switch -->
 <div class="filterRow" style="margin-bottom:8px;">
-  <div class="seg" id="annualViewSeg" aria-label="Annual floods view">
-    <button class="segBtn isActive" type="button" data-val="minor">Minor</button>
-    <button class="segBtn" type="button" data-val="moderate">Moderate</button>
-    <button class="segBtn" type="button" data-val="major">Major</button>
-  </div>
+ <div class="seg" id="annualViewSeg" aria-label="Annual floods view">
+  <button class="segBtn isActive" type="button" data-val="minor">Minor</button>
+  <button class="segBtn" type="button" data-val="moderate">Moderate</button>
+  <button class="segBtn" type="button" data-val="major">Major</button>
+  <button class="segBtn" type="button" data-val="total">Total</button>
 </div>
+
 
         <div class="chartWrap"><canvas id="annualChart"></canvas></div>
         <div class="foot" id="annualNote"></div>
@@ -1431,8 +1442,9 @@ const monthAvgMeta=$("monthAvgMeta"), monthAvgBody=$("monthAvgBody");
     /* =========================
    VIEW SWITCHES (Monthly + Annual)
    ========================= */
-let MONTH_VIEW = "minor";  // "minor" | "moderate" | "major"
-let ANNUAL_VIEW = "minor"; // "minor" | "moderate" | "major"
+let MONTH_VIEW = "minor";  // "minor" | "moderate" | "major" | "total"
+let ANNUAL_VIEW = "minor"; // "minor" | "moderate" | "major" | "total"
+
 
 function setSegActive(segEl, val){
   if(!segEl) return;
@@ -1445,31 +1457,38 @@ function applyMonthView(){
   // 1) Table column visibility (via class)
   const tbl = document.getElementById("monthAvgTable");
   if(tbl){
-    tbl.classList.remove("show-minor","show-moderate","show-major");
+    tbl.classList.remove("show-minor","show-moderate","show-major","show-total");
     tbl.classList.add(`show-${MONTH_VIEW}`);
   }
 
   // 2) Chart dataset visibility
   if(monthAvgChart){
-    // datasets: 0 minor, 1 moderate, 2 major
-    monthAvgChart.data.datasets[0].hidden = (MONTH_VIEW !== "minor");
-    monthAvgChart.data.datasets[1].hidden = (MONTH_VIEW !== "moderate");
-    monthAvgChart.data.datasets[2].hidden = (MONTH_VIEW !== "major");
+    const showAll = (MONTH_VIEW === "total");
 
-    // keep stacked so scale stays consistent; only one bar stack remains visible anyway
+    // datasets: 0 minor, 1 moderate, 2 major
+    monthAvgChart.data.datasets[0].hidden = !(showAll || MONTH_VIEW === "minor");
+    monthAvgChart.data.datasets[1].hidden = !(showAll || MONTH_VIEW === "moderate");
+    monthAvgChart.data.datasets[2].hidden = !(showAll || MONTH_VIEW === "major");
+
     monthAvgChart.update();
   }
 }
 
+
+
 function applyAnnualView(){
   if(annualChart){
+    const showAll = (ANNUAL_VIEW === "total");
+
     // datasets: 0 minor, 1 moderate, 2 major
-    annualChart.data.datasets[0].hidden = (ANNUAL_VIEW !== "minor");
-    annualChart.data.datasets[1].hidden = (ANNUAL_VIEW !== "moderate");
-    annualChart.data.datasets[2].hidden = (ANNUAL_VIEW !== "major");
+    annualChart.data.datasets[0].hidden = !(showAll || ANNUAL_VIEW === "minor");
+    annualChart.data.datasets[1].hidden = !(showAll || ANNUAL_VIEW === "moderate");
+    annualChart.data.datasets[2].hidden = !(showAll || ANNUAL_VIEW === "major");
+
     annualChart.update();
   }
 }
+
 
 function hookMonthViewSwitch(){
   const seg = document.getElementById("monthViewSeg");

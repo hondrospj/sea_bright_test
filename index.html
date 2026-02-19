@@ -1396,6 +1396,9 @@ const dayMaxFtEl = $("dayMaxFt"),
       dayMaxWhenEl = $("dayMaxWhen"),
       dayMinWhenEl = $("dayMinWhen"),
       dayRangeMeta = $("dayRangeMeta");
+  
+    const dailyRangeDateEl = $("dailyRangeDate");
+
 
 const stageTextEl=$("stageText"), stageDotEl=$("stageDot");
 const lastPill=$("lastPill");
@@ -3762,6 +3765,10 @@ async function updateLiveAndAnnualCounts(){
 // ---- Daily range (today) ----
 const today = sliceAfter(ytd, startOfTodayEST_ISO());
 STATE.todayNavd = today;
+  if(dailyRangeDateEl){
+  dailyRangeDateEl.textContent = fmtNiceDate(startOfTodayEST_ISO());
+}
+
 
 if(today.length){
   const dmx = maxPoint(today), dmn = minPoint(today);

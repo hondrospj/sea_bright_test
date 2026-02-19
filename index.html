@@ -1481,17 +1481,30 @@ function applyMonthView(){
 
 
 function applyAnnualView(){
-  if(annualChart){
-    const showAll = (ANNUAL_VIEW === "total");
+  if(!annualChart) return;
 
-    // datasets: 0 minor, 1 moderate, 2 major
-    annualChart.data.datasets[0].hidden = !(showAll || ANNUAL_VIEW === "minor");
-    annualChart.data.datasets[1].hidden = !(showAll || ANNUAL_VIEW === "moderate");
-    annualChart.data.datasets[2].hidden = !(showAll || ANNUAL_VIEW === "major");
+  const showAll = (ANNUAL_VIEW === "total");
 
-    annualChart.update();
+  // dataset 0 = minor
+  annualChart.data.datasets[0].hidden =
+    !(showAll || ANNUAL_VIEW === "minor");
+
+  // dataset 1 = moderate
+  annualChart.data.datasets[1].hidden =
+    !(showAll || ANNUAL_VIEW === "moderate");
+
+  // dataset 2 = major
+  annualChart.data.datasets[2].hidden =
+    !(showAll || ANNUAL_VIEW === "major");
+
+  // dataset 3 = quadratic trend (ONLY show in total view)
+  if(annualChart.data.datasets[3]){
+    annualChart.data.datasets[3].hidden = !showAll;
   }
+
+  annualChart.update();
 }
+
 
 
 function hookMonthViewSwitch(){
@@ -2664,49 +2677,169 @@ function overwriteCurrentYearBarWithLiveCounts(liveCounts){
   annualMajor[idx] = liveCounts.major;
 }
 
+function quadFit(xs, ys){
+  // Fits y = a x^2 + b x + c (least squares)
+  // Returns {a,b,c} or null if not enough data.
+  const n = Math.min(xs.length, ys.length);
+  if(n < 3) return null;
+
+  // Build normal equations:
+  // [Σx4 Σx3 Σx2][a] = [Σx2y]
+  // [Σx3 Σx2 Σx1][b] = [Σxy ]
+  // [Σx2 Σx1 Σ1 ][c] = [Σy  ]
+  let Sx=0, Sx2=0, Sx3=0, Sx4=0;
+  let Sy=0, Sxy=0, Sx2y=0;
+
+  for(let i=0;i<n;i++){
+    const x = Number(xs[i]);
+    const y = Number(ys[i]);
+    if(!Number.isFinite(x) || !Number.isFinite(y)) continue;
+
+    const x2 = x*x;
+    Sx  += x;
+    Sx2 += x2;
+    Sx3 += x2*x;
+    Sx4 += x2*x2;
+
+    Sy   += y;
+    Sxy  += x*y;
+    Sx2y += x2*y;
+  }
+
+  // Solve 3x3 via Cramer's rule or elimination (simple elimination here)
+  const A = [
+    [Sx4, Sx3, Sx2],
+    [Sx3, Sx2, Sx ],
+    [Sx2, Sx , n  ]
+  ];
+  const B = [Sx2y, Sxy, Sy];
+
+  // Gaussian elimination
+  for(let col=0; col<3; col++){
+    // pivot
+    let pivot = col;
+    for(let r=col+1; r<3; r++){
+      if(Math.abs(A[r][col]) > Math.abs(A[pivot][col])) pivot = r;
+    }
+    if(Math.abs(A[pivot][col]) < 1e-12) return null;
+
+    // swap
+    if(pivot !== col){
+      [A[pivot], A[col]] = [A[col], A[pivot]];
+      [B[pivot], B[col]] = [B[col], B[pivot]];
+    }
+
+    // eliminate
+    for(let r=col+1; r<3; r++){
+      const f = A[r][col] / A[col][col];
+      for(let c=col; c<3; c++) A[r][c] -= f * A[col][c];
+      B[r] -= f * B[col];
+    }
+  }
+
+  // back-substitute
+  const x3 = [0,0,0];
+  for(let r=2; r>=0; r--){
+    let sum = B[r];
+    for(let c=r+1; c<3; c++) sum -= A[r][c] * x3[c];
+    x3[r] = sum / A[r][r];
+  }
+
+  const [a,b,c] = x3;
+  return {a,b,c};
+}
+
+function evalQuad({a,b,c}, x){
+  return a*x*x + b*x + c;
+}
 
 /* Annual chart */
 function ensureAnnual(){
   if(annualChart) return;
-  annualChart=new Chart($("annualChart"),{
-    type:"bar",
-    data:{
-      labels:YEARS,
-      datasets:[
-        {label:"Minor",data:annualMinor,stack:"f",borderWidth:0,backgroundColor:"rgba(251,191,36,.85)"},
-        {label:"Moderate",data:annualModerate,stack:"f",borderWidth:0,backgroundColor:"rgba(251,113,133,.80)"},
-        {label:"Major",data:annualMajor,stack:"f",borderWidth:0,backgroundColor:"rgba(167,139,250,.80)"}
-      ]
-    },
-    options:{
-      responsive:true,
-      maintainAspectRatio:false,
 
-      // ✅ KEY: hover anywhere on the bar → show ALL stacks for that year
-      interaction:{ mode:"index", intersect:false },
+  const ctx = $("annualChart"); // your helper returns the canvas element
 
-      plugins:{
-        legend:{
-          position:"bottom",
-          labels:{color:"rgba(234,240,255,.88)",font:{weight:"950"},boxWidth:16}
+  annualChart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: YEARS,
+      datasets: [
+        {
+          label: "Minor",
+          data: annualMinor,
+          stack: "f",
+          borderWidth: 0,
+          backgroundColor: "rgba(251,191,36,.85)"
+        },
+        {
+          label: "Moderate",
+          data: annualModerate,
+          stack: "f",
+          borderWidth: 0,
+          backgroundColor: "rgba(251,113,133,.80)"
+        },
+        {
+          label: "Major",
+          data: annualMajor,
+          stack: "f",
+          borderWidth: 0,
+          backgroundColor: "rgba(167,139,250,.80)"
         },
 
-        // ✅ Tooltip shows Minor/Moderate/Major + computed Total
-        tooltip:{
-          mode:"index",
-          intersect:false,
-          callbacks:{
-            title:(items)=>{
-              // Year label (your x-axis label)
-              return items?.[0]?.label ?? "";
-            },
-            label:(ctx)=>{
+        // ✅ Trendline MUST be the 4th dataset (index 3)
+        {
+          type: "line",
+          label: "Quadratic trend (Total)",
+          data: [],                 // filled in renderAnnual()
+          borderWidth: 3,
+          pointRadius: 0,
+          tension: 0.2,
+          spanGaps: true,
+
+          // critical: don't stack the line with bars
+          stack: undefined,
+
+          // keep it above bars
+          order: 99,
+
+          // make it solid (borderDash: [6,4] if you want dashed)
+          borderDash: [2, 0],
+
+          // pick a readable line color (you can swap to a CSS var if you want)
+          borderColor: "rgba(234,240,255,.85)"
+        }
+      ]
+    },
+
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+
+      // ✅ hover anywhere on the bar → show ALL stacks for that year
+      interaction: { mode: "index", intersect: false },
+
+      plugins: {
+        legend: {
+          position: "bottom",
+          labels: {
+            color: "rgba(234,240,255,.88)",
+            font: { weight: "950" },
+            boxWidth: 16
+          }
+        },
+
+        tooltip: {
+          mode: "index",
+          intersect: false,
+          callbacks: {
+            title: (items) => items?.[0]?.label ?? "",
+            label: (ctx) => {
               const v = ctx.parsed?.y;
-              if(!Number.isFinite(v)) return null;
+              if (!Number.isFinite(v)) return null;
               return `${ctx.dataset.label}: ${Math.round(v)}`;
             },
-            footer:(items)=>{
-              const total = (items || []).reduce((sum,it)=>{
+            footer: (items) => {
+              const total = (items || []).reduce((sum, it) => {
                 const v = it.parsed?.y;
                 return sum + (Number.isFinite(v) ? v : 0);
               }, 0);
@@ -2715,16 +2848,22 @@ function ensureAnnual(){
           }
         }
       },
-      scales:{
-        x:{
-          stacked:true,
-          ticks:{color:"rgba(169,182,211,.9)",maxRotation:0,autoSkip:true,maxTicksLimit:7},
-          grid:{color:"rgba(255,255,255,.06)"}
+
+      scales: {
+        x: {
+          stacked: true,
+          ticks: {
+            color: "rgba(169,182,211,.9)",
+            maxRotation: 0,
+            autoSkip: true,
+            maxTicksLimit: 7
+          },
+          grid: { color: "rgba(255,255,255,.06)" }
         },
-        y:{
-          stacked:true,
-          ticks:{color:"rgba(169,182,211,.9)",precision:0},
-          grid:{color:"rgba(255,255,255,.06)"}
+        y: {
+          stacked: true,
+          ticks: { color: "rgba(169,182,211,.9)", precision: 0 },
+          grid: { color: "rgba(255,255,255,.06)" }
         }
       }
     }
@@ -2732,14 +2871,37 @@ function ensureAnnual(){
 }
 
 
+
 function renderAnnual(){
   ensureAnnual();
+
   annualChart.data.labels = YEARS;
   annualChart.data.datasets[0].data = annualMinor;
   annualChart.data.datasets[1].data = annualModerate;
   annualChart.data.datasets[2].data = annualMajor;
+
+  // ---- Quadratic trend on TOTAL (minor+moderate+major) ----
+  const totals = YEARS.map((_, i) =>
+    (annualMinor[i] || 0) + (annualModerate[i] || 0) + (annualMajor[i] || 0)
+  );
+
+  // Use a centered x to reduce numerical weirdness: x = year - meanYear
+  const meanYear = YEARS.reduce((s,y)=>s+y,0) / (YEARS.length || 1);
+  const xs = YEARS.map(y => y - meanYear);
+
+  const fit = quadFit(xs, totals);
+
+  const trend = fit
+    ? xs.map(x => evalQuad(fit, x))
+    : totals.map(_ => null);
+
+  // dataset index 3 = trend (as added above)
+  if(annualChart.data.datasets[3]){
+    annualChart.data.datasets[3].data = trend;
+  }
+
   annualChart.update();
-    applyAnnualView();
+  applyAnnualView(); // keeps your minor/mod/major toggles working
 }
 
 /* Timeseries tick labels (daily) */

@@ -793,7 +793,8 @@ thead th{
       <div class="liveGrid">
         <!-- TODAY (current + today's max/min) -->
         <div class="panel">
-          <div class="panelTitle">Daily range (today)</div>
+<div class="panelTitle">Daily range (<span id="dailyRangeDate">—</span>)</div>
+
 
           <div class="todayTop">
             <div class="curBox">
@@ -3758,8 +3759,9 @@ async function updateLiveAndAnnualCounts(){
   setStage(STATE.lastNavd.ft);
 
   // ---- Daily range (today) ----
-  const today = sliceAfter(ytd, startOfTodayEST_ISO());
-  STATE.todayNavd = today;
+// ---- Daily range (today) ----
+const today = sliceAfter(ytd, startOfTodayEST_ISO());
+STATE.todayNavd = today;
 
 if(today.length){
   const dmx = maxPoint(today), dmn = minPoint(today);
@@ -3767,18 +3769,18 @@ if(today.length){
   dayMaxFtEl.textContent = toDisplayFtFromNavd(dmx.ft).toFixed(2);
   dayMinFtEl.textContent = toDisplayFtFromNavd(dmn.ft).toFixed(2);
 
-  // ✅ show time under each number (EST)
+  // ✅ ONLY show the time under each number (EST)
   if(dayMaxWhenEl) dayMaxWhenEl.textContent = fmtESTTime(dmx.t);
   if(dayMinWhenEl) dayMinWhenEl.textContent = fmtESTTime(dmn.t);
 
-  // optional: keep the long meta line (or delete it if you don’t want it)
-  dayRangeMeta.textContent = `Max @ ${fmtESTFull(dmx.t)} · Min @ ${fmtESTFull(dmn.t)}`;
+  // ✅ optional: blank the long meta line so it doesn't “fight” the clean layout
+  if(dayRangeMeta) dayRangeMeta.textContent = "";
 }else{
   dayMaxFtEl.textContent = "—";
   dayMinFtEl.textContent = "—";
   if(dayMaxWhenEl) dayMaxWhenEl.textContent = "—";
   if(dayMinWhenEl) dayMinWhenEl.textContent = "—";
-  dayRangeMeta.textContent = "—";
+  if(dayRangeMeta) dayRangeMeta.textContent = "";
 }
 
 

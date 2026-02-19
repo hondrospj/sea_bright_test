@@ -1627,9 +1627,10 @@ function updateUnitsAndBadges(){
 
   // Update the stage badges under Live conditions (Minor/Moderate/Major boxes)
   const T = THRESH[DISPLAY_DATUM];
-  minorBadge.textContent    = `${T.minorLow.toFixed(2)}–${T.moderateLow.toFixed(2)}`;
-  moderateBadge.textContent = `${T.moderateLow.toFixed(2)}–${T.majorLow.toFixed(2)}`;
-  majorBadge.textContent    = `≥ ${T.majorLow.toFixed(2)}`;
+minorBadge.textContent    = `${T.minorLow.toFixed(2)}–${T.moderateLow.toFixed(2)} ft`;
+moderateBadge.textContent = `${T.moderateLow.toFixed(2)}–${T.majorLow.toFixed(2)} ft`;
+majorBadge.textContent    = `≥ ${T.majorLow.toFixed(2)} ft`;
+
 
   // ✅ NEW: Update the numbers next to Minor/Moderate/Major in Observations & Predictions
   if(thMinorTxt) thMinorTxt.textContent = `${T.minorLow.toFixed(2)} ${unitText()}`;

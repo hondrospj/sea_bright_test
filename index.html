@@ -1497,18 +1497,23 @@ function applyMonthView(){
 
 
 function applyAnnualView(){
-  if(annualChart){
-    const showAll = (ANNUAL_VIEW === "total");
+  if(!annualChart) return;
 
-    // datasets: 0 minor, 1 moderate, 2 major
-    annualChart.data.datasets[0].hidden = !showAll && (ANNUAL_VIEW !== "minor");
-    annualChart.data.datasets[1].hidden = !showAll && (ANNUAL_VIEW !== "moderate");
-    annualChart.data.datasets[2].hidden = !showAll && (ANNUAL_VIEW !== "major");
+  const showAll = (ANNUAL_VIEW === "total");
 
-    annualChart.update();
+  // datasets: 0 minor, 1 moderate, 2 major
+  annualChart.data.datasets[0].hidden = !showAll && (ANNUAL_VIEW !== "minor");
+  annualChart.data.datasets[1].hidden = !showAll && (ANNUAL_VIEW !== "moderate");
+  annualChart.data.datasets[2].hidden = !showAll && (ANNUAL_VIEW !== "major");
+
+  // ✅ dataset 3 = quadratic trendline (Total)
+  // Show it ONLY when Total is selected
+  if(annualChart.data.datasets[3]){
+    annualChart.data.datasets[3].hidden = (ANNUAL_VIEW !== "total");
   }
-}
 
+  annualChart.update();
+}
 
 function hookMonthViewSwitch(){
   const seg = document.getElementById("monthViewSeg");

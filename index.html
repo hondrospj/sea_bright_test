@@ -2364,20 +2364,6 @@ const floodBandsPlugin = {
     ctx.fillRect(left, chartArea.top, right-left, (yMajor - chartArea.top));
 
     // dashed lines
-    ctx.setLineDash([6,4]);
-    ctx.lineWidth = 1.5;
-
-    const hline = (py, stroke) => {
-      ctx.strokeStyle = stroke;
-      ctx.beginPath();
-      ctx.moveTo(left, py);
-      ctx.lineTo(right, py);
-      ctx.stroke();
-    };
-
-    hline(yMinor, "rgba(251,191,36,.75)");
-    hline(yModer, "rgba(251,113,133,.75)");
-    hline(yMajor, "rgba(167,139,250,.75)");
 
     ctx.restore();
   }
@@ -2984,14 +2970,7 @@ function ensureTsChart(){
           pointHoverRadius:0,
           pointHitRadius:0,
           tension:0.25,
-
-          // ✅ IMPORTANT:
-          // If you keep hourly-only predictions with nulls between, this MUST be true
-          // or the line will be invisible (no dots + no segments).
-          // If you later resample predictions to 15-min, you can set this back to false.
           spanGaps:true,
-
-          borderDash:[6,5],
           borderColor:"rgba(45,212,191,.9)",
           segment:{
             borderColor:(ctx)=>{

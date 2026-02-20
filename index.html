@@ -2959,31 +2959,45 @@ function ensureTsChart(){
               const y = ctx?.p1?.parsed?.y;
               if(y===null || y===undefined || Number.isNaN(y)) return "rgba(45,212,191,.9)";
               return colorForFtDisplay(+y);
-            }
-          }
-        },
-        {
-         {
-  label:"Predicted (NOAA)",
-  data:[],
-  borderWidth:2,
-  borderDash:[6,6],   // ← THIS makes it dashed
-          pointRadius:0,
-          pointHoverRadius:0,
-          pointHitRadius:0,
-          tension:0.25,
-          spanGaps:true,
-          borderColor:"rgba(45,212,191,.9)",
-          segment:{
-            borderColor:(ctx)=>{
-              const y = ctx?.p1?.parsed?.y;
-              if(y===null || y===undefined || Number.isNaN(y)) return "rgba(45,212,191,.9)";
-              return colorForFtDisplay(+y);
-            }
-          }
-        }
-      ]
-    },
+          datasets: [
+  {
+    label: "Observed (USGS)",
+    data: [],
+    borderWidth: 2,
+    pointRadius: 0,
+    pointHoverRadius: 0,
+    pointHitRadius: 0,
+    tension: 0.25,
+    spanGaps: true,
+    borderColor: "rgba(233,240,255,.85)",
+    segment: {
+      borderColor: (ctx) => {
+        const y = ctx?.p1?.parsed?.y;
+        if (y === null || y === undefined || Number.isNaN(y)) return "rgba(233,240,255,.85)";
+        return colorForFtDisplay(+y);
+      }
+    }
+  },
+  {
+    label: "Predicted (NOAA)",
+    data: [],
+    borderWidth: 2,
+    borderDash: [6, 6], // dashed predicted line
+    pointRadius: 0,
+    pointHoverRadius: 0,
+    pointHitRadius: 0,
+    tension: 0.25,
+    spanGaps: true,
+    borderColor: "rgba(45,212,191,.9)",
+    segment: {
+      borderColor: (ctx) => {
+        const y = ctx?.p1?.parsed?.y;
+        if (y === null || y === undefined || Number.isNaN(y)) return "rgba(45,212,191,.9)";
+        return colorForFtDisplay(+y);
+      }
+    }
+  }
+]
     options:{
       responsive:true,
       maintainAspectRatio:false,

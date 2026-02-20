@@ -2354,15 +2354,15 @@ const floodBandsPlugin = {
 
     ctx.save();
 
-    // bands
-    ctx.fillStyle = "rgba(251,191,36,.10)";
-    ctx.fillRect(left, yModer, right-left, (yMinor - yModer));
+   // bands (✅ less opaque / more transparent)
+ctx.fillStyle = "rgba(251,191,36,.06)";   // Minor
+ctx.fillRect(left, yModer, right-left, (yMinor - yModer));
 
-    ctx.fillStyle = "rgba(251,113,133,.10)";
-    ctx.fillRect(left, yMajor, right-left, (yModer - yMajor));
+ctx.fillStyle = "rgba(251,113,133,.06)";  // Moderate
+ctx.fillRect(left, yMajor, right-left, (yModer - yMajor));
 
-    ctx.fillStyle = "rgba(167,139,250,.10)";
-    ctx.fillRect(left, chartArea.top, right-left, (yMajor - chartArea.top));
+ctx.fillStyle = "rgba(167,139,250,.06)";  // Major
+ctx.fillRect(left, chartArea.top, right-left, (yMajor - chartArea.top));
 
     // dashed lines
 
@@ -2972,6 +2972,11 @@ function ensureTsChart(){
           pointHitRadius:0,
           tension:0.25,
           spanGaps:true,
+
+          // ✅ DASHED predicted line
+          borderDash:[8,6],
+          borderDashOffset:0,
+
           borderColor:"rgba(45,212,191,.9)",
           segment:{
             borderColor:(ctx)=>{
@@ -3039,7 +3044,6 @@ function ensureTsChart(){
     }
   });
 }
-
 
 
 /* Build 15-min obs grid + plot RAW PETSS predictions (no interpolation) */

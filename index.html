@@ -2963,9 +2963,11 @@ function ensureTsChart(){
           }
         },
         {
-          label:"Predicted (NOAA)",
-          data:[],
-          borderWidth:2,
+         {
+  label:"Predicted (NOAA)",
+  data:[],
+  borderWidth:2,
+  borderDash:[6,6],   // ← THIS makes it dashed
           pointRadius:0,
           pointHoverRadius:0,
           pointHitRadius:0,

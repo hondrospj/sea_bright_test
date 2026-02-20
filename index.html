@@ -2354,15 +2354,16 @@ const floodBandsPlugin = {
 
     ctx.save();
 
-   // bands (✅ less opaque / more transparent)
-ctx.fillStyle = "rgba(251,191,36,.06)";   // Minor
-ctx.fillRect(left, yModer, right-left, (yMinor - yModer));
+// ===== Flood bands (stronger / less transparent) =====
 
-ctx.fillStyle = "rgba(251,113,133,.06)";  // Moderate
-ctx.fillRect(left, yMajor, right-left, (yModer - yMajor));
+ctx.fillStyle = "rgba(251,191,36,.14)";   // Minor
+ctx.fillRect(left, yModer, right - left, yMinor - yModer);
 
-ctx.fillStyle = "rgba(167,139,250,.06)";  // Major
-ctx.fillRect(left, chartArea.top, right-left, (yMajor - chartArea.top));
+ctx.fillStyle = "rgba(251,113,133,.14)";  // Moderate
+ctx.fillRect(left, yMajor, right - left, yModer - yMajor);
+
+ctx.fillStyle = "rgba(167,139,250,.14)";  // Major
+ctx.fillRect(left, chartArea.top, right - left, yMajor - chartArea.top);
 
     // dashed lines
 

@@ -759,371 +759,363 @@ thead th{
 
   </style>
 </head>
-
 <body>
-  <div class="wrap">
+<div class="wrap">
 
-    <div class="banner" id="alertBanner">
-      <div><b id="alertTitle">Coastal Flood Advisory</b></div>
-      <div class="small" id="alertBody"></div>
-    </div>
-
-    <div class="top">
-      <a class="brand" href="https://cupajoe.live/" target="_blank" rel="noopener">
-<div class="brandLogo">
-  <img src="assets/shorelysafe" alt="Cupajoe logo">
-</div>
-
-        <div class="brandTitle">
-          <div class="kicker">USGS 01412150 · Sea Bright, NJ</div>
-          <div class="name">Sea Bright Tidal Flooding Dashboard</div>
-        </div>
-      </a>
-
-   <div class="topRight">
-
-  <!-- OBVIOUS datum selector -->
-  <div class="datumPick" aria-label="Datum selector">
-    <span class="datumLbl">Datum</span>
-    <select id="datumSelect" class="datumSelect" title="Choose datum">
-      <!-- options are filled by JS so order matches DATUMS -->
-    </select>
+  <div class="banner" id="alertBanner">
+    <div><b id="alertTitle">Coastal Flood Advisory</b></div>
+    <div class="small" id="alertBody"></div>
   </div>
-     
 
-  <div class="pill" id="lastPill">Last updated: —</div>
-
-  <div class="pill" id="stagePill">
-    <span class="dot" id="stageDot"></span>
-    <span id="stageText">Loading…</span>
-  </div>
-</div>
-</div>
-
-    <!-- 1) Live Conditions (NOT accordion) -->
-    <div class="card">
-      <div class="hrow">
-        <h2>Live conditions</h2>
-        <div class="kicker" style="text-transform:none">Time Expressed In EST</div>
+  <div class="top">
+    <a class="brand" href="https://cupajoe.live/" target="_blank" rel="noopener">
+      <div class="brandLogo">
+        <!-- FIX: add file extension (adjust if yours is .svg/.jpg) -->
+        <img src="assets/shorelysafe.png" alt="Cupajoe logo">
       </div>
 
-      <div class="liveGrid">
-        <!-- TODAY (current + today's max/min) -->
-        <div class="panel">
-<div class="panelTitle">Daily range (<span id="dailyRangeDate">—</span>)</div>
+      <div class="brandTitle">
+        <div class="kicker">USGS 01412150 · Sea Bright, NJ</div>
+        <div class="name">Sea Bright Tidal Flooding Dashboard</div>
+      </div>
+    </a>
 
+    <div class="topRight">
 
-          <div class="todayTop">
-            <div class="curBox">
-              <div class="curLabel">Current water elevation</div>
+      <!-- OBVIOUS datum selector -->
+      <div class="datumPick" aria-label="Datum selector">
+        <span class="datumLbl">Datum</span>
+        <select id="datumSelect" class="datumSelect" title="Choose datum">
+          <!-- options are filled by JS so order matches DATUMS -->
+        </select>
+      </div>
 
-              <div class="curRow">
-                <div class="curVal">
-                  <span id="curFt">—</span>
+      <div class="pill" id="lastPill">Last updated: —</div>
+
+      <div class="pill" id="stagePill">
+        <span class="dot" id="stageDot"></span>
+        <span id="stageText">Loading…</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1) Live Conditions (NOT accordion) -->
+  <div class="card">
+    <div class="hrow">
+      <h2>Live conditions</h2>
+      <div class="kicker" style="text-transform:none">Time Expressed In EST</div>
+    </div>
+
+    <div class="liveGrid">
+      <!-- TODAY (current + today's max/min) -->
+      <div class="panel">
+        <div class="panelTitle">Daily range (<span id="dailyRangeDate">—</span>)</div>
+
+        <div class="todayTop">
+          <div class="curBox">
+            <div class="curLabel">Current water elevation</div>
+
+            <div class="curRow">
+              <div class="curVal">
+                <span id="curFt">—</span>
+                <span class="unit" data-unit>ft MLLW</span>
+              </div>
+            </div>
+
+            <div class="levelMeter" aria-hidden="true">
+              <div class="levelFill" id="curFill"></div>
+            </div>
+
+            <div class="curMeta" id="curMeta">Updated: —</div>
+            <div class="curMeta" id="nearMeta" style="display:none"></div>
+          </div>
+
+          <div class="todayRange">
+            <div class="rangeRow">
+              <div class="rangeCol">
+                <div class="rangeLab">Max</div>
+                <div class="rangeVal">
+                  <span id="dayMaxFt">—</span>
                   <span class="unit" data-unit>ft MLLW</span>
                 </div>
+                <div class="rangeWhen" id="dayMaxWhen">—</div>
               </div>
 
-              <div class="levelMeter" aria-hidden="true">
-                <div class="levelFill" id="curFill"></div>
+              <div class="rangeCol">
+                <div class="rangeLab">Min</div>
+                <div class="rangeVal">
+                  <span id="dayMinFt">—</span>
+                  <span class="unit" data-unit>ft MLLW</span>
+                </div>
+                <div class="rangeWhen" id="dayMinWhen">—</div>
               </div>
-
-              <div class="curMeta" id="curMeta">Updated: —</div>
-              <div class="curMeta" id="nearMeta" style="display:none"></div>
             </div>
 
-         <div class="todayRange">
-  <div class="rangeRow">
-    <div class="rangeCol">
-      <div class="rangeLab">Max</div>
-      <div class="rangeVal">
-        <span id="dayMaxFt">—</span>
-        <span class="unit" data-unit>ft MLLW</span>
+            <div class="rangeMeta" id="dayRangeMeta">—</div>
+          </div>
+        </div>
       </div>
-      <div class="rangeWhen" id="dayMaxWhen">—</div>
+
+      <!-- 72 HOUR FLOOD OUTLOOK (inside Live Conditions) -->
+      <div class="panel">
+        <div class="panelTitle">Flood outlook (Next 72 Hours)</div>
+
+        <div class="outlookTop" aria-label="Total flood hours by type">
+          <div class="miniStat">
+            <span class="miniChip" style="background:var(--minor)"></span>
+            Minor <b id="f48MinorHrs">—</b> hrs
+          </div>
+          <div class="miniStat">
+            <span class="miniChip" style="background:var(--moderate)"></span>
+            Moderate <b id="f48ModerHrs">—</b> hrs
+          </div>
+          <div class="miniStat">
+            <span class="miniChip" style="background:var(--major)"></span>
+            Major <b id="f48MajorHrs">—</b> hrs
+          </div>
+        </div>
+
+        <div class="events" id="f48List">
+          <div class="event">
+            <div class="eventLeft">
+              <div class="eventWhen">Loading…</div>
+              <div class="eventSub">—</div>
+            </div>
+            <div class="eventBadge" style="color:var(--muted)">—</div>
+          </div>
+        </div>
+
+        <div class="rangeMeta" id="f48Meta">—</div>
+      </div>
     </div>
 
-    <div class="rangeCol">
-      <div class="rangeLab">Min</div>
-      <div class="rangeVal">
-        <span id="dayMinFt">—</span>
-        <span class="unit" data-unit>ft MLLW</span>
+    <div class="stages" aria-label="Flood stages">
+      <div class="stage">
+        <div class="stageName">Minor</div>
+        <div class="badge" id="minorBadge" style="color:var(--minor)">5.20–6.20 ft</div>
       </div>
-      <div class="rangeWhen" id="dayMinWhen">—</div>
+      <div class="stage">
+        <div class="stageName">Moderate</div>
+        <div class="badge" id="moderateBadge" style="color:var(--moderate)">6.20–7.20 ft</div>
+      </div>
+      <div class="stage">
+        <div class="stageName">Major</div>
+        <div class="badge" id="majorBadge" style="color:var(--major)">≥ 7.20 ft</div>
+      </div>
     </div>
   </div>
 
+  <div style="height:14px"></div>
 
-              <div class="rangeMeta" id="dayRangeMeta">—</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 72 HOUR FLOOD OUTLOOK (inside Live Conditions) -->
-        <div class="panel">
-          <div class="panelTitle">Flood outlook (Next 72 Hours)</div>
-
-          <div class="outlookTop" aria-label="Total flood hours by type">
-            <div class="miniStat">
-              <span class="miniChip" style="background:var(--minor)"></span>
-              Minor <b id="f48MinorHrs">—</b> hrs
-            </div>
-            <div class="miniStat">
-              <span class="miniChip" style="background:var(--moderate)"></span>
-              Moderate <b id="f48ModerHrs">—</b> hrs
-            </div>
-            <div class="miniStat">
-              <span class="miniChip" style="background:var(--major)"></span>
-              Major <b id="f48MajorHrs">—</b> hrs
-            </div>
-          </div>
-
-          <div class="events" id="f48List">
-            <div class="event">
-              <div class="eventLeft">
-                <div class="eventWhen">Loading…</div>
-                <div class="eventSub">—</div>
-              </div>
-              <div class="eventBadge" style="color:var(--muted)">—</div>
-            </div>
-          </div>
-
-          <div class="rangeMeta" id="f48Meta">—</div>
-        </div>
-      </div>
-
-      <div class="stages" aria-label="Flood stages">
-        <div class="stage">
-          <div class="stageName">Minor</div>
-          <div class="badge" id="minorBadge" style="color:var(--minor)">5.20–6.20 ft</div>
-        </div>
-        <div class="stage">
-          <div class="stageName">Moderate</div>
-          <div class="badge" id="moderateBadge" style="color:var(--moderate)">6.20–7.20 ft</div>
-        </div>
-        <div class="stage">
-          <div class="stageName">Major</div>
-          <div class="badge" id="majorBadge" style="color:var(--major)">≥ 7.20 ft</div>
-        </div>
+  <!-- 2) Top 10 Highest Tides (ACCORDION) -->
+  <details class="acc">
+    <summary class="accHeader">
+      <h2 class="accTitle">Top ten highest tides</h2>
+      <span class="chev"></span>
+    </summary>
+    <div class="accBody">
+      <div class="table">
+        <table aria-label="Top ten highest tides">
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Date</th>
+              <th id="topTenUnitTh">Height (ft MLLW)</th>
+              <th>Type</th>
+            </tr>
+          </thead>
+          <tbody id="topTenBody"></tbody>
+        </table>
       </div>
     </div>
+  </details>
 
-    <div style="height:14px"></div>
+  <div style="height:14px"></div>
 
-    <!-- 2) Top 10 Highest Tides (ACCORDION) -->
-    <details class="acc">
-      <summary class="accHeader">
-        <h2 class="accTitle">Top ten highest tides</h2>
-        <span class="chev"></span>
-      </summary>
-      <div class="accBody">
-        <div class="table">
-          <table aria-label="Top ten highest tides">
-            <thead>
-              <tr>
-                <th>Rank</th>
-                <th>Date</th>
-                <th id="topTenUnitTh">Height (ft MLLW)</th>
-                <th>Type</th>
-              </tr>
-            </thead>
-            <tbody id="topTenBody"></tbody>
-          </table>
-        </div>
-      </div>
-    </details>
-
-    <div style="height:14px"></div>
-
-    <!-- 3) Observations & Predictions (NOT accordion) -->
-    <div class="card">
-      <div class="hrow">
-        <h2>Observations (USGS) & Predictions (NOAA)</h2>
-        <div class="kicker" style="text-transform:none"></div>
-      </div>
-
-      <div class="chartWrapTall">
-        <canvas id="tsChart"></canvas>
-      </div>
-
-     <div class="foot" id="threshKey" style="font-size:18px;">
-  <span class="tag" style="padding:10px 16px;">
-    <span class="chip" style="background:var(--minor); width:14px; height:14px;"></span>
-    Minor
-    <span class="thNum thMinor" id="thMinorTxt">—</span>
-  </span>
-
-  <span class="tag" style="padding:10px 16px;">
-    <span class="chip" style="background:var(--moderate); width:14px; height:14px;"></span>
-    Moderate
-    <span class="thNum thModer" id="thModerTxt">—</span>
-  </span>
-
-  <span class="tag" style="padding:10px 16px;">
-    <span class="chip" style="background:var(--major); width:14px; height:14px;"></span>
-    Major
-    <span class="thNum thMajor" id="thMajorTxt">—</span>
-  </span>
-</div>
-
-
-      <div class="foot" id="fcNote"></div>
-      <div class="foot" id="txtNote"></div>
+  <!-- 3) Observations & Predictions (NOT accordion) -->
+  <div class="card">
+    <div class="hrow">
+      <h2>Observations (USGS) & Predictions (NOAA)</h2>
+      <div class="kicker" style="text-transform:none"></div>
     </div>
 
-    <div style="height:14px"></div>
+    <div class="chartWrapTall">
+      <canvas id="tsChart"></canvas>
+    </div>
 
-    <!-- 4) Average Floods Per Month (ACCORDION) -->
-    <details class="acc">
-      <summary class="accHeader">
-        <h2 class="accTitle">Average number of floods per month</h2>
-        <span class="chev"></span>
-      </summary>
+    <div class="foot" id="threshKey" style="font-size:18px;">
+      <span class="tag" style="padding:10px 16px;">
+        <span class="chip" style="background:var(--minor); width:14px; height:14px;"></span>
+        Minor
+        <span class="thNum thMinor" id="thMinorTxt">—</span>
+      </span>
 
-      <div class="accBody">
-        <!-- Monthly view switch -->
-<div class="filterRow" style="margin-bottom:8px;">
-<div class="seg" id="monthViewSeg" aria-label="Monthly floods view">
-  <button class="segBtn isActive" type="button" data-val="total">Total</button>
-  <button class="segBtn" type="button" data-val="minor">Minor</button>
-  <button class="segBtn" type="button" data-val="moderate">Moderate</button>
-  <button class="segBtn" type="button" data-val="major">Major</button>
-</div>
+      <span class="tag" style="padding:10px 16px;">
+        <span class="chip" style="background:var(--moderate); width:14px; height:14px;"></span>
+        Moderate
+        <span class="thNum thModer" id="thModerTxt">—</span>
+      </span>
 
-</div>
+      <span class="tag" style="padding:10px 16px;">
+        <span class="chip" style="background:var(--major); width:14px; height:14px;"></span>
+        Major
+        <span class="thNum thMajor" id="thMajorTxt">—</span>
+      </span>
+    </div>
 
-        <div class="hint" id="monthAvgMeta">Computing…</div>
-        <div style="height:10px"></div>
-        <div class="chartWrap"><canvas id="monthAvgChart"></canvas></div>
-        <div style="height:10px"></div>
-
-        <div class="table">
-      <table id="monthAvgTable" class="show-total" aria-label="Average floods by month of year">
-
-            <thead>
-              <tr>
-                <th>Month</th>
-                <th>Average Total Number of Floods</th>
-                <th>Average Minor</th>
-                <th>Average Moderate</th>
-                <th>Average Major</th>
-              </tr>
-            </thead>
-            <tbody id="monthAvgBody"></tbody>
-          </table>
-        </div>
-      </div>
-    </details>
-
-    <div style="height:14px"></div>
-
-    <!-- 5) Flooding over the years bar chart (ACCORDION) -->
-    <details class="acc">
-      <summary class="accHeader">
-        <h2 class="accTitle">Flooding over the years</h2>
-        <span class="chev"></span>
-      </summary>
-
-      <div class="accBody">
-        <!-- Annual view switch -->
-<div class="filterRow" style="margin-bottom:8px;">
-<div class="seg" id="annualViewSeg" aria-label="Annual floods view">
-  <button class="segBtn isActive" type="button" data-val="total">Total</button>
-  <button class="segBtn" type="button" data-val="minor">Minor</button>
-  <button class="segBtn" type="button" data-val="moderate">Moderate</button>
-  <button class="segBtn" type="button" data-val="major">Major</button>
-</div>
-
-
-        <div class="chartWrap"><canvas id="annualChart"></canvas></div>
-        <div class="foot" id="annualNote"></div>
-      </div>
-    </details>
-
-    <div style="height:14px"></div>
-
-    <!-- 6) Historic Flooding Filter (ACCORDION) -->
-    <details class="acc">
-      <summary class="accHeader">
-        <h2 class="accTitle">Historic flooding filter (enter a range)</h2>
-        <span class="chev"></span>
-      </summary>
-
-   <div class="accBody">
-
-  <div class="hint" id="histHelp">
-    Use any combination: Elevation range and/or Date range. Leave fields blank to ignore them.
+    <div class="foot" id="fcNote"></div>
+    <div class="foot" id="txtNote"></div>
   </div>
-  <div style="height:8px"></div>
 
-  <div class="filterRow">
+  <div style="height:14px"></div>
 
-          <input class="input" id="minElev" type="number" step="0.01" placeholder="Min (ft)" />
-          <input class="input" id="maxElev" type="number" step="0.01" placeholder="Max (ft)" />
-          <input class="input" id="fromDate" type="date" autocomplete="off" />
-          <input class="input" id="toDate" type="date" autocomplete="off" />
-          <select id="sortMode">
-            <option value="desc">Highest first</option>
-            <option value="asc">Lowest first</option>
-            <option value="recent">Most recent</option>
-          </select>
-          <button class="btn" id="applyBtn">Apply</button>
-          <button class="btn" id="resetBtn">Reset</button>
-        </div>
+  <!-- 4) Average Floods Per Month (ACCORDION) -->
+  <details class="acc">
+    <summary class="accHeader">
+      <h2 class="accTitle">Average number of floods per month</h2>
+      <span class="chev"></span>
+    </summary>
 
-        <div class="hint" id="histMeta">Loading…</div>
-        <div style="height:10px"></div>
-
-        <div class="table">
-          <table aria-label="Historic tides above threshold">
-            <thead>
-              <tr>
-                <th>Date/Time (EST)</th>
-                <th id="histUnitTh">Peak (ft MLLW)</th>
-                <th>Type</th>
-              </tr>
-            </thead>
-            <tbody id="histBody"></tbody>
-          </table>
+    <div class="accBody">
+      <!-- Monthly view switch -->
+      <div class="filterRow" style="margin-bottom:8px;">
+        <div class="seg" id="monthViewSeg" aria-label="Monthly floods view">
+          <button class="segBtn isActive" type="button" data-val="total">Total</button>
+          <button class="segBtn" type="button" data-val="minor">Minor</button>
+          <button class="segBtn" type="button" data-val="moderate">Moderate</button>
+          <button class="segBtn" type="button" data-val="major">Major</button>
         </div>
       </div>
-    </details>
 
-    <div style="height:14px"></div>
-
-    <!-- 7) Cumulative flooding by day-of-year (Avg + Min/Max band) (NOT accordion) -->
-    <div class="card">
-      <div class="hrow">
-        <h2>Cumulative annual flooding</h2>
-        <div class="kicker" id="doyMeta">Computing…</div>
-      </div>
-
-      <div class="hint" id="doyHint"></div>
-
+      <div class="hint" id="monthAvgMeta">Computing…</div>
       <div style="height:10px"></div>
-      <div class="chartWrapTall"><canvas id="doyCumChart"></canvas></div>
+      <div class="chartWrap"><canvas id="monthAvgChart"></canvas></div>
+      <div style="height:10px"></div>
 
-      <div class="foot" id="doyNote"></div>
+      <div class="table">
+        <table id="monthAvgTable" class="show-total" aria-label="Average floods by month of year">
+          <thead>
+            <tr>
+              <th>Month</th>
+              <th>Average Total Number of Floods</th>
+              <th>Average Minor</th>
+              <th>Average Moderate</th>
+              <th>Average Major</th>
+            </tr>
+          </thead>
+          <tbody id="monthAvgBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </details>
+
+  <div style="height:14px"></div>
+
+  <!-- 5) Flooding over the years bar chart (ACCORDION) -->
+  <details class="acc">
+    <summary class="accHeader">
+      <h2 class="accTitle">Flooding over the years</h2>
+      <span class="chev"></span>
+    </summary>
+
+    <div class="accBody">
+      <!-- FIX: close filterRow properly (your original block was missing a closing </div>) -->
+      <div class="filterRow" style="margin-bottom:8px;">
+        <div class="seg" id="annualViewSeg" aria-label="Annual floods view">
+          <button class="segBtn isActive" type="button" data-val="total">Total</button>
+          <button class="segBtn" type="button" data-val="minor">Minor</button>
+          <button class="segBtn" type="button" data-val="moderate">Moderate</button>
+          <button class="segBtn" type="button" data-val="major">Major</button>
+        </div>
+      </div>
+
+      <div class="chartWrap"><canvas id="annualChart"></canvas></div>
+      <div class="foot" id="annualNote"></div>
+    </div>
+  </details>
+
+  <div style="height:14px"></div>
+
+  <!-- 6) Historic Flooding Filter (ACCORDION) -->
+  <details class="acc">
+    <summary class="accHeader">
+      <h2 class="accTitle">Historic flooding filter (enter a range)</h2>
+      <span class="chev"></span>
+    </summary>
+
+    <div class="accBody">
+      <div class="hint" id="histHelp">
+        Use any combination: Elevation range and/or Date range. Leave fields blank to ignore them.
+      </div>
+      <div style="height:8px"></div>
+
+      <div class="filterRow">
+        <input class="input" id="minElev" type="number" step="0.01" placeholder="Min (ft)" />
+        <input class="input" id="maxElev" type="number" step="0.01" placeholder="Max (ft)" />
+        <input class="input" id="fromDate" type="date" autocomplete="off" />
+        <input class="input" id="toDate" type="date" autocomplete="off" />
+        <select id="sortMode">
+          <option value="desc">Highest first</option>
+          <option value="asc">Lowest first</option>
+          <option value="recent">Most recent</option>
+        </select>
+        <button class="btn" id="applyBtn">Apply</button>
+        <button class="btn" id="resetBtn">Reset</button>
+      </div>
+
+      <div class="hint" id="histMeta">Loading…</div>
+      <div style="height:10px"></div>
+
+      <div class="table">
+        <table aria-label="Historic tides above threshold">
+          <thead>
+            <tr>
+              <th>Date/Time (EST)</th>
+              <th id="histUnitTh">Peak (ft MLLW)</th>
+              <th>Type</th>
+            </tr>
+          </thead>
+          <tbody id="histBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </details>
+
+  <div style="height:14px"></div>
+
+  <!-- 7) Cumulative flooding by day-of-year (Avg + Min/Max band) (NOT accordion) -->
+  <div class="card">
+    <div class="hrow">
+      <h2>Cumulative annual flooding</h2>
+      <div class="kicker" id="doyMeta">Computing…</div>
     </div>
 
- <div style="height:14px"></div>
+    <div class="hint" id="doyHint"></div>
 
-<!-- MAP SECTION (PASTE THIS WHOLE BLOCK) -->
-<details class="acc" id="mapAcc">
-  <summary class="accHeader">
-    <h2 class="accTitle">NJ tide gauge map</h2>
-    <span class="chev"></span>
-  </summary>
+    <div style="height:10px"></div>
+    <div class="chartWrapTall"><canvas id="doyCumChart"></canvas></div>
 
-  <div class="accBody">
-    <div id="gaugeMap"></div>
-    <div class="foot">Click a marker for station info.</div>
+    <div class="foot" id="doyNote"></div>
   </div>
-</details>
 
-<div style="height:14px"></div>
+  <div style="height:14px"></div>
 
-</div>   <!-- keep this — closes .wrap -->
+  <!-- MAP SECTION (PASTE THIS WHOLE BLOCK) -->
+  <details class="acc" id="mapAcc">
+    <summary class="accHeader">
+      <h2 class="accTitle">NJ tide gauge map</h2>
+      <span class="chev"></span>
+    </summary>
+
+    <div class="accBody">
+      <div id="gaugeMap"></div>
+      <div class="foot">Click a marker for station info.</div>
+    </div>
+  </details>
+
+  <div style="height:14px"></div>
+
+</div> <!-- keep this — closes .wrap -->
 
 
   <script>

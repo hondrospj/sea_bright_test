@@ -889,7 +889,7 @@ thead th{
   <div class="card">
     <div class="hrow">
       <h2>Live conditions</h2>
-      <div class="kicker" style="text-transform:none">Time Expressed In EST</div>
+      <div class="kicker" style="text-transform:none">Time Expressed In ET</div>
     </div>
 
     <div class="liveGrid">
@@ -1208,7 +1208,7 @@ thead th{
 
 
 /* Fixed EST year-round (UTC-5). */
-const TZ="Etc/GMT+5";
+const TZ = "America/New_York";
 
 /* =========================
 DATUM SYSTEM (MLLW-based offsets)
@@ -1735,9 +1735,26 @@ function getESTParts(date=new Date()){
   return { y:+p.find(x=>x.type==="year").value, m:+p.find(x=>x.type==="month").value, d:+p.find(x=>x.type==="day").value };
 }
 
-function startOfTodayEST_ISO(){
-  const {y,m,d}=getESTParts(new Date());
-  return new Date(Date.UTC(y,m-1,d,5,0,0)).toISOString();
+function startOfTodayLocalTZ_ISO(){
+  const { y, m, d } = getESTParts(new Date()); // still ok; uses TZ inside fmtPartsYMD
+  // Create a Date that represents midnight in TZ, without hard-coding UTC offset
+  // Trick: format a TZ-midnight as parts, then find its UTC timestamp by searching.
+  const target = { y, m, d, hh: 0, mm: 0 };
+
+  // brute-force find the UTC time whose TZ parts match target (fast: only checks within 30 hours)
+  const now = Date.now();
+  const base = new Date(Date.UTC(y, m-1, d, 0, 0, 0)).getTime(); // around the right day
+  for (let t = base - 12*3600*1000; t <= base + 18*3600*1000; t += 5*60*1000){
+    const p = getESTParts(new Date(t));
+    const time = fmtTime.formatToParts(new Date(t));
+    const hh = +time.find(x=>x.type==="hour").value % 24;
+    const mm = +time.find(x=>x.type==="minute").value;
+    if (p.y===target.y && p.m===target.m && p.d===target.d && hh===0 && mm===0){
+      return new Date(t).toISOString();
+    }
+  }
+  // fallback (shouldn't happen)
+  return new Date(base).toISOString();
 }
 function startOfYearEST_ISO(y){ return new Date(Date.UTC(y,0,1,5,0,0)).toISOString(); }
 function nowISO(){ return new Date().toISOString(); }
@@ -4074,10 +4091,10 @@ async function updateLiveAndAnnualCounts(){
 
   // ---- Daily range (today) ----
 // ---- Daily range (today) ----
-const today = sliceAfter(ytd, startOfTodayEST_ISO());
+const today = sliceAfter(ytd, startOfTodayLocalTZ_ISO());
 STATE.todayNavd = today;
   if(dailyRangeDateEl){
-  dailyRangeDateEl.textContent = fmtNiceDate(startOfTodayEST_ISO());
+  dailyRangeDateEl.textContent = fmtNiceDate(startOfTodayLocalTZ_ISO());
 }
 
 

@@ -213,32 +213,9 @@
   font-size:13px;
   line-height:1.4;
   box-shadow:var(--shadow);
-  display:none;
+  display:none;      /* VERY IMPORTANT */
   z-index:1000;
 }
-
-   .brand{
-  width:100%;
-  justify-content:flex-start;  /* ✅ keep logo left */
-  text-align:left;
-}
-.brandTitle{
-  align-items:flex-start;      /* ✅ keep text aligned right of logo */
-  text-align:left;
-}
-
-      .kicker, .name{
-        white-space:normal;
-        overflow:visible;
-        text-overflow:clip;
-      }
-      .top > div{
-        width:100%;
-        justify-content:center !important;
-        flex-wrap:wrap;
-      }
-      .pill, .btn{ max-width:100%; }
-    }
 
     /* =========================
    MINI "SWITCH" (segmented control)
@@ -1509,6 +1486,33 @@ const f48ListEl     = $("f48List");
 const f48MetaEl     = $("f48Meta");
 
  const datumSelect = $("datumSelect");
+
+    const datumInfoBtn = $("datumInfoBtn");
+const datumInfoBox = $("datumInfoBox");
+
+/* HIDE popup on page load */
+if(datumInfoBox){
+  datumInfoBox.style.display = "none";
+}
+
+/* TOGGLE when clicking ? */
+if(datumInfoBtn && datumInfoBox){
+
+  datumInfoBtn.addEventListener("click", (e)=>{
+    e.stopPropagation();
+
+    if(datumInfoBox.style.display === "block"){
+      datumInfoBox.style.display = "none";
+    } else {
+      datumInfoBox.style.display = "block";
+    }
+  });
+
+  /* click anywhere else closes */
+  document.addEventListener("click", ()=>{
+    datumInfoBox.style.display = "none";
+  });
+}
 
 const datumInfoBtn = $("datumInfoBtn");
 const datumInfoBox = $("datumInfoBox");

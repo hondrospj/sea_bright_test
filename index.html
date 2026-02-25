@@ -343,6 +343,64 @@ OBVIOUS DATUM DROPDOWN
 }
 
 
+    /* =========================
+   Datum help "?" popover
+   ========================= */
+.datumHelpBtn{
+  width:28px;
+  height:28px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.18);
+  background:rgba(0,0,0,.22);
+  color:var(--text);
+  font-weight:950;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  line-height:1;
+  user-select:none;
+}
+.datumHelpBtn:hover{ filter:brightness(1.08); }
+.datumHelpBtn:focus{
+  outline:none;
+  border-color:rgba(45,212,191,.45);
+  box-shadow:0 0 0 4px rgba(45,212,191,.12);
+}
+
+/* popover */
+.datumPick{ position:relative; } /* anchor the popover */
+.datumHelpPop{
+  position:absolute;
+  top:calc(100% + 10px);
+  right:10px;
+  width:min(380px, 82vw);
+  background:rgba(10,16,28,.98);
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:14px;
+  box-shadow:var(--shadow);
+  padding:12px 12px;
+  display:none;
+  z-index:9999;
+}
+.datumHelpPop.isOpen{ display:block; }
+
+.datumHelpTitle{
+  font-weight:950;
+  font-size:12px;
+  letter-spacing:.18px;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin-bottom:8px;
+}
+.datumHelpLine{
+  font-size:12.5px;
+  line-height:1.3;
+  color:rgba(234,240,255,.92);
+  margin:6px 0;
+}
+.datumHelpLine b{ color:var(--text); }
+
     .grid{display:grid;grid-template-columns:1.15fr .85fr;gap:14px;margin-top:10px}
     @media(max-width:980px){.grid{grid-template-columns:1fr}}
 
@@ -790,14 +848,33 @@ thead th{
     </a>
 
     <div class="topRight">
+<!-- OBVIOUS datum selector -->
+<div class="datumPick" aria-label="Datum selector">
+  <span class="datumLbl">Datum</span>
 
-      <!-- OBVIOUS datum selector -->
-      <div class="datumPick" aria-label="Datum selector">
-        <span class="datumLbl">Datum</span>
-        <select id="datumSelect" class="datumSelect" title="Choose datum">
-          <!-- options are filled by JS so order matches DATUMS -->
-        </select>
-      </div>
+  <select id="datumSelect" class="datumSelect" title="Choose datum">
+    <!-- options are filled by JS so order matches DATUMS -->
+  </select>
+
+  <!-- ✅ New help icon + popover -->
+  <button
+    class="datumHelpBtn"
+    id="datumHelpBtn"
+    type="button"
+    aria-label="What do these datums mean?"
+    aria-expanded="false"
+    aria-controls="datumHelpPop"
+    title="What do these datums mean?"
+  >?</button>
+
+  <div class="datumHelpPop" id="datumHelpPop" role="dialog" aria-hidden="true">
+    <div class="datumHelpTitle">Datum quick definitions</div>
+    <div class="datumHelpLine"><b>MLLW</b>: Mean Lower Low Water — the average of the lower of the two daily low tides.</div>
+    <div class="datumHelpLine"><b>MSL</b>: Mean Sea Level — the long-term average sea level over a standard period.</div>
+    <div class="datumHelpLine"><b>NAVD88</b>: North American Vertical Datum of 1988 — a geodetic land-based elevation reference used on maps and surveys.</div>
+    <div class="datumHelpLine"><b>MHHW</b>: Mean Higher High Water — the average of the higher of the two daily high tides.</div>
+  </div>
+</div>
 
       <div class="pill" id="lastPill">Last updated: —</div>
 
@@ -1461,7 +1538,53 @@ const f48ListEl     = $("f48List");
 const f48MetaEl     = $("f48Meta");
 
  const datumSelect = $("datumSelect");
+// =========================
+// Datum help popover ("?")
+// =========================
+const datumHelpBtn = $("datumHelpBtn");
+const datumHelpPop = $("datumHelpPop");
 
+function closeDatumHelp(){
+  if(!datumHelpBtn || !datumHelpPop) return;
+  datumHelpPop.classList.remove("isOpen");
+  datumHelpPop.setAttribute("aria-hidden","true");
+  datumHelpBtn.setAttribute("aria-expanded","false");
+}
+
+function toggleDatumHelp(){
+  if(!datumHelpBtn || !datumHelpPop) return;
+
+  const open = datumHelpPop.classList.contains("isOpen");
+  if(open){
+    closeDatumHelp();
+  }else{
+    datumHelpPop.classList.add("isOpen");
+    datumHelpPop.setAttribute("aria-hidden","false");
+    datumHelpBtn.setAttribute("aria-expanded","true");
+  }
+}
+
+if(datumHelpBtn && datumHelpPop){
+  datumHelpBtn.addEventListener("click", (e)=>{
+    e.stopPropagation();
+    toggleDatumHelp();
+  });
+
+  // click outside closes it
+  document.addEventListener("click", (e)=>{
+    const t = e.target;
+    if(datumHelpPop.classList.contains("isOpen")){
+      if(!datumHelpPop.contains(t) && t !== datumHelpBtn){
+        closeDatumHelp();
+      }
+    }
+  });
+
+  // Esc closes it
+  document.addEventListener("keydown", (e)=>{
+    if(e.key === "Escape") closeDatumHelp();
+  });
+}
 
 
 

@@ -764,6 +764,43 @@ thead th{
   #gaugeMap{ height: 320px; }
 }
 
+    /* Datum info button */
+.datumInfoBtn{
+  width:22px;
+  height:22px;
+  border-radius:50%;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.08);
+  color:var(--text);
+  font-weight:900;
+  font-size:13px;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:0;
+}
+
+.datumInfoBtn:hover{
+  background:rgba(255,255,255,.16);
+}
+
+/* Popup box */
+.datumInfoBox{
+  position:absolute;
+  top:60px;
+  right:0;
+  width:280px;
+  background:#111827;
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:14px;
+  font-size:13px;
+  line-height:1.35;
+  box-shadow:var(--shadow);
+  display:none;
+  z-index:1000;
+}
   </style>
 </head>
 
@@ -790,9 +827,22 @@ thead th{
     <div class="topRight">
 
       <!-- OBVIOUS datum selector -->
-      <div class="datumPick" aria-label="Datum selector">
-        <span class="datumLbl">Datum</span>
-        <select id="datumSelect" class="datumSelect" title="Choose datum">
+<div class="datumPick" aria-label="Datum selector">
+  <span class="datumLbl">Datum</span>
+
+  <select id="datumSelect" class="datumSelect" title="Choose datum">
+  </select>
+
+  <button id="datumInfoBtn" class="datumInfoBtn" title="What is this?">?</button>
+
+  <div id="datumInfoBox" class="datumInfoBox">
+    <b>Datum Reference Levels:</b><br><br>
+    <b>MLLW</b> – Mean Lower Low Water; the average of the lower low tide each day.<br><br>
+    <b>NAVD88</b> – North American Vertical Datum of 1988; a fixed national elevation reference.<br><br>
+    <b>MSL</b> – Mean Sea Level; the long-term average sea surface height.<br><br>
+    <b>MHHW</b> – Mean Higher High Water; the average of the higher high tide each day.
+  </div>
+</div>
           <!-- options are filled by JS so order matches DATUMS -->
         </select>
       </div>
@@ -4394,7 +4444,20 @@ setInterval(async ()=>{
   }
 }, 5*60*1000);
 
-    
+ const datumInfoBtn = document.getElementById("datumInfoBtn");
+const datumInfoBox = document.getElementById("datumInfoBox");
+
+if(datumInfoBtn && datumInfoBox){
+  datumInfoBtn.addEventListener("click", (e)=>{
+    e.stopPropagation();
+    datumInfoBox.style.display =
+      datumInfoBox.style.display === "block" ? "none" : "block";
+  });
+
+  document.addEventListener("click", ()=>{
+    datumInfoBox.style.display = "none";
+  });
+}   
 
     </script>
 </body>

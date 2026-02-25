@@ -1280,7 +1280,8 @@ const TOP_TEN_MLLW = [
     /* =========================
 MAP — Leaflet gauge map
 ========================= */
-
+const DEFAULT_GAUGE_ID = "01407600"; // Sea Bright USGS
+const DEFAULT_GAUGE_ZOOM = 12;       // adjust if you want closer (13 = tighter)
 // Edit these whenever you want (lat/lon + label + link)
 const GAUGES = [
   // --- USGS NJ coastal/estuary network ---
@@ -1372,11 +1373,16 @@ function ensureGaugeMap(){
     bounds.push([g.lat, g.lon]);
   }
 
-  if(bounds.length){
-    _gaugeMap.fitBounds(bounds, { padding:[30,30] });
-  }else{
-    _gaugeMap.setView([40.2,-74.0], 9);
-  }
+// Default view = Sea Bright gauge
+const def = GAUGES.find(g => String(g.id) === DEFAULT_GAUGE_ID);
+
+if(def){
+  _gaugeMap.setView([def.lat, def.lon], DEFAULT_GAUGE_ZOOM);
+} else if(bounds.length){
+  _gaugeMap.fitBounds(bounds, { padding:[30,30] });
+} else {
+  _gaugeMap.setView([40.2,-74.0], 9);
+}
 
   // Fix initial render sizing issues (accordion hidden → shown)
   setTimeout(()=>_gaugeMap.invalidateSize(true), 100);

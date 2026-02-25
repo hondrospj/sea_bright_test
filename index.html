@@ -267,14 +267,13 @@
 
 /* Keep table geometry stable */
 #monthAvgTable{
-table-layout: auto;   /* prevents width changes */
-width: auto;
+  width:100%;
+  table-layout:fixed;
+  border-collapse:collapse;
+  text-align:center;
 }
 
-    .monthTableCenter{
-  display:flex;
-  justify-content:center;
-}
+
 /* Helper: "hide but keep space" */
 #monthAvgTable .col-hide{
   visibility: hidden;      /* keeps column width */
@@ -1133,7 +1132,7 @@ thead th{
       <div class="chartWrap"><canvas id="monthAvgChart"></canvas></div>
       <div style="height:10px"></div>
 
-  <div class="table monthTableCenter">
+<div class="table">
   <table id="monthAvgTable" class="show-total" aria-label="Average floods by month of year">
     <thead>
       <tr>

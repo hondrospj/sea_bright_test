@@ -3988,18 +3988,21 @@ function renderMonthAveragesTable(monthStats){
 
 function ensureMonthAvgChart(){
   if(monthAvgChart) return;
+
   monthAvgChart = new Chart($("monthAvgChart"),{
     type:"bar",
-    data:{ labels:[], datasets:[
-      {label:"Average Minor", data:[], stack:"m", borderWidth:0, backgroundColor:"rgba(251,191,36,.85)"},
-      {label:"Average Moderate", data:[], stack:"m", borderWidth:0, backgroundColor:"rgba(251,113,133,.80)"},
-      {label:"Average Major", data:[], stack:"m", borderWidth:0, backgroundColor:"rgba(167,139,250,.80)"}
-    ]},
+    data:{
+      labels:[],
+      datasets:[
+        {label:"Average Minor", data:[], stack:"m", borderWidth:0, backgroundColor:"rgba(251,191,36,.85)"},
+        {label:"Average Moderate", data:[], stack:"m", borderWidth:0, backgroundColor:"rgba(251,113,133,.80)"},
+        {label:"Average Major", data:[], stack:"m", borderWidth:0, backgroundColor:"rgba(167,139,250,.80)"}
+      ]
+    },
     options:{
       responsive:true,
       maintainAspectRatio:false,
 
-      // ✅ KEY
       interaction:{ mode:"index", intersect:false },
 
       plugins:{
@@ -4008,39 +4011,52 @@ function ensureMonthAvgChart(){
           labels:{color:"rgba(234,240,255,.88)",font:{weight:"950"},boxWidth:16}
         },
 
-        // ✅ Show all three + Total (sum)
         tooltip:{
           mode:"index",
           intersect:false,
           callbacks:{
-            title:(items)=> items?.[0]?.label ?? "",  // Month name (x label)
+            title:(items)=> items?.[0]?.label ?? "",
             label:(ctx)=>{
               const v = ctx.parsed?.y;
               if(!Number.isFinite(v)) return null;
               return `${ctx.dataset.label}: ${v.toFixed(2)}`;
             },
-           footer:(items)=>{
-  const total = (items || [])
-    .filter(it => it.dataset.type !== "line")   // <-- exclude quadratic
-    .reduce((sum,it)=>{
-      const v = it.parsed?.y;
-      return sum + (Number.isFinite(v) ? v : 0);
-    }, 0);
+            footer:(items)=>{
+              const total = (items || [])
+                .filter(it => it.dataset.type !== "line")
+                .reduce((sum,it)=>{
+                  const v = it.parsed?.y;
+                  return sum + (Number.isFinite(v) ? v : 0);
+                },0);
 
-  return `Total: ${Math.round(total)}`;
-}
-
+              return `Total: ${Math.round(total)}`;
+            }
           }
         }
       },
+
       scales:{
-        x:{stacked:true,ticks:{color:"rgba(169,182,211,.9)"},grid:{color:"rgba(255,255,255,.06)"}},
-        y:{stacked:true,ticks:{color:"rgba(169,182,211,.9)"},grid:{color:"rgba(255,255,255,.06)"}}
+        x:{
+          stacked:true,
+          ticks:{color:"rgba(169,182,211,.9)"},
+          grid:{color:"rgba(255,255,255,.06)"}
+        },
+
+        // ⭐ FIX: force hundredths on y-axis
+        y:{
+          stacked:true,
+          ticks:{
+            color:"rgba(169,182,211,.9)",
+
+            // 👇 THIS controls axis numbers
+            callback:(value)=> Number(value).toFixed(2)
+          },
+          grid:{color:"rgba(255,255,255,.06)"}
+        }
       }
     }
   });
 }
-
 
 function renderMonthAveragesChart(monthStats){
   ensureMonthAvgChart();

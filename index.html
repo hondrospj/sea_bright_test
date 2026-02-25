@@ -1216,6 +1216,9 @@ function buildHourlyLabels(startISO, endISO){
   return labels;
 }
 
+    // Which gauge should the map auto-zoom to?
+const MAP_FOCUS = { agency: "USGS", id: USGS_SITE, zoom: 11 }; // tweak zoom if you want
+
 // Pick the LAST value observed within each hour (looks best for water level)
 function seriesToHourlyLast(series){
   const m = new Map(); // hourMs -> ft
@@ -1310,91 +1313,6 @@ const GAUGES = [
   { name:"NOAA Sandy Hook", agency:"NOAA", id:"8531680", lat:40.466818, lon:-74.009391 }
 ];
 
-
-
-let _gaugeMap = null;
-let _gaugeLayer = null;
-
-function ensureGaugeMap(){
-  const el = document.getElementById("gaugeMap");
-  if(!el) return;
-
-  // Leaflet not loaded yet? Bail quietly.
-  if(typeof window.L === "undefined"){
-    console.warn("Leaflet not loaded (window.L missing).");
-    return;
-  }
-
-  // Already built
-  if(_gaugeMap){
-    // In case accordion opened later, force resize.
-    setTimeout(()=>_gaugeMap.invalidateSize(true), 50);
-    return;
-  }
-
-  _gaugeMap = L.map(el, {
-    scrollWheelZoom: false,
-    zoomControl: true
-  });
-
-  // Base tiles
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 18,
-    attribution: "&copy; OpenStreetMap"
-  }).addTo(_gaugeMap);
-
-  // Markers
-  _gaugeLayer = L.layerGroup().addTo(_gaugeMap);
-
-  const bounds = [];
-
-  for(const g of GAUGES){
-    const color =
-      (g.agency || "").toUpperCase() === "NOAA" ? "#60a5fa" : "#2dd4bf";
-
-    const m = L.circleMarker([g.lat, g.lon], {
-      radius: 8,
-      weight: 2,
-      color: color,
-      fillColor: color,
-      fillOpacity: 0.85
-    });
-
-    const popup = `
-      <div style="font-weight:900;margin-bottom:6px;">${g.name}</div>
-      <div style="opacity:.85;margin-bottom:8px;">${g.agency} · ${g.id || ""}</div>
-      ${g.url ? `<a href="${g.url}" target="_blank" rel="noopener" style="text-decoration:underline;">Open station</a>` : ""}
-    `;
-
-    m.bindPopup(popup);
-    m.addTo(_gaugeLayer);
-
-    bounds.push([g.lat, g.lon]);
-  }
-
-  if(bounds.length){
-    _gaugeMap.fitBounds(bounds, { padding:[30,30] });
-  }else{
-    _gaugeMap.setView([40.2,-74.0], 9);
-  }
-
-  // Fix initial render sizing issues (accordion hidden → shown)
-  setTimeout(()=>_gaugeMap.invalidateSize(true), 100);
-}
-
-function hookGaugeMapAccordion(){
-  const acc = document.getElementById("mapAcc");
-  if(!acc) return;
-
-  acc.addEventListener("toggle", ()=>{
-    if(acc.open){
-      setTimeout(()=>{
-        ensureGaugeMap();
-        if(_gaugeMap) _gaugeMap.invalidateSize(true);
-      }, 50);
-    }
-  });
-}
 
 /* DOM */
 const $=id=>document.getElementById(id);

@@ -178,6 +178,44 @@
     justify-content:center;
   }
 }
+      .datumPick{
+  position:relative; /* important */
+}
+
+.datumInfoBtn{
+  width:30px;
+  height:30px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.18);
+  background:rgba(0,0,0,.22);
+  color:var(--text);
+  font-weight:950;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:0;
+}
+
+.datumInfoBtn:hover{
+  background:rgba(255,255,255,.12);
+}
+
+.datumInfoBox{
+  position:absolute;
+  right:0;
+  top:calc(100% + 8px);
+  width:260px;
+  background:#111827;
+  border:1px solid rgba(255,255,255,.15);
+  border-radius:14px;
+  padding:12px;
+  font-size:13px;
+  line-height:1.4;
+  box-shadow:var(--shadow);
+  display:none;
+  z-index:1000;
+}
 
    .brand{
   width:100%;
@@ -791,12 +829,23 @@ thead th{
     <div class="topRight">
 
       <!-- OBVIOUS datum selector -->
-      <div class="datumPick" aria-label="Datum selector">
-        <span class="datumLbl">Datum</span>
-        <select id="datumSelect" class="datumSelect" title="Choose datum">
-          <!-- options are filled by JS so order matches DATUMS -->
-        </select>
-      </div>
+    <div class="datumPick" aria-label="Datum selector">
+  <span class="datumLbl">Datum</span>
+
+  <select id="datumSelect" class="datumSelect" title="Choose datum"></select>
+
+  <!-- QUESTION MARK BUTTON -->
+  <button id="datumInfoBtn" class="datumInfoBtn" type="button">?</button>
+
+  <!-- SMALL POPUP -->
+  <div id="datumInfoBox" class="datumInfoBox">
+    <b>Datum Guide</b><br><br>
+    <b>MLLW</b> – Mean Lower Low Water (tidal low reference).<br><br>
+    <b>NAVD88</b> – National land elevation reference.<br><br>
+    <b>MSL</b> – Mean Sea Level (long-term average).<br><br>
+    <b>MHHW</b> – Mean Higher High Water (average daily high).
+  </div>
+</div>
 
       <div class="pill" id="lastPill">Last updated: —</div>
 
@@ -1461,7 +1510,20 @@ const f48MetaEl     = $("f48Meta");
 
  const datumSelect = $("datumSelect");
 
+const datumInfoBtn = $("datumInfoBtn");
+const datumInfoBox = $("datumInfoBox");
 
+if(datumInfoBtn && datumInfoBox){
+  datumInfoBtn.addEventListener("click", (e)=>{
+    e.stopPropagation();
+    datumInfoBox.style.display =
+      datumInfoBox.style.display === "block" ? "none" : "block";
+  });
+
+  document.addEventListener("click", ()=>{
+    datumInfoBox.style.display = "none";
+  });
+}
 
 
 const monthAvgMeta=$("monthAvgMeta"), monthAvgBody=$("monthAvgBody");

@@ -1867,9 +1867,10 @@ function updateFloodOutlook48(){
     return;
   }
 
-  // Next 48h window anchored to forecast start
-  const t0 = new Date(pred[0].t).getTime();
-const t1 = t0 + 72 * 3600 * 1000;
+// Next 72h window anchored to NOW (not forecast file start)
+const nowMs = Date.now();
+const t0 = nowMs;
+const t1 = nowMs + 72 * 3600 * 1000;
 
 
   // Convert to DISPLAY datum and keep only 48h
@@ -1951,8 +1952,8 @@ const t1 = t0 + 72 * 3600 * 1000;
     }).join("");
   }
 
-  f48MetaEl.textContent =
-    `${fmtNiceDate(pred[0].t)} → ${fmtNiceDate(new Date(t1).toISOString())} · Based on NOAA/PETSS`;
+f48MetaEl.textContent =
+  `${fmtNiceDate(new Date(t0).toISOString())} → ${fmtNiceDate(new Date(t1).toISOString())} · Based on NOAA/PETSS`;
 }
 
 function updatePred24RangeCard(){

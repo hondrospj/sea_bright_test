@@ -3641,75 +3641,84 @@ function renderDOYCumPanel(){
   const mStarts = monthStarts365();
   const mNames  = ["January","Febuary","March","April","May","June","July","August","September","October","Novvember","December"];
 
-  // ✅ DATASETS (band always behind; average above band; current year always on top)
-  const data = {
-    labels,
-    datasets: [
-      // helper for band fill (NOT shown in legend)
-      {
-        label: "_rangeMin",
-        data: min,
-        borderWidth: 0,
-        pointRadius: 0,
-        pointHoverRadius: 0,
-        pointHitRadius: 0,
-        showLine: false,
-        order: 0
-      },
+// ✅ DATASETS (band always behind; average above band; current year always on top)
+const data = {
+  labels,
+  datasets: [
+    // helper for band fill (NOT shown in legend)
+    {
+      label: "_rangeMin",
+      data: min,
+      borderWidth: 0,
+      pointRadius: 0,
+      pointHoverRadius: 0,
+      pointHitRadius: 0,
+      showLine: false,
+      order: 0
+    },
 
-      // band max (fills down to _rangeMin)
-      {
-        label: "Historic Range (min–max)",
-        data: max,
-        borderWidth: 0,
-        pointRadius: 0,
-        pointHoverRadius: 0,
-        pointHitRadius: 0,
-        fill: "-1",
-        backgroundColor: "rgba(255,255,255,0.18)",
-        order: 1
-      },
+    // band max (fills down to _rangeMin)
+    {
+      label: "Historic Range (min–max)",
+      data: max,
+      borderWidth: 0,
+      pointRadius: 0,
+      pointHoverRadius: 0,
+      pointHitRadius: 0,
+      fill: "-1",
+      backgroundColor: "rgba(255,255,255,0.18)",
+      order: 1
+    },
 
-      // Average (green)
-      {
-        label: "Average",
-        data: avg,
-        borderWidth: 2,
-        tension: 0.25,
-        borderColor: "rgba(45,212,191,.95)",
-        backgroundColor: "rgba(45,212,191,.95)",
-        pointRadius: 0,
-        pointHoverRadius: 0,
-        pointHitRadius: 0,
-        pointStyle: "rectFilled",
-        pointBackgroundColor: "rgba(45,212,191,.95)",
-        pointBorderColor: "rgba(45,212,191,.95)",
-        pointBorderWidth: 0,
-        fill: false,
-        order: 10
-      },
+    // Average (green)
+    {
+      label: "Average",
+      data: avg,
+      borderWidth: 2,
+      tension: 0.25,
 
-      // Current year (red) — FORCE FRONT
-      {
-        label: String(CUR_Y),
-        data: ytd || new Array(365).fill(null),
-        borderWidth: 4,
-        tension: 0.25,
-        borderColor: "#ef4444",
-        backgroundColor: "#ef4444",
-        pointRadius: 0,
-        pointHoverRadius: 0,
-        pointHitRadius: 0,
-        spanGaps: false,
-        pointStyle: "rectFilled",
-        pointBackgroundColor: "#ef4444",
-        pointBorderColor: "#ef4444",
-        pointBorderWidth: 0,
-        order: 999
-      }
-    ]
-  };
+      borderColor: "rgba(45,212,191,.95)",
+      backgroundColor: "rgba(45,212,191,.95)",
 
+      pointRadius: 0,
+      pointHoverRadius: 0,
+      pointHitRadius: 0,
+
+      pointStyle: "rectFilled",
+      pointBackgroundColor: "rgba(45,212,191,.95)",
+      pointBorderColor: "rgba(45,212,191,.95)",
+      pointBorderWidth: 0,
+
+      fill: false,
+      order: 10
+    },
+
+    // 🔴 Current year (red) — MUST BE LAST to guarantee it draws on top
+    {
+      label: String(CUR_Y),
+      data: ytd || new Array(365).fill(null),
+      borderWidth: 5,
+      tension: 0.25,
+
+      borderColor: "#ef4444",
+      backgroundColor: "#ef4444",
+
+      pointRadius: 0,
+      pointHoverRadius: 0,
+      pointHitRadius: 0,
+
+      spanGaps: false,
+
+      pointStyle: "rectFilled",
+      pointBackgroundColor: "#ef4444",
+      pointBorderColor: "#ef4444",
+      pointBorderWidth: 0,
+
+      fill: false,
+      order: 999
+    }
+  ]
+};
   const options = {
     responsive:true,
     maintainAspectRatio:false,

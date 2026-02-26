@@ -856,13 +856,19 @@ thead th{
 }
 /* ===== FIX PURPLE TITLE AFTER CLICK ===== */
 
-/* Force header title link to always stay white */
-.brandTitle a,
-.brandTitle a:visited,
-.brandTitle a:hover,
-.brandTitle a:active{
-  color:#eaf0ff !important;
-  text-decoration:none !important;
+/* ✅ Fix purple visited link on the whole header click area */
+a.brand,
+a.brand:visited,
+a.brand:hover,
+a.brand:active,
+a.brand:focus{
+  color: var(--text) !important;
+  text-decoration: none !important;
+}
+
+/* Optional: if anything inside tries to inherit a link color */
+a.brand *{
+  color: inherit !important;
 }
   </style>
 </head>

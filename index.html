@@ -3641,152 +3641,145 @@ function renderDOYCumPanel(){
   const mStarts = monthStarts365();
   const mNames  = ["January","Febuary","March","April","May","June","July","August","September","October","Novvember","December"];
 
- const data = {
-  labels,
-  datasets: [
-    // helper for band fill (NOT shown in legend)
-    {
-      label: "_rangeMin",
-      data: min,
-      borderWidth: 0,
-      pointRadius: 0,
-      pointHoverRadius: 0, // ✅ Step 1B
-      pointHitRadius: 0,   // ✅ Step 1B
-      showLine: false
-    },
+  // ✅ DATASETS (band always behind; average above band; current year always on top)
+  const data = {
+    labels,
+    datasets: [
+      // helper for band fill (NOT shown in legend)
+      {
+        label: "_rangeMin",
+        data: min,
+        borderWidth: 0,
+        pointRadius: 0,
+        pointHoverRadius: 0,
+        pointHitRadius: 0,
+        showLine: false,
+        order: 0
+      },
 
-    {
-      label: "Historic Range (min–max)",
-      data: max,
-      borderWidth: 0,
-      pointRadius: 0,
-      pointHoverRadius: 0, // ✅ Step 1B
-      pointHitRadius: 0,   // ✅ Step 1B
-      fill: "-1",
-      backgroundColor: "rgba(255,255,255,0.18)"
-    },
-{
-  label: "Average",
-  order: 10,
-  data: avg,
-  borderWidth: 2,
-  tension: 0.25,
+      // band max (fills down to _rangeMin)
+      {
+        label: "Historic Range (min–max)",
+        data: max,
+        borderWidth: 0,
+        pointRadius: 0,
+        pointHoverRadius: 0,
+        pointHitRadius: 0,
+        fill: "-1",
+        backgroundColor: "rgba(255,255,255,0.18)",
+        order: 1
+      },
 
-  // line styling
-  borderColor: "rgba(45,212,191,.95)",
-  backgroundColor: "rgba(45,212,191,.95)", // ✅ REQUIRED for filled legend
+      // Average (green)
+      {
+        label: "Average",
+        data: avg,
+        borderWidth: 2,
+        tension: 0.25,
+        borderColor: "rgba(45,212,191,.95)",
+        backgroundColor: "rgba(45,212,191,.95)",
+        pointRadius: 0,
+        pointHoverRadius: 0,
+        pointHitRadius: 0,
+        pointStyle: "rectFilled",
+        pointBackgroundColor: "rgba(45,212,191,.95)",
+        pointBorderColor: "rgba(45,212,191,.95)",
+        pointBorderWidth: 0,
+        fill: false,
+        order: 10
+      },
 
-  // kill all points (including hover dots)
-  pointRadius: 0,
-  pointHoverRadius: 0,
-  pointHitRadius: 0,
+      // Current year (red) — FORCE FRONT
+      {
+        label: String(CUR_Y),
+        data: ytd || new Array(365).fill(null),
+        borderWidth: 4,
+        tension: 0.25,
+        borderColor: "#ef4444",
+        backgroundColor: "#ef4444",
+        pointRadius: 0,
+        pointHoverRadius: 0,
+        pointHitRadius: 0,
+        spanGaps: false,
+        pointStyle: "rectFilled",
+        pointBackgroundColor: "#ef4444",
+        pointBorderColor: "#ef4444",
+        pointBorderWidth: 0,
+        order: 999
+      }
+    ]
+  };
 
-  // ✅ force legend chip to be a solid filled square
-  pointStyle: "rectFilled",
-  pointBackgroundColor: "rgba(45,212,191,.95)",
-  pointBorderColor: "rgba(45,212,191,.95)",
-  pointBorderWidth: 0,
+  const options = {
+    responsive:true,
+    maintainAspectRatio:false,
+    interaction:{mode:"index", intersect:false},
 
-  fill: false
-},
-
-
-    // ✅ YTD line labeled as the actual current year (2026, 2027, ...)
-    {
-      label: String(CUR_Y),
-      order: 20,
-      data: ytd || new Array(365).fill(null),
-      borderWidth: 3,
-      pointRadius: 0,
-      pointHoverRadius: 0,
-      pointHitRadius: 0,
-      tension: 0.25,
-      borderColor: "#ef4444",
-      backgroundColor: "#ef4444",
-      spanGaps: false,
-
-      // ✅ Legend chip becomes a filled square (matches Average)
-      pointStyle: "rectFilled",
-      pointBackgroundColor: "#ef4444",
-      pointBorderColor: "#ef4444"
-    }
-  ]
-};
-
-const options = {
-  responsive:true,
-  maintainAspectRatio:false,
-  interaction:{mode:"index", intersect:false},
-
-  // ✅ Step 1A: remove the hover “dot” entirely (global)
-  elements:{
-    point:{
-      radius:0,
-      hoverRadius:0,
-      hitRadius:0
-    }
-  },
-
-  plugins:{
-    legend: { // ✅ spelled correctly
-      position:"bottom",
-      labels:{
-        color:"rgba(234,240,255,.88)",
-        font:{weight:"950"},
-        boxWidth:14,
-
-        // ✅ Use filled point-style legend markers
-        usePointStyle:true,
-
-        filter:(legendItem, data)=>{
-          const label = data?.datasets?.[legendItem.datasetIndex]?.label || "";
-          return label !== "_rangeMin"; // ✅ hide helper from legend
-        }
+    // kill hover dots globally
+    elements:{
+      point:{
+        radius:0,
+        hoverRadius:0,
+        hitRadius:0
       }
     },
-    tooltip:{
-      callbacks:{
-        title:(items)=>{
-          const idx = items?.[0]?.dataIndex;
-          if(idx == null) return "";
-          return doyIndexToMonthDay(idx);
-        },
-        label:(ctx)=>{
-          const v = ctx.parsed?.y;
-          if(!Number.isFinite(v)) return null;
 
-          // Only show tooltip for Average + current year
-          const want = new Set(["Average", String(CUR_Y)]);
-          if(!want.has(ctx.dataset.label)) return null;
-
-          return `${ctx.dataset.label}: ${Math.round(v*100)/100}`;
-        }
-      }
-    }
-  },
-
-  scales:{
-    x:{
-      ticks:{
-        color:"rgba(169,182,211,.9)",
-        autoSkip:false,
-        maxRotation:0,
-        callback:(value, index)=>{
-          const m = mStarts.indexOf(index);
-          return (m >= 0) ? mNames[m] : "";
+    plugins:{
+      legend:{
+        position:"bottom",
+        labels:{
+          color:"rgba(234,240,255,.88)",
+          font:{weight:"950"},
+          boxWidth:14,
+          usePointStyle:true,
+          filter:(legendItem, chartData)=>{
+            const label = chartData?.datasets?.[legendItem.datasetIndex]?.label || "";
+            return label !== "_rangeMin";
+          }
         }
       },
-      grid:{display:false}
-    },
-    y:{
-      ticks:{color:"rgba(169,182,211,.9)"},
-      grid:{color:"rgba(255,255,255,.06)"}
-    }
-  }
-};
+      tooltip:{
+        callbacks:{
+          title:(items)=>{
+            const idx = items?.[0]?.dataIndex;
+            if(idx == null) return "";
+            return doyIndexToMonthDay(idx);
+          },
+          label:(ctx)=>{
+            const v = ctx.parsed?.y;
+            if(!Number.isFinite(v)) return null;
 
-if(doyCumChart) doyCumChart.destroy();
-doyCumChart = new Chart(canvas.getContext("2d"), { type:"line", data, options });
+            const want = new Set(["Average", String(CUR_Y)]);
+            if(!want.has(ctx.dataset.label)) return null;
+
+            return `${ctx.dataset.label}: ${Math.round(v*100)/100}`;
+          }
+        }
+      }
+    },
+
+    scales:{
+      x:{
+        ticks:{
+          color:"rgba(169,182,211,.9)",
+          autoSkip:false,
+          maxRotation:0,
+          callback:(value, index)=>{
+            const m = mStarts.indexOf(index);
+            return (m >= 0) ? mNames[m] : "";
+          }
+        },
+        grid:{display:false}
+      },
+      y:{
+        ticks:{color:"rgba(169,182,211,.9)"},
+        grid:{color:"rgba(255,255,255,.06)"}
+      }
+    }
+  };
+
+  if(doyCumChart) doyCumChart.destroy();
+  doyCumChart = new Chart(canvas.getContext("2d"), { type:"line", data, options });
 }
 
 /* -------------------------

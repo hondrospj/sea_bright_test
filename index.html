@@ -257,7 +257,7 @@
 .segBtn.isActive[data-val="total"]{ box-shadow: inset 0 -2px 0 rgba(234,240,255,.65); }
 
 /* =========================
-   Monthly table column hiding (NO BOUNCE VERSION)
+   Monthly table column hiding + CENTERED (single-metric)
    Columns:
    1 Month
    2 Avg Total
@@ -266,76 +266,60 @@
    5 Avg Major
    ========================= */
 
-/* Keep table geometry stable */
 #monthAvgTable{
-  width:100%;
-  table-layout:fixed;
-  border-collapse:collapse;
-  text-align:center;
+  width: 100%;
+  border-collapse: collapse;
+  text-align: center;
 }
 
-
-/* Helper: "hide but keep space" */
-#monthAvgTable .col-hide{
-  visibility: hidden;      /* keeps column width */
-  opacity: 0;              /* looks fully gone */
-  pointer-events: none;    /* prevents hover/click */
-}
-
-/* Optional: tighten cell padding so "blank" columns don't feel bulky
-#monthAvgTable th, #monthAvgTable td { white-space: nowrap; }
-*/
-
-/* --- MINOR: show Month + Avg Minor (col 3) --- */
-/* hide Total(2), Moderate(4), Major(5) */
-#monthAvgTable.show-minor th:nth-child(2),
-#monthAvgTable.show-minor td:nth-child(2),
-#monthAvgTable.show-minor th:nth-child(4),
-#monthAvgTable.show-minor td:nth-child(4),
-#monthAvgTable.show-minor th:nth-child(5),
-#monthAvgTable.show-minor td:nth-child(5){
-  visibility: hidden;
-  opacity: 0;
-  pointer-events: none;
+/* When you're showing only ONE metric (2 columns total), shrink table and center it */
+#monthAvgTable.show-total,
+#monthAvgTable.show-minor,
+#monthAvgTable.show-moderate,
+#monthAvgTable.show-major{
+  width: min(720px, 100%);   /* adjust 720px if you want tighter/wider */
+  margin-inline: auto;       /* centers it in the card */
+  table-layout: fixed;       /* keeps the 2 cols nicely balanced */
 }
 
 /* --- TOTAL: show Month + Avg Total (col 2) --- */
-/* hide Minor(3), Moderate(4), Major(5) */
 #monthAvgTable.show-total th:nth-child(3),
 #monthAvgTable.show-total td:nth-child(3),
 #monthAvgTable.show-total th:nth-child(4),
 #monthAvgTable.show-total td:nth-child(4),
 #monthAvgTable.show-total th:nth-child(5),
 #monthAvgTable.show-total td:nth-child(5){
-display: none;
-  opacity: 0;
-  pointer-events: none;
+  display: none;
+}
+
+/* --- MINOR: show Month + Avg Minor (col 3) --- */
+#monthAvgTable.show-minor th:nth-child(2),
+#monthAvgTable.show-minor td:nth-child(2),
+#monthAvgTable.show-minor th:nth-child(4),
+#monthAvgTable.show-minor td:nth-child(4),
+#monthAvgTable.show-minor th:nth-child(5),
+#monthAvgTable.show-minor td:nth-child(5){
+  display: none;
 }
 
 /* --- MODERATE: show Month + Avg Moderate (col 4) --- */
-/* hide Total(2), Minor(3), Major(5) */
 #monthAvgTable.show-moderate th:nth-child(2),
 #monthAvgTable.show-moderate td:nth-child(2),
 #monthAvgTable.show-moderate th:nth-child(3),
 #monthAvgTable.show-moderate td:nth-child(3),
 #monthAvgTable.show-moderate th:nth-child(5),
 #monthAvgTable.show-moderate td:nth-child(5){
-  visibility: hidden;
-  opacity: 0;
-  pointer-events: none;
+  display: none;
 }
 
 /* --- MAJOR: show Month + Avg Major (col 5) --- */
-/* hide Total(2), Minor(3), Moderate(4) */
 #monthAvgTable.show-major th:nth-child(2),
 #monthAvgTable.show-major td:nth-child(2),
 #monthAvgTable.show-major th:nth-child(3),
 #monthAvgTable.show-major td:nth-child(3),
 #monthAvgTable.show-major th:nth-child(4),
 #monthAvgTable.show-major td:nth-child(4){
-  visibility: hidden;
-  opacity: 0;
-  pointer-events: none;
+  display: none;
 }
 
 

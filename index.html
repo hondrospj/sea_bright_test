@@ -274,19 +274,21 @@
   text-align:center;
 }
 
+/* Optional: prevents wrapping changes from affecting row height */
+#monthAvgTable th,
+#monthAvgTable td{
+  white-space: nowrap;
+}
 
-/* Helper: "hide but keep space" */
-#monthAvgTable .col-hide{
+/* "Hide but keep space" (NO BOUNCE) */
+#monthAvgTable th.col-hide,
+#monthAvgTable td.col-hide{
   visibility: hidden;      /* keeps column width */
   opacity: 0;              /* looks fully gone */
   pointer-events: none;    /* prevents hover/click */
 }
 
-/* Optional: tighten cell padding so "blank" columns don't feel bulky
-#monthAvgTable th, #monthAvgTable td { white-space: nowrap; }
-*/
-
-/* --- MINOR: show Month + Avg Minor (col 3) --- */
+/* --- MINOR: show Month(1) + Avg Minor(3) --- */
 /* hide Total(2), Moderate(4), Major(5) */
 #monthAvgTable.show-minor th:nth-child(2),
 #monthAvgTable.show-minor td:nth-child(2),
@@ -299,7 +301,7 @@
   pointer-events: none;
 }
 
-/* --- TOTAL: show Month + Avg Total (col 2) --- */
+/* --- TOTAL: show Month(1) + Avg Total(2) --- */
 /* hide Minor(3), Moderate(4), Major(5) */
 #monthAvgTable.show-total th:nth-child(3),
 #monthAvgTable.show-total td:nth-child(3),
@@ -307,12 +309,12 @@
 #monthAvgTable.show-total td:nth-child(4),
 #monthAvgTable.show-total th:nth-child(5),
 #monthAvgTable.show-total td:nth-child(5){
-display: none;
+  visibility: hidden;   /* IMPORTANT: not display:none */
   opacity: 0;
   pointer-events: none;
 }
 
-/* --- MODERATE: show Month + Avg Moderate (col 4) --- */
+/* --- MODERATE: show Month(1) + Avg Moderate(4) --- */
 /* hide Total(2), Minor(3), Major(5) */
 #monthAvgTable.show-moderate th:nth-child(2),
 #monthAvgTable.show-moderate td:nth-child(2),
@@ -325,7 +327,7 @@ display: none;
   pointer-events: none;
 }
 
-/* --- MAJOR: show Month + Avg Major (col 5) --- */
+/* --- MAJOR: show Month(1) + Avg Major(5) --- */
 /* hide Total(2), Minor(3), Moderate(4) */
 #monthAvgTable.show-major th:nth-child(2),
 #monthAvgTable.show-major td:nth-child(2),

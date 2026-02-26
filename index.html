@@ -870,79 +870,20 @@ a.brand:focus{
 a.brand *{
   color: inherit !important;
 }
-    /* ================================
-   DATUM DROPDOWN DARK BACKGROUND
-   ================================ */
 
-/* main dropdown button */
-.datumWrap select{
-  background:#0b1220 !important;   /* deep black/blue */
-  color:#eaf0ff !important;
+
+    /* =========================================
+   MAKE DATUM BAR BACKGROUND TRUE DARK/BLACK
+   ========================================= */
+
+.datumPick{
+  background:#050b16 !important;   /* deep black */
   border:1px solid rgba(255,255,255,.18);
 }
 
-/* when clicked/open */
-.datumWrap select:focus{
-  background:#0b1220 !important;
-  outline:none;
-  box-shadow:0 0 0 1px rgba(255,255,255,.25);
-}
-
-/* dropdown list itself */
-.datumWrap select option{
-  background:#0b1220;
-  color:#eaf0ff;
-}
-    /* ===== FORCE DATUM DROPDOWN TO DARK/BLACK ===== */
-
-/* 1) Hit ANY select inside the datum control area */
-#datum select,
-.datum select,
-.datumWrap select,
-.datumControl select,
-.datumRow select,
-.controls select,
-.toolbar select,
-select#datum,
-select#datumSelect,
-select[name="datum"]{
-  background-color:#0b1220 !important;
-  color:#eaf0ff !important;
-  border:1px solid rgba(255,255,255,.18) !important;
-  -webkit-appearance:none;
-  appearance:none;
-}
-
-/* 2) If the visible "button" is a wrapper DIV (common with custom dropdown styling) */
-#datum,
-.datum,
-.datumWrap,
-.datumControl,
-.datumRow{
-  background:#0b1220 !important;
-}
-
-/* 3) If you’re using a custom “select button” element */
-select + .selectBtn,
-.selectBtn,
-.selectButton,
-.dropdownBtn,
-.pillSelect,
-.pill select{
-  background:#0b1220 !important;
-  color:#eaf0ff !important;
-  border:1px solid rgba(255,255,255,.18) !important;
-}
-
-/* 4) Options list */
-#datum option,
-.datum option,
-.datumWrap option,
-.datumControl option,
-select#datum option,
-select#datumSelect option{
-  background:#0b1220 !important;
-  color:#eaf0ff !important;
+/* optional: make inner pill match darker style */
+.datumPick .datumSelect{
+  background:#020814 !important;
 }
   </style>
 </head>

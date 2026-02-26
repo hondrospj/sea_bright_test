@@ -3609,7 +3609,6 @@ const { y: yNow, m: mNow, d: dNow } = getESTParts(new Date());
   return ytd;
 }
 
-
 /* -------------------------
 Render chart
 ------------------------- */
@@ -3641,84 +3640,84 @@ function renderDOYCumPanel(){
   const mStarts = monthStarts365();
   const mNames  = ["January","Febuary","March","April","May","June","July","August","September","October","Novvember","December"];
 
-// ✅ DATASETS (band always behind; average above band; current year always on top)
-const data = {
-  labels,
-  datasets: [
-    // helper for band fill (NOT shown in legend)
-    {
-      label: "_rangeMin",
-      data: min,
-      borderWidth: 0,
-      pointRadius: 0,
-      pointHoverRadius: 0,
-      pointHitRadius: 0,
-      showLine: false,
-      order: 0
-    },
+  // Build datasets as named vars so draw order is unambiguous:
+  const dsRangeMin = {
+    label: "_rangeMin",
+    data: min,
+    borderWidth: 0,
+    pointRadius: 0,
+    pointHoverRadius: 0,
+    pointHitRadius: 0,
+    showLine: false,
+    order: 0
+  };
 
-    // band max (fills down to _rangeMin)
-    {
-      label: "Historic Range (min–max)",
-      data: max,
-      borderWidth: 0,
-      pointRadius: 0,
-      pointHoverRadius: 0,
-      pointHitRadius: 0,
-      fill: "-1",
-      backgroundColor: "rgba(255,255,255,0.18)",
-      order: 1
-    },
+  const dsRangeBand = {
+    label: "Historic Range (min–max)",
+    data: max,
+    borderWidth: 0,
+    pointRadius: 0,
+    pointHoverRadius: 0,
+    pointHitRadius: 0,
+    fill: "-1",
+    backgroundColor: "rgba(255,255,255,0.18)",
+    order: 1
+  };
 
-    // Average (green)
-    {
-      label: "Average",
-      data: avg,
-      borderWidth: 2,
-      tension: 0.25,
+  // Average (green) — BELOW red
+  const dsAvg = {
+    label: "Average",
+    data: avg,
+    borderWidth: 2,
+    tension: 0.25,
 
-      borderColor: "rgba(45,212,191,.95)",
-      backgroundColor: "rgba(45,212,191,.95)",
+    borderColor: "rgba(45,212,191,.95)",
+    backgroundColor: "rgba(45,212,191,.95)",
 
-      pointRadius: 0,
-      pointHoverRadius: 0,
-      pointHitRadius: 0,
+    pointRadius: 0,
+    pointHoverRadius: 0,
+    pointHitRadius: 0,
 
-      pointStyle: "rectFilled",
-      pointBackgroundColor: "rgba(45,212,191,.95)",
-      pointBorderColor: "rgba(45,212,191,.95)",
-      pointBorderWidth: 0,
+    pointStyle: "rectFilled",
+    pointBackgroundColor: "rgba(45,212,191,.95)",
+    pointBorderColor: "rgba(45,212,191,.95)",
+    pointBorderWidth: 0,
 
-      fill: false,
-      order: 10
-    },
+    fill: false,
+    order: 10
+  };
 
-    // 🔴 Current year (red) — MUST BE LAST to guarantee it draws on top
-    {
-      label: String(CUR_Y),
-      data: ytd || new Array(365).fill(null),
-      borderWidth: 5,
-      tension: 0.25,
+  // 🔴 Current year (red) — MUST DRAW LAST (on top of green)
+  const dsCur = {
+    label: String(CUR_Y),
+    data: ytd || new Array(365).fill(null),
+    borderWidth: 5,
+    tension: 0.25,
 
-      borderColor: "#ef4444",
-      backgroundColor: "#ef4444",
+    borderColor: "#ef4444",
+    backgroundColor: "#ef4444",
 
-      pointRadius: 0,
-      pointHoverRadius: 0,
-      pointHitRadius: 0,
+    pointRadius: 0,
+    pointHoverRadius: 0,
+    pointHitRadius: 0,
 
-      spanGaps: false,
+    spanGaps: false,
 
-      pointStyle: "rectFilled",
-      pointBackgroundColor: "#ef4444",
-      pointBorderColor: "#ef4444",
-      pointBorderWidth: 0,
+    pointStyle: "rectFilled",
+    pointBackgroundColor: "#ef4444",
+    pointBorderColor: "#ef4444",
+    pointBorderWidth: 0,
 
-      fill: false,
-      order: 999
-    }
-  ]
-};
+    fill: false,
+    order: 999
+  };
+
+  // ✅ Guaranteed draw order: band behind, green next, red last on top
+  const data = {
+    labels,
+    datasets: [dsRangeMin, dsRangeBand, dsAvg, dsCur]
+  };
+
   const options = {
     responsive:true,
     maintainAspectRatio:false,
@@ -3790,7 +3789,6 @@ const data = {
   if(doyCumChart) doyCumChart.destroy();
   doyCumChart = new Chart(canvas.getContext("2d"), { type:"line", data, options });
 }
-
 /* -------------------------
 Init (one-time load)
 Call this once in boot(), NOT every 5 minutes.

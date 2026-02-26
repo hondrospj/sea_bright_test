@@ -267,21 +267,28 @@
    ========================= */
 
 #monthAvgTable{
-  width: 100%;
-  border-collapse: collapse;
-  text-align: center;
+  width:100%;              /* full width so divider lines hit card edges */
+  border-collapse:collapse;
+  table-layout:fixed;
 }
 
-/* When you're showing only ONE metric (2 columns total), shrink table and center it */
-#monthAvgTable.show-total,
-#monthAvgTable.show-minor,
-#monthAvgTable.show-moderate,
-#monthAvgTable.show-major{
-  width: min(720px, 100%);   /* adjust 720px if you want tighter/wider */
-  margin-inline: auto;       /* centers it in the card */
-  table-layout: fixed;       /* keeps the 2 cols nicely balanced */
+/* make the two visible columns split the space evenly */
+#monthAvgTable th,
+#monthAvgTable td{
+  text-align:center;
+  padding:14px 8px;
 }
 
+/* 2-column layout balance */
+#monthAvgTable th:first-child,
+#monthAvgTable td:first-child{
+  width:50%;
+}
+
+#monthAvgTable th:last-child,
+#monthAvgTable td:last-child{
+  width:50%;
+}
 /* --- TOTAL: show Month + Avg Total (col 2) --- */
 #monthAvgTable.show-total th:nth-child(3),
 #monthAvgTable.show-total td:nth-child(3),

@@ -2549,7 +2549,22 @@ ctx.fillRect(left, chartArea.top, right - left, yMajor - chartArea.top);
 };
 
 Chart.register(floodBandsPlugin);
+// ✅ Force one dataset to draw LAST (on top), regardless of internal sorting
+const drawDatasetLastPlugin = {
+  id: "drawDatasetLast",
+  afterDatasetsDraw(chart, args, pluginOpts) {
+    const idx = chart.data.datasets.findIndex(d => d && d._drawLast === true);
+    if (idx < 0) return;
 
+    const meta = chart.getDatasetMeta(idx);
+    if (!meta || meta.hidden) return;
+
+    // Draw it again on top of everything
+    meta.controller.draw();
+  }
+};
+
+Chart.register(drawDatasetLastPlugin);
 
 /* =========================
 Core state
@@ -3687,30 +3702,23 @@ function renderDOYCumPanel(){
     order: 10
   };
 
-  // 🔴 Current year (red) — MUST DRAW LAST (on top of green)
-  const dsCur = {
-    label: String(CUR_Y),
-    data: ytd || new Array(365).fill(null),
-    borderWidth: 5,
-    tension: 0.25,
+const dsCur = {
+  label: String(CUR_Y),
+  data: ytd || new Array(365).fill(null),
 
-    borderColor: "#ef4444",
-    backgroundColor: "#ef4444",
+  _drawLast: true,   // ✅ ADD THIS
 
-    pointRadius: 0,
-    pointHoverRadius: 0,
-    pointHitRadius: 0,
-
-    spanGaps: false,
-
-    pointStyle: "rectFilled",
-    pointBackgroundColor: "#ef4444",
-    pointBorderColor: "#ef4444",
-    pointBorderWidth: 0,
-
-    fill: false,
-    order: 999
-  };
+  borderWidth: 5,
+  tension: 0.25,
+  borderColor: "#ef4444",
+  backgroundColor: "#ef4444",
+  pointRadius: 0,
+  pointHoverRadius: 0,
+  pointHitRadius: 0,
+  spanGaps: false,
+  fill: false,
+  order: 999
+};
 
   // ✅ Guaranteed draw order: band behind, green next, red last on top
   const data = {

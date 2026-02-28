@@ -1390,20 +1390,6 @@ const LIVE_START_ISO = "2026-01-01T00:00:00Z"; // use >= Jan 1 2026
 /* NWS alerts point */
 const ALERT_POINT={lat:39.2325, lon:-75.0380};
 
-/* TXT daily tides file */
-const DAILY_TIDES_TXT_FILE = "bivalve_daily_stats.txt";
-const TXT_PATH_CANDIDATES = [
-  `data/${DAILY_TIDES_TXT_FILE}`,
-  `./data/${DAILY_TIDES_TXT_FILE}`,
-  `../data/${DAILY_TIDES_TXT_FILE}`,
-  `/data/${DAILY_TIDES_TXT_FILE}`
-];
-let DAILY_TIDES_TXT_URL = TXT_PATH_CANDIDATES[0];
-
-
-/* TXT columns (NAVD88 daily stats for parameter 72279) */
-const COL_DAILY_HIGH = "239251_72279_00021";
-const COL_DAILY_LOWHI = "239252_72279_00022";
 
 /* Top ten list (MLLW) — FIXED (shifted +2.10 ft from NAVD) */
 const TOP_TEN_MLLW = [
@@ -2099,117 +2085,9 @@ function ceilToNext15MinISO(iso){
   return new Date(next).toISOString();
 }
 
-/* =========================
-FETCH helper (TXT)
-========================= */
-async function tryFetchText(url){
-  try{
-    const res = await fetch(url, { cache:"no-store" });
-    if(!res.ok) return {ok:false, url, status:res.status, text:null};
-    return {ok:true, url, status:res.status, text: await res.text()};
-  }catch(e){
-    return {ok:false, url, status:"NETWORK", text:null, err:(e?.message||String(e))};
-  }
-}
 
-async function resolveDailyTidesTXTUrl(){
-  const failures = [];
-  for(const candidate of TXT_PATH_CANDIDATES){
-    const r = await tryFetchText(candidate);
-    if(r.ok){
-      DAILY_TIDES_TXT_URL = candidate;
-      // suppress TXT OK message in UI
-      // setTXTStatus(`TXT OK: loaded ${candidate}`);
-      return { url: candidate, text: r.text };
-    }else{
-      failures.push(`${candidate} (${r.status}${r.err ? `: ${r.err}` : ""})`);
-    }
-  }
-  // still show real errors
-  setTXTStatus("TXT ERROR: could not load daily tides file. Tried: " + failures.join(" · "));
-  throw new Error("TXT not found. Tried: " + failures.join(" | "));
-}
 
-/* =========================
-Parse USGS daily tab-delimited TXT
-========================= */
-let DAILY_TIDES = [];
-let DAILY_EVENTS_NAVD = [];
 
-function parseUSGSDailyTidesTXT(text){
-  const lines = text.split(/\r?\n/);
-
-  let headerLineIndex = -1;
-  for(let i=0;i<lines.length;i++){
-    const ln = lines[i];
-    if(!ln) continue;
-    if(ln.startsWith("#")) continue;
-    if(ln.startsWith("agency_cd\t")) { headerLineIndex = i; break; }
-  }
-  if(headerLineIndex < 0) throw new Error("TXT parse error: could not find header row starting with 'agency_cd'.");
-
-  const header = lines[headerLineIndex].split("\t");
-  const idxDate = header.indexOf("datetime");
-  const idxHigh = header.indexOf(COL_DAILY_HIGH);
-  const idxLowHi = header.indexOf(COL_DAILY_LOWHI);
-
-  if(idxDate < 0 || idxHigh < 0 || idxLowHi < 0){
-    const missing = [
-      idxDate < 0 ? "datetime" : null,
-      idxHigh < 0 ? COL_DAILY_HIGH : null,
-      idxLowHi < 0 ? COL_DAILY_LOWHI : null
-    ].filter(Boolean).join(" / ");
-    setTXTStatus(`TXT ERROR: missing column(s): ${missing}`);
-    throw new Error("TXT missing required columns: " + missing);
-  }
-
-  const out=[];
-  for(let i=headerLineIndex+1;i<lines.length;i++){
-    const ln = lines[i];
-    if(!ln) continue;
-    if(ln.startsWith("#")) continue;
-
-    const parts = ln.split("\t");
-    if(parts.length < header.length) continue;
-
-    const dtStr = (parts[idxDate] || "").trim();
-    if(!/^\d{4}-\d{2}-\d{2}$/.test(dtStr)) continue;
-
-    const y = +dtStr.slice(0,4);
-    const m = +dtStr.slice(5,7);
-    const d = +dtStr.slice(8,10);
-
-    const highStr = (parts[idxHigh] || "").trim();
-    const lowhiStr = (parts[idxLowHi] || "").trim();
-
-    const highNavd = highStr === "" ? null : +highStr;
-    const lowhiNavd = lowhiStr === "" ? null : +lowhiStr;
-
-    if((highNavd!==null && Number.isFinite(highNavd)) || (lowhiNavd!==null && Number.isFinite(lowhiNavd))){
-      out.push({y,m,d, highNavd:Number.isFinite(highNavd)?highNavd:null, lowhiNavd:Number.isFinite(lowhiNavd)?lowhiNavd:null});
-    }
-  }
-  out.sort((a,b)=> (a.y-b.y) || (a.m-b.m) || (a.d-b.d));
-  return out;
-}
-
-function buildDailyEventsFromDailyTides(rows){
-  const ev=[];
-  for(const r of rows){
-    const t = new Date(Date.UTC(r.y, r.m-1, r.d, 17, 0, 0)).toISOString(); // noon EST as 17:00Z
-    if(r.highNavd!==null) ev.push({t, ft:r.highNavd, kind:"High", y:r.y, m:r.m, d:r.d});
-    if(r.lowhiNavd!==null) ev.push({t, ft:r.lowhiNavd, kind:"Low-High", y:r.y, m:r.m, d:r.d});
-  }
-  ev.sort((a,b)=>new Date(a.t)-new Date(b.t));
-  return ev;
-}
-
-async function loadDailyTidesFromTXT(){
-  const {url, text} = await resolveDailyTidesTXTUrl();
-  DAILY_TIDES = parseUSGSDailyTidesTXT(text);
-  DAILY_EVENTS_NAVD = buildDailyEventsFromDailyTides(DAILY_TIDES);
-  setTXTStatus(""); // suppress TXT OK message
-}
 // --- PETSS: try multiple possible output filenames (works on Pages + local) ---
 const PETSS_JSON_CANDIDATES = [
   "data/petss_forecast.json",

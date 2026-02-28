@@ -1274,7 +1274,7 @@ const TZ = "America/New_York";
 
 /* =========================
 DATUM SYSTEM (MLLW-based offsets)
-- We convert everything through MLLW using offsets from your table.
+- We convert everything through MLLW using offsets from  table.
 datum_ft = mllw_ft + OFFSET_FROM_MLLW[datum]
 ========================= */
 
@@ -1282,7 +1282,7 @@ let DISPLAY_DATUM = "MLLW"; // MLLW | NAVD88 | MSL | MHHW
 
 const DATUMS = ["MLLW", "NAVD88", "MSL", "MHHW"]; // cycle order
 
-// From your table (Gauge Zero row): datum = MLLW + offset
+// From  table (Gauge Zero row): datum = MLLW + offset
 const OFFSET_FROM_MLLW = {
   MLLW:   0.00,
   NAVD88: -2.10,
@@ -1309,7 +1309,7 @@ function navdToMllw(navdFt){
 }
 
 
-// Helpers used across the app (your internal truth stays NAVD88 where needed)
+// Helpers used across the app ( internal truth stays NAVD88 where needed)
 function toDisplayFtFromNavd(navdFt){
   return datumToDatum(navdFt, "NAVD88", DISPLAY_DATUM);
 }
@@ -1340,7 +1340,7 @@ const CREST_WINDOW_HOURS = 2;             // search max within ±2 hours of pred
 const REQUIRE_WITHIN_HOURS = 1;           // must have at least one obs point within ±1 hour
 
 
-/* Flood thresholds (from your table) */
+/* Flood thresholds (from  table) */
 const THRESH = {
   MLLW:  { minorLow:5.20, moderateLow:6.20, majorLow:7.20 },
   NAVD88:{ minorLow:3.10, moderateLow:4.10, majorLow:5.10 },
@@ -2227,11 +2227,11 @@ const PETSS_JSON_CANDIDATES = [
   `./data/petss_forecast_${COOPS_STATION}_mllw.json`,
   `/data/petss_forecast_${COOPS_STATION}_mllw.json`,
 
-  // keep your old guess as a last resort
+  // keep  old guess as a last resort
   "data/petss_forecast_8536889_mllw.json"
 ];
 
-// returns parsed points in the format your chart expects: [{t, ft}]
+// returns parsed points in the format  chart expects: [{t, ft}]
 function normalizePetssJsonToPoints(json){
   // Option A: { points: [{t, fcst, ...}, ...] }
   if(Array.isArray(json?.points)){
@@ -2351,7 +2351,7 @@ Returns MLLW ft as [{t: ISO8601, ft: Number}] plus issuedTime for UI.
 const NWPS_GAUGE = "SBIN4";
 const NWPS_STAGEFLOW_URL = `https://api.water.noaa.gov/nwps/v1/gauges/${NWPS_GAUGE}/stageflow`;
 
-/* Clip to N hours from the first point (keeps your existing 72h logic consistent). */
+/* Clip to N hours from the first point (keeps  existing 72h logic consistent). */
 function clipHoursFromFirst(points, hours){
   if(!hours || !points?.length) return points || [];
   const t0 = new Date(points[0].t).getTime();
@@ -2365,7 +2365,7 @@ function clipHoursFromFirst(points, hours){
 
 /* Best-effort extraction across common NWPS response shapes. */
 function extractNWPSForecastSeries(json){
-  // Your sample shows top-level json.data[]
+  //  sample shows top-level json.data[]
   if(Array.isArray(json?.data) && json.data.length) return json.data;
 
   // Some NWPS responses include nested forecast series
@@ -2678,7 +2678,7 @@ function extractFloodPeaks_NAVD(series){
 
       /* =========================
 STEP 3 — build live flood peak events since Jan 1 2026
-These are NAVD88 peaks from USGS 15-min data (same datum as your TXT events)
+These are NAVD88 peaks from USGS 15-min data (same datum as  TXT events)
 ========================= */
 async function fetchNOAAHiloHighs({ station, beginYMD, endYMD, datum="MLLW" }){
   const url = new URL("https://api.tidesandcurrents.noaa.gov/api/prod/datagetter");
@@ -2978,7 +2978,7 @@ function evalQuad({a,b,c}, x){
 function ensureAnnual(){
   if(annualChart) return;
 
-  const ctx = $("annualChart"); // your helper returns the canvas element
+  const ctx = $("annualChart"); //  helper returns the canvas element
 
   annualChart = new Chart(ctx, {
     type: "bar",
@@ -3334,7 +3334,7 @@ function updateTsChartFromState(){
     return (v==null) ? null : toDisplayFtFromNavd(v);
   });
 
-  // (optional) keep your spike filter for OBS only (15-min makes sense)
+  // (optional) keep  spike filter for OBS only (15-min makes sense)
   const obsFiltered = filterSpikes15Min(
     obsValsDisplay.map(v => (Number.isFinite(v) ? v : null)),
     TS_MAX_DELTA_FT
@@ -3409,7 +3409,7 @@ const predValsDisplay = labels.map(iso=>{
 
 /* =========================
 DOY cumulative flooding (NO TXT) — REDONE (clean + datum-safe)
-- Pull USGS Daily Values (DV) for your site/param in NAVD88:
+- Pull USGS Daily Values (DV) for  site/param in NAVD88:
     00021 = Daily Maximum (high)
     00022 = Daily (Low-High) / secondary daily stat (depends on USGS series)
 - Count “events” >= flood stage:
@@ -3422,7 +3422,7 @@ const DOY_START_ISO = "2000-01-01"; // backfill start (YYYY-MM-DD)
 let DOY_CACHE = null;               // { years, avg, min, max, stageLabel }
 let doyCumChart = null;
 
-/* Uses your dashboard’s Minor threshold automatically (datum-aware) */
+/* Uses  dashboard’s Minor threshold automatically (datum-aware) */
 function doyFloodStageDisplayFt(){
   return THRESH?.[DISPLAY_DATUM]?.minorLow ?? 0;
 }
@@ -3942,7 +3942,7 @@ function applyFilter(){
   const fromStr = (fromDateEl?.value || "").trim();
   const toStr   = (toDateEl?.value   || "").trim();
 
-  // Convert elev range -> NAVD (your data are NAVD)
+  // Convert elev range -> NAVD ( data are NAVD)
   const minNavd = Number.isFinite(minDisplay) ? fromDisplayToNavd(minDisplay) : -Infinity;
   const maxNavd = Number.isFinite(maxDisplay) ? fromDisplayToNavd(maxDisplay) :  Infinity;
 
@@ -4307,7 +4307,7 @@ function normalizePeaksJson(json){
     const ft = Number(ftRaw);
     if(!Number.isFinite(ft)) continue;
 
-    // Derive y/m/d if missing (your monthly stats like having these)
+    // Derive y/m/d if missing ( monthly stats like having these)
     const y = r?.y ?? r?.year ?? dt.getUTCFullYear();
     const m = r?.m ?? r?.month ?? (dt.getUTCMonth() + 1);
     const d = r?.d ?? r?.day ?? dt.getUTCDate();
@@ -4423,7 +4423,7 @@ async function initTXTBackedHistory(){
     const tMs = new Date(e.t).getTime();
     if(!Number.isFinite(tMs)) continue;
 
-    // Use EST year consistency (your UI logic is EST-based)
+    // Use EST year consistency ( UI logic is EST-based)
     const { y } = getESTParts(new Date(e.t));
     if(y !== year) continue;
 

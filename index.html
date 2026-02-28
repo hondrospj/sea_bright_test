@@ -41,13 +41,12 @@
     body{
       margin:0;
       font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
-      background:var(--bg);   /* solid only */
+      background:var(--bg);   
       color:var(--text);
       -webkit-font-smoothing:antialiased;
       -moz-osx-font-smoothing:grayscale;
       overflow-x:hidden;
     }
-    /* KILL any old global overlay gradient */
     body:before{content:none !important;}
 
 .wrap{
@@ -71,18 +70,17 @@
     .top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
    .top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
     .brand{display:flex;align-items:center;gap:12px}
-/* ✅ Logo container stays inside the header */
+
 .brandLogo{
   display:inline-flex;
   align-items:center;
   justify-content:center;
 
-  padding:4px 6px;      /* thin white edge */
+  padding:4px 6px;   
   background:#ffffff;
 
-  border-radius:6px;    /* 👈 small corner = square look */
-}
-/* remove any border you had before */
+  border-radius:6px;   
+
 .brandLogo img{
   height:46px;
   width:auto;
@@ -98,13 +96,13 @@
  .kicker{
   color:var(--muted);
   font-weight:850;
-  font-size:16px;   /* small line */
+  font-size:16px;   
   letter-spacing:.2px;
   text-transform:uppercase
 }
 
 .name{
-  font-size:32px;   /* big title */
+  font-size:32px;   
   font-weight:950;
   letter-spacing:.2px
 }
@@ -119,7 +117,7 @@
     }
     .dot{width:9px;height:9px;border-radius:999px;background:var(--ok);box-shadow:0 0 0 4px rgba(45,212,191,.16)}
 
-    /* --- Mobile header overflow fix (kept) --- */
+  
     .brand, .brandTitle { min-width: 0; }
     .kicker, .name { min-width: 0; }
     .kicker, .name{
@@ -148,19 +146,19 @@
   min-width:0;
 }
 
-/* Last updated box stretches nicely */
+
 #lastPill{
   flex:1 1 320px;
   min-width:240px;
 }
 
-/* Keep datum + status tight */
+
 .datumPick,
 #stagePill{
   flex:0 0 auto;
 }
 
-/* Medium screens (ipad-ish) */
+
 @media (max-width: 980px){
   .topRight{
     flex-wrap:wrap;
@@ -173,7 +171,7 @@
   }
 }
 
-/* Mobile clean stack */
+
 @media (max-width: 720px){
   .topRight{
     flex-direction:column;
@@ -191,11 +189,11 @@
 
    .brand{
   width:100%;
-  justify-content:flex-start;  /* ✅ keep logo left */
+  justify-content:flex-start; 
   text-align:left;
 }
 .brandTitle{
-  align-items:flex-start;      /* ✅ keep text aligned right of logo */
+  align-items:flex-start;     
   text-align:left;
 }
 
@@ -212,9 +210,7 @@
       .pill, .btn{ max-width:100%; }
     }
 
-    /* =========================
-   MINI "SWITCH" (segmented control)
-   ========================= */
+
 .seg{
   display:inline-flex;
   border:1px solid var(--line);
@@ -245,43 +241,35 @@
   background:rgba(255,255,255,.08);
 }
 
-/* Optional: color hint on active */
+
 .segBtn.isActive[data-val="minor"]{ box-shadow: inset 0 -2px 0 rgba(251,191,36,.75); }
 .segBtn.isActive[data-val="moderate"]{ box-shadow: inset 0 -2px 0 rgba(251,113,133,.75); }
 .segBtn.isActive[data-val="major"]{ box-shadow: inset 0 -2px 0 rgba(167,139,250,.75); }
     .segBtn.isActive[data-val="total"]{ box-shadow: inset 0 -2px 0 rgba(234,240,255,.65); }
 
 
-/* Optional: color hint on active */
+
 .segBtn.isActive[data-val="minor"]{ box-shadow: inset 0 -2px 0 rgba(251,191,36,.75); }
 .segBtn.isActive[data-val="moderate"]{ box-shadow: inset 0 -2px 0 rgba(251,113,133,.75); }
 .segBtn.isActive[data-val="major"]{ box-shadow: inset 0 -2px 0 rgba(167,139,250,.75); }
 .segBtn.isActive[data-val="total"]{ box-shadow: inset 0 -2px 0 rgba(234,240,255,.65); }
 
-/* =========================
-   Monthly table column hiding + CENTERED (single-metric)
-   Columns:
-   1 Month
-   2 Avg Total
-   3 Avg Minor
-   4 Avg Moderate
-   5 Avg Major
-   ========================= */
+
 
 #monthAvgTable{
-  width:100%;              /* full width so divider lines hit card edges */
+  width:100%;              
   border-collapse:collapse;
   table-layout:fixed;
 }
 
-/* make the two visible columns split the space evenly */
+
 #monthAvgTable th,
 #monthAvgTable td{
   text-align:center;
   padding:14px 8px;
 }
 
-/* 2-column layout balance */
+
 #monthAvgTable th:first-child,
 #monthAvgTable td:first-child{
   width:50%;
@@ -291,7 +279,7 @@
 #monthAvgTable td:last-child{
   width:50%;
 }
-/* --- TOTAL: show Month + Avg Total (col 2) --- */
+
 #monthAvgTable.show-total th:nth-child(3),
 #monthAvgTable.show-total td:nth-child(3),
 #monthAvgTable.show-total th:nth-child(4),
@@ -301,7 +289,7 @@
   display: none;
 }
 
-/* --- MINOR: show Month + Avg Minor (col 3) --- */
+
 #monthAvgTable.show-minor th:nth-child(2),
 #monthAvgTable.show-minor td:nth-child(2),
 #monthAvgTable.show-minor th:nth-child(4),
@@ -311,7 +299,7 @@
   display: none;
 }
 
-/* --- MODERATE: show Month + Avg Moderate (col 4) --- */
+
 #monthAvgTable.show-moderate th:nth-child(2),
 #monthAvgTable.show-moderate td:nth-child(2),
 #monthAvgTable.show-moderate th:nth-child(3),
@@ -321,7 +309,7 @@
   display: none;
 }
 
-/* --- MAJOR: show Month + Avg Major (col 5) --- */
+
 #monthAvgTable.show-major th:nth-child(2),
 #monthAvgTable.show-major td:nth-child(2),
 #monthAvgTable.show-major th:nth-child(3),
@@ -332,9 +320,7 @@
 }
 
 
-    /* =========================
-OBVIOUS DATUM DROPDOWN
-========================= */
+
 .datumPick{
   display:flex;
   align-items:center;
@@ -374,9 +360,7 @@ OBVIOUS DATUM DROPDOWN
 }
 
 
-    /* =========================
-   Datum help "?" popover
-   ========================= */
+  
 .datumHelpBtn{
   width:28px;
   height:28px;
@@ -399,8 +383,8 @@ OBVIOUS DATUM DROPDOWN
   box-shadow:0 0 0 4px rgba(45,212,191,.12);
 }
 
-/* popover */
-.datumPick{ position:relative; } /* anchor the popover */
+
+.datumPick{ position:relative; } 
 .datumHelpPop{
   position:absolute;
   top:calc(100% + 10px);
@@ -436,7 +420,7 @@ OBVIOUS DATUM DROPDOWN
     @media(max-width:980px){.grid{grid-template-columns:1fr}}
 
     .card{
-      background:var(--card);        /* flat */
+      background:var(--card);       
       border:1px solid var(--line);
       border-radius:var(--radius);
       box-shadow:var(--shadow);
@@ -444,13 +428,13 @@ OBVIOUS DATUM DROPDOWN
       overflow:hidden;
       position:relative;
 
-      /* keep iOS hardening, but NO overlay gradients */
+
       isolation:isolate;
       contain:paint;
       transform:translateZ(0);
       -webkit-transform:translateZ(0);
     }
-    /* KILL glow overlays inside cards */
+
     .card:before{content:none !important;}
     .card>*{position:relative;z-index:1}
 
@@ -463,7 +447,7 @@ OBVIOUS DATUM DROPDOWN
     }
     .hrow h2{margin:0;font-size:12.5px;letter-spacing:.22px;text-transform:uppercase;color:var(--muted);font-weight:950}
 
-    /* ===== Live Conditions layout ===== */
+
     .liveGrid{
       display:grid;
       grid-template-columns:1fr 1fr;
@@ -486,7 +470,7 @@ OBVIOUS DATUM DROPDOWN
       transform:translateZ(0);
       -webkit-transform:translateZ(0);
     }
-    /* KILL glow overlays inside panels */
+
     .panel:before{content:none !important;}
     .panel>*{position:relative;z-index:1}
 
@@ -500,7 +484,7 @@ OBVIOUS DATUM DROPDOWN
       margin-bottom:10px;
     }
 
-    /* TODAY */
+
     .todayTop{
       display:flex;
       align-items:stretch;

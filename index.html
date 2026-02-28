@@ -66,7 +66,7 @@
     .top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
    .top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
     .brand{display:flex;align-items:center;gap:12px}
-/* ✅ Logo container stays inside the header */
+/*  Logo container stays inside the header */
 .brandLogo{
   display:inline-flex;
   align-items:center;
@@ -186,11 +186,11 @@
 
    .brand{
   width:100%;
-  justify-content:flex-start;  /* ✅ keep logo left */
+  justify-content:flex-start;  /*   keep logo left */
   text-align:left;
 }
 .brandTitle{
-  align-items:flex-start;      /* ✅ keep text aligned right of logo */
+  align-items:flex-start;      /*   keep text aligned right of logo */
   text-align:left;
 }
 
@@ -851,7 +851,7 @@ thead th{
 }
 /* ===== FIX PURPLE TITLE AFTER CLICK ===== */
 
-/* ✅ Fix purple visited link on the whole header click area */
+/*   Fix purple visited link on the whole header click area */
 a.brand,
 a.brand:visited,
 a.brand:hover,
@@ -912,7 +912,7 @@ a.brand *{
     <!-- options are filled by JS so order matches DATUMS -->
   </select>
 
-  <!-- ✅ New help icon + popover -->
+  <!--   New help icon + popover -->
   <button
     class="datumHelpBtn"
     id="datumHelpBtn"
@@ -1679,7 +1679,7 @@ function applyAnnualView(){
   annualChart.data.datasets[1].hidden = !showAll && (ANNUAL_VIEW !== "moderate");
   annualChart.data.datasets[2].hidden = !showAll && (ANNUAL_VIEW !== "major");
 
-  // ✅ dataset 3 = quadratic trendline (Total)
+  //   dataset 3 = quadratic trendline (Total)
   // Show it ONLY when Total is selected
   if(annualChart.data.datasets[3]){
     annualChart.data.datasets[3].hidden = (ANNUAL_VIEW !== "total");
@@ -1847,7 +1847,7 @@ moderateBadge.textContent = `${T.moderateLow.toFixed(2)}–${T.majorLow.toFixed(
 majorBadge.textContent    = `≥ ${T.majorLow.toFixed(2)} ft`;
 
 
-  // ✅ NEW: Update the numbers next to Minor/Moderate/Major in Observations & Predictions
+  //   NEW: Update the numbers next to Minor/Moderate/Major in Observations & Predictions
   if(thMinorTxt) thMinorTxt.textContent = `${T.minorLow.toFixed(2)} ${unitText()}`;
   if(thModerTxt) thModerTxt.textContent = `${T.moderateLow.toFixed(2)} ${unitText()}`;
   if(thMajorTxt) thMajorTxt.textContent = `${T.majorLow.toFixed(2)} ${unitText()}`;
@@ -2454,7 +2454,7 @@ ctx.fillRect(left, chartArea.top, right - left, yMajor - chartArea.top);
 };
 
 Chart.register(floodBandsPlugin);
-// ✅ Force one dataset to draw LAST (on top), regardless of internal sorting
+//   Force one dataset to draw LAST (on top), regardless of internal sorting
 const drawDatasetLastPlugin = {
   id: "drawDatasetLast",
   afterDatasetsDraw(chart, args, pluginOpts) {
@@ -2879,7 +2879,7 @@ function ensureAnnual(){
           backgroundColor: "rgba(167,139,250,.80)"
         },
 
-        // ✅ Trendline MUST be the 4th dataset (index 3)
+        //   Trendline MUST be the 4th dataset (index 3)
         {
           type: "line",
           label: "Quadratic trend (Total)",
@@ -2908,7 +2908,7 @@ function ensureAnnual(){
       responsive: true,
       maintainAspectRatio: false,
 
-      // ✅ hover anywhere on the bar → show ALL stacks for that year
+      //   hover anywhere on the bar → show ALL stacks for that year
       interaction: { mode: "index", intersect: false },
 
       plugins: {
@@ -2933,7 +2933,7 @@ function ensureAnnual(){
             },
          footer: (items) => {
   const total = (items || [])
-    .filter(it => it.dataset.type !== "line") // ✅ exclude quadratic
+    .filter(it => it.dataset.type !== "line") //   exclude quadratic
     .reduce((sum, it) => {
       const v = it.parsed?.y;
       return sum + (Number.isFinite(v) ? v : 0);
@@ -3071,7 +3071,7 @@ function ensureTsChart(){
           tension:0.25,
           spanGaps:true,
 
-          // ✅ DASHED predicted line
+          //   DASHED predicted line
           borderDash:[8,6],
           borderDashOffset:0,
 
@@ -3174,14 +3174,14 @@ function updateTsChartFromState(){
     ? STATE.obs24Navd[STATE.obs24Navd.length - 1].t
     : endISO;
 
-  // ✅ predictions start at NEXT hour
+  //   predictions start at NEXT hour
   const lastObsMs = new Date(lastObsT).getTime();
   const predStartMs = floorToHourMs(lastObsMs) + HOUR_MS;
   const predStartISO = new Date(predStartMs).toISOString();
   const predEndISO   = new Date(predStartMs + 72*3600*1000).toISOString();
   const predEndMs    = new Date(predEndISO).getTime();
 
-  // ✅ 15-min axis from obs start → forecast end
+  //   15-min axis from obs start → forecast end
   const labels = build15MinLabels(startObsISO, predEndISO);
 
   // -------------------------
@@ -3611,7 +3611,7 @@ const dsCur = {
   label: String(CUR_Y),
   data: ytd || new Array(365).fill(null),
 
-  _drawLast: true,   // ✅ ADD THIS
+  _drawLast: true,   //   ADD THIS
 
   borderWidth: 5,
   tension: 0.25,
@@ -3625,7 +3625,7 @@ const dsCur = {
   order: 999
 };
 
-  // ✅ Guaranteed draw order: band behind, green next, red last on top
+  //   Guaranteed draw order: band behind, green next, red last on top
   const data = {
     labels,
     datasets: [dsRangeMin, dsRangeBand, dsAvg, dsCur]
@@ -3783,7 +3783,7 @@ async function hydrateHistoricFromTXT(){
 function renderHist(rowsNavd){
   histBody.innerHTML = "";
 
-  const LIMIT = 10;                      // ✅ only show 10
+  const LIMIT = 10;                      //   only show 10
   const show = rowsNavd.slice(0, LIMIT);
 
   for(const r of show){
@@ -4064,11 +4064,11 @@ if(today.length){
   dayMaxFtEl.textContent = toDisplayFtFromNavd(dmx.ft).toFixed(2);
   dayMinFtEl.textContent = toDisplayFtFromNavd(dmn.ft).toFixed(2);
 
-  // ✅ ONLY show the time under each number (EST)
+  //   ONLY show the time under each number (EST)
   if(dayMaxWhenEl) dayMaxWhenEl.textContent = fmtESTTime(dmx.t);
   if(dayMinWhenEl) dayMinWhenEl.textContent = fmtESTTime(dmn.t);
 
-  // ✅ optional: blank the long meta line so it doesn't “fight” the clean layout
+  //   optional: blank the long meta line so it doesn't “fight” the clean layout
   if(dayRangeMeta) dayRangeMeta.textContent = "";
 }else{
   dayMaxFtEl.textContent = "—";
@@ -4120,7 +4120,7 @@ try {
 }
 
 
-  // ✅ IMPORTANT: actually render the chart + 24h range card after STATE updates
+  //   IMPORTANT: actually render the chart + 24h range card after STATE updates
   updateTsChartFromState();
   updatePred24RangeCard();
   updateFloodOutlook48();
@@ -4360,7 +4360,7 @@ if (hist[0].status === "rejected") {
   if (monthAvgMeta)  monthAvgMeta.textContent = "History load failed (monthly averages unavailable).";
 }
 
-// ✅ NEW: DOY cumulative panel (daily stats from USGS API; no TXT)
+//   NEW: DOY cumulative panel (daily stats from USGS API; no TXT)
 
 
 

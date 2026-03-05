@@ -538,6 +538,11 @@ OBVIOUS DATUM DROPDOWN
       letter-spacing:.2px;
       white-space:nowrap;
     }
+    /* ===== Current water elevation number color by flood stage ===== */
+.curVal.isBelow   #curFt{ color: var(--text); }      /* white */
+.curVal.isMinor   #curFt{ color: var(--minor); }     /* orange */
+.curVal.isModerate#curFt{ color: var(--moderate); }  /* red */
+.curVal.isMajor   #curFt{ color: var(--major); }     /* purple */
     .curMeta{
       margin-top:8px;
       color:var(--muted);
@@ -546,7 +551,6 @@ OBVIOUS DATUM DROPDOWN
       text-align:center;
       display:none;
     }
-
     /* remove progress bar under Current water elevation */
     .levelMeter{display:none !important;}
     .levelFill{display:none !important;}
@@ -958,10 +962,10 @@ a.brand *{
             <div class="curLabel">Current water elevation</div>
 
             <div class="curRow">
-              <div class="curVal">
-                <span id="curFt">—</span>
-                <span class="unit" data-unit>ft MLLW</span>
-              </div>
+            <div class="curVal" id="curValWrap">
+  <span id="curFt">—</span>
+  <span class="unit" data-unit>ft MLLW</span>
+</div>
             </div>
 
             <div class="levelMeter" aria-hidden="true">
@@ -1819,6 +1823,19 @@ function setStage(navdFt){
   stageTextEl.textContent=c.label;
   stageDotEl.style.background=c.color;
   stageDotEl.style.boxShadow = `0 0 0 4px ${c.glow}`;
+}
+    function setCurrentNumberColorByNavd(navdFt){
+  const wrap = document.getElementById("curValWrap") || (curFtEl ? curFtEl.closest(".curVal") : null);
+  if(!wrap) return;
+
+  // clear prior state classes
+  wrap.classList.remove("isBelow","isMinor","isModerate","isMajor");
+
+  const c = classifyByNavd(navdFt); // uses NAVD thresholds
+  if(c.short === "Major") wrap.classList.add("isMajor");
+  else if(c.short === "Moderate") wrap.classList.add("isModerate");
+  else if(c.short === "Minor") wrap.classList.add("isMinor");
+  else wrap.classList.add("isBelow");
 }
 
     function datumLabel(){
@@ -4044,11 +4061,11 @@ async function updateLiveAndAnnualCounts(){
   STATE.lastNavd = ytd[ytd.length - 1];
 
   // ---- Current water level card ----
-  curFtEl.textContent = toDisplayFtFromNavd(STATE.lastNavd.ft).toFixed(2);
-  curMetaEl.textContent = "Updated: " + fmtESTFull(STATE.lastNavd.t);
-  lastPill.textContent  = "Last updated: " + fmtESTFull(STATE.lastNavd.t);
-  setStage(STATE.lastNavd.ft);
-
+curFtEl.textContent = toDisplayFtFromNavd(STATE.lastNavd.ft).toFixed(2);
+curMetaEl.textContent = "Updated: " + fmtESTFull(STATE.lastNavd.t);
+lastPill.textContent  = "Last updated: " + fmtESTFull(STATE.lastNavd.t);
+setStage(STATE.lastNavd.ft);
+setCurrentNumberColorByNavd(STATE.lastNavd.ft);
   // ---- Daily range (today) ----
 // ---- Daily range (today) ----
 const today = sliceAfter(ytd, startOfTodayLocalTZ_ISO());
@@ -4441,10 +4458,11 @@ function setDatum(newDatum){
   renderAnnual();
 
   // Live card refresh (STATE.lastNavd is NAVD)
-  if(STATE.lastNavd){
-    curFtEl.textContent = toDisplayFtFromNavd(STATE.lastNavd.ft).toFixed(2);
-    setStage(STATE.lastNavd.ft); // stage classification is NAVD-based (fine)
-  }
+if(STATE.lastNavd){
+  curFtEl.textContent = toDisplayFtFromNavd(STATE.lastNavd.ft).toFixed(2);
+  setStage(STATE.lastNavd.ft);
+  setCurrentNumberColorByNavd(STATE.lastNavd.ft);
+}
 
 // Daily range refresh
 if(STATE.todayNavd && STATE.todayNavd.length){

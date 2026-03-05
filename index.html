@@ -13,22 +13,28 @@
 
   <style>
 
-    :root{
-      --bg:#0b1220;
-      --text:#eaf0ff;
-      --muted:#a9b6d3;
-      --line:rgba(255,255,255,.085);
-      --ok:#2dd4bf;
-      --minor:#fbbf24;
-      --moderate:#fb7185;
-      --major:#a78bfa;
-      --shadow:0 22px 70px rgba(0,0,0,.40);
-      --radius:18px;
+:root{
+  --bg:#0b1220;
+  --text:#eaf0ff;
+  --muted:#a9b6d3;
+  --line:rgba(255,255,255,.085);
+  --ok:#2dd4bf;
+  --minor:#fbbf24;
+  --moderate:#fb7185;
+  --major:#a78bfa;
+  --shadow:0 22px 70px rgba(0,0,0,.40);
+  --radius:18px;
 
-      /* NO “glow” backgrounds at all (removes greenish banding on iOS) */
-      --card:rgba(255,255,255,.035);
-      --card2:rgba(0,0,0,.18);
-    }
+  /* NO “glow” backgrounds at all (removes greenish banding on iOS) */
+  --card:rgba(255,255,255,.035);
+  --card2:rgba(0,0,0,.18);
+}
+
+select,
+option{
+  background: var(--bg);
+  color: var(--text);
+}
 
     *{box-sizing:border-box}
     html,body{height:100%}
@@ -538,11 +544,11 @@ OBVIOUS DATUM DROPDOWN
       letter-spacing:.2px;
       white-space:nowrap;
     }
-    /* ===== Current water elevation number color by flood stage ===== */
-.curVal.isBelow   #curFt{ color: var(--text); }      /* white */
-.curVal.isMinor   #curFt{ color: var(--minor); }     /* orange */
-.curVal.isModerate#curFt{ color: var(--moderate); }  /* red */
-.curVal.isMajor   #curFt{ color: var(--major); }     /* purple */
+/* Current water elevation number color by flood stage */
+.curVal.isBelow    #curFt { color: var(--text); }      /* white */
+.curVal.isMinor    #curFt { color: var(--minor); }     /* orange */
+.curVal.isModerate #curFt { color: var(--moderate); }  /* red */
+.curVal.isMajor    #curFt { color: var(--major); }     /* purple */
     .curMeta{
       margin-top:8px;
       color:var(--muted);

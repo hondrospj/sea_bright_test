@@ -4066,7 +4066,24 @@ function updateMonthAveragesFromHistory(){
   renderMonthAveragesChart(stats);
 }
 
+function countEventsFromHistoryForYear(year){
+  const T = THRESH.NAVD88;
+  const out = { minor: 0, moderate: 0, major: 0 };
 
+  for(const e of (HIGH_TIDES_NAVD || [])){
+    const y = Number.isFinite(+e.y) ? +e.y : new Date(e.t).getUTCFullYear();
+    const ft = Number(e.ft);
+
+    if(!Number.isFinite(y) || !Number.isFinite(ft)) continue;
+    if(y !== year) continue;
+
+    if(ft >= T.majorLow) out.major++;
+    else if(ft >= T.moderateLow) out.moderate++;
+    else if(ft >= T.minorLow) out.minor++;
+  }
+
+  return out;
+}
 /* =========================
 LIVE: current conditions + daily range + overwrite current year bar
 ========================= */
@@ -4592,10 +4609,7 @@ if(STATE.todayNavd && STATE.todayNavd.length){
 }
 
 
-// Dropdown jumps directly
-datumSelect.addEventListener("change", ()=>{
-  setDatum(datumSelect.value);
-});
+
 
 
 

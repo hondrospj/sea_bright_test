@@ -784,6 +784,18 @@ thead th{
     .foot{margin-top:10px;color:var(--muted);font-size:12.5px;line-height:1.25;text-align:center}
 
     .filterRow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+    .annualSparseNote{
+  display:none;
+  margin:2px 0 8px 0;
+  color:var(--muted);
+  font-size:12.5px;
+  line-height:1.3;
+  text-align:left;
+}
+
+.annualSparseNote b{
+  color:var(--text);
+}
     .input,.btn,select{
       background:rgba(0,0,0,.18);
       border:1px solid var(--line);
@@ -1130,6 +1142,8 @@ a.brand *{
           <button class="segBtn" type="button" data-val="major">Major</button>
         </div>
       </div>
+
+      <div class="annualSparseNote" id="annualSparseNote"></div>
 
       <div class="chartWrap"><canvas id="annualChart"></canvas></div>
       <div class="foot" id="annualNote"></div>
@@ -1639,8 +1653,8 @@ if(datumHelpBtn && datumHelpPop){
 }
 
 
-
 const monthAvgMeta=$("monthAvgMeta"), monthAvgBody=$("monthAvgBody");
+const annualSparseNote = $("annualSparseNote");
 
     /* =========================
    VIEW SWITCHES (Monthly + Annual)
@@ -3755,12 +3769,18 @@ async function initDOYCumulativeFromAPI_FAST(){
   DOY_ROWS_CACHE = await fetchUSGSDailyStats_NAVD88({ start: DOY_START_ISO });
   DOY_CACHE = computeDOYStatsFromDailyRows(DOY_ROWS_CACHE);
   renderDOYCumPanel();
+  renderAnnualSparseDataNote();
 }
 
 function refreshDOYAfterDatumToggle(){
-  if(!DOY_ROWS_CACHE) { renderDOYCumPanel(); return; }
+  if(!DOY_ROWS_CACHE) {
+    renderDOYCumPanel();
+    renderAnnualSparseDataNote();
+    return;
+  }
   DOY_CACHE = computeDOYStatsFromDailyRows(DOY_ROWS_CACHE);
   renderDOYCumPanel();
+  renderAnnualSparseDataNote();
 }
 
 /* =========================
@@ -4310,26 +4330,105 @@ async function initTXTBackedHistory(){
   renderAnnual();
 }
 
-      function countEventsFromHistoryForYear(year){
-  const T = THRESH.NAVD88;
-  let minor=0, moderate=0, major=0;
+ function expectedDaysInYear(year){
+  return isLeapYear(year) ? 366 : 365;
+}
 
-  for(const e of (HIGH_TIDES_NAVD || [])){
-    const tMs = new Date(e.t).getTime();
-    if(!Number.isFinite(tMs)) continue;
+function compressYearRanges(years){
+  if(!years || !years.length) return "";
 
-    // Use EST year consistency ( UI logic is EST-based)
-    const { y } = getESTParts(new Date(e.t));
-    if(y !== year) continue;
+  const sorted = [...new Set(years)]
+    .filter(y => Number.isFinite(y))
+    .sort((a,b)=>a-b);
 
-    const ft = +e.ft;
-    if(!Number.isFinite(ft)) continue;
+  const parts = [];
+  let start = sorted[0];
+  let prev = sorted[0];
 
-    if(ft >= T.majorLow) major++;
-    else if(ft >= T.moderateLow) moderate++;
-    else if(ft >= T.minorLow) minor++;
+  for(let i=1;i<sorted.length;i++){
+    const y = sorted[i];
+
+    if(y === prev + 1){
+      prev = y;
+      continue;
+    }
+
+    parts.push(start === prev ? `${start}` : `${start}-${prev}`);
+    start = y;
+    prev = y;
   }
-  return { minor, moderate, major };
+
+  parts.push(start === prev ? `${start}` : `${start}-${prev}`);
+  return parts.join("; ");
+}
+
+function computeSparseYearsFromDailyRows(rows){
+  if(!rows || !rows.length) return [];
+
+  const currentYear = new Date().getFullYear();
+
+  // Count unique dates that have at least one valid daily stat
+  const byYearDates = new Map(); // year -> Set("YYYY-MM-DD")
+  let minYear = Infinity;
+  let maxYear = -Infinity;
+
+  for(const r of rows){
+    const y = Number(r?.y);
+    const date = String(r?.date || "");
+
+    if(!Number.isFinite(y) || !date) continue;
+    if(y >= currentYear) continue; // exclude current year
+
+    if(y < minYear) minYear = y;
+    if(y > maxYear) maxYear = y;
+
+    const hasData =
+      Number.isFinite(r?.highNavd) ||
+      Number.isFinite(r?.lowhiNavd);
+
+    if(!hasData) continue;
+
+    if(!byYearDates.has(y)) byYearDates.set(y, new Set());
+    byYearDates.get(y).add(date);
+  }
+
+  if(!Number.isFinite(minYear) || !Number.isFinite(maxYear)) return [];
+
+  const sparse = [];
+
+  for(let y = minYear; y <= maxYear; y++){
+    const haveDays = byYearDates.get(y)?.size || 0;
+    const expected = expectedDaysInYear(y);
+
+    if(haveDays < (expected / 2)){
+      sparse.push(y);
+    }
+  }
+
+  return sparse;
+}
+
+function renderAnnualSparseDataNote(){
+  if(!annualSparseNote){
+    return;
+  }
+
+  if(!DOY_ROWS_CACHE || !DOY_ROWS_CACHE.length){
+    annualSparseNote.style.display = "none";
+    annualSparseNote.textContent = "";
+    return;
+  }
+
+  const sparseYears = computeSparseYearsFromDailyRows(DOY_ROWS_CACHE);
+
+  if(!sparseYears.length){
+    annualSparseNote.style.display = "none";
+    annualSparseNote.textContent = "";
+    return;
+  }
+
+  annualSparseNote.innerHTML = `<b>Sparse Data:</b> ${compressYearRanges(sparseYears)}`;
+  annualSparseNote.style.display = "block";
 }
 
 

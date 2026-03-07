@@ -2752,7 +2752,6 @@ function countAnnualFloodsFromTXT(eventsNavd){
   }
   return byYear;
 }
-
 function buildAnnualArraysFromHistory_completedYears(){
   const T = THRESH.NAVD88;
 
@@ -2766,15 +2765,33 @@ function buildAnnualArraysFromHistory_completedYears(){
     const ft = +e.ft;
     if(!Number.isFinite(ft)) continue;
 
-    if(!yearCounts.has(y)) yearCounts.set(y,{minor:0, moderate:0, major:0});
+    if(!yearCounts.has(y)){
+      yearCounts.set(y,{minor:0, moderate:0, major:0});
+    }
 
     if(ft >= T.majorLow) yearCounts.get(y).major++;
     else if(ft >= T.moderateLow) yearCounts.get(y).moderate++;
     else if(ft >= T.minorLow) yearCounts.get(y).minor++;
   }
 
-  const yearsAll = Array.from(yearCounts.keys()).sort((a,b)=>a-b);
+  const yearsWithData = Array.from(yearCounts.keys()).sort((a,b)=>a-b);
+  if(!yearsWithData.length){
+    YEARS = [];
+    annualMinor = [];
+    annualModerate = [];
+    annualMajor = [];
+    return;
+  }
+
+  const minYear = yearsWithData[0];
   const curYear = new Date().getFullYear();
+
+  // continuous year range
+  const yearsAll = [];
+  for(let y = minYear; y <= curYear; y++){
+    yearsAll.push(y);
+  }
+
   const yearsCompleted = yearsAll.filter(y => y < curYear);
 
   YEARS = yearsCompleted;
@@ -2782,7 +2799,6 @@ function buildAnnualArraysFromHistory_completedYears(){
   annualModerate = yearsCompleted.map(y => yearCounts.get(y)?.moderate ?? 0);
   annualMajor = yearsCompleted.map(y => yearCounts.get(y)?.major ?? 0);
 }
-
 
 
 function overwriteCurrentYearBarWithLiveCounts(liveCounts){
